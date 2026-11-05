@@ -55,6 +55,14 @@ The processed table intentionally has **no foreign key** or uniqueness constrain
 
 Follow-up cases to discuss: SQL three-valued logic, `NULL` in join columns, composite-key joins vs. joining on `trade_id` alone, and what happens when source or target has a duplicated business key.
 
+## Detailed SQL walkthroughs
+
+The exercises below include reference SQL, design rationale, expected results, NULL/composite-key caveats, and verification scenarios. Try the unsolved practice questions above before opening the walkthroughs.
+
+1. [Missing trades — LEFT JOIN and composite keys](exercises/01-sql-diagnostics/01-missing-trades.md)
+2. [Duplicate processing — GROUP BY and HAVING](exercises/01-sql-diagnostics/02-duplicate-processing.md)
+3. [Full reconciliation — FULL JOIN, aggregate flags, and DQ precedence](exercises/01-sql-diagnostics/03-full-reconciliation.md)
+
 ## Validate
 
 ```bash

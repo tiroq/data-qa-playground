@@ -86,3 +86,23 @@ Init files are executed only on the first startup of an **empty** PostgreSQL vol
 - Python + pytest + Testcontainers: automated reconciliation tests
 - ClickHouse: analytics SQL and deduplication patterns
 - Kafka: ingestion, delivery semantics, and idempotency
+
+## Exness interview training track (17 linked sessions)
+
+The repository now also includes a structured, **incremental** practice track for a synthetic trading-data QA case. Session 01 remains unchanged; Sessions 02–17 are specified in advance and will gain implementations only after each practical exercise.
+
+- [Session roadmap and progress](ROADMAP.md)
+- [Full exercise index](exercises/README.md)
+- [Synthetic trading-data contract](docs/TRADING-DATA-CASE.md)
+- [How to run and review each session](docs/SESSION-WORKFLOW.md)
+- [Assessment rubric](docs/ASSESSMENT-RUBRIC.md)
+
+**Language:** the actual interview and interactive training discussions are in **Russian**; SQL/Python, technical terms, repository code and written specifications remain in English.
+
+**Session 02 isolated SQL dataset:**
+
+```bash
+docker compose exec -T postgres psql -U qa -d trading -v ON_ERROR_STOP=1 < postgres/fixtures/02-trade-versions.sql
+```
+
+The fixture creates only the separate `lab02` schema and does not alter the original Session 01 seed. Do not assume Python, ClickHouse, Kafka or CI implementations are already present: these are added gradually in their designated sessions.

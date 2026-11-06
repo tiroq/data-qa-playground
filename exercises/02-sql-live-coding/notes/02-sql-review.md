@@ -1,7 +1,7 @@
 # Session 02 — SQL Live Coding — Review Notes
 
 **Date:** 2026-11-06 (Asia/Bangkok)  
-**Status:** IN PROGRESS — Task 1 reviewed after follow-up; Tasks 2–3 pending.  
+**Status:** IN PROGRESS — Task 1 reviewed; Task 2 initial attempt under follow-up; Task 3 pending.  
 **Attempts:** [initial SQL](../solutions/02-latest-trades.sql), [candidate follow-up SQL](../solutions/02-latest-trades-followup.sql), [reviewed reference approach](../solutions/02-latest-trades-reviewed.sql)  
 **Provisional Task 1 score after follow-up:** 7.5/10 (static review only). This is **not** the final session score.
 
@@ -47,3 +47,38 @@
 - **Static review only.** No live PostgreSQL query, `docker compose` run, or result-row assertion has been performed in this review.
 - Fixture expectations from checked-in SQL: 12 physical rows, 6 logical keys.
 - Reviewed reference approach is recorded, but **not executed**; final session score and edge-case test evidence remain pending.
+
+
+## Task 2 — Account-level latest PnL: initial attempt
+
+**Candidate:** [02-account-pnl-attempt.sql](../solutions/02-account-pnl-attempt.sql)  
+**Preliminary score:** 6/10, static review; subject to follow-up and actual execution. The query has **not** been executed in a live PostgreSQL instance.
+
+### What works
+
+- Uses `ROW_NUMBER()` with the correct composite trade key, business-version priority and unique last tie-breaker.
+- Filters on `rn = 1` **before** `status = 'FILLED'`: this avoids including historic filled versions of trades now cancelled.
+- Aggregates using `COUNT(*)`, `SUM(pnl)` and `GROUP BY` after latest-state selection, avoiding retry-driven duplication.
+- Sorts final output by account and retains numeric precision for non-NULL values.
+
+### Blocking bugs
+
+1. **Critical:** `CASE WHEN pnl IS NULL THEN TRUE ELSE FALSE END AS has_conflict` is a missing-value indicator, not a same-version payload-conflict detector. It observes only the single ranked row that survived `rn = 1`; all other candidate rows are already discarded.
+2. **High:** `GROUP BY account_id, has_conflict` changes the intended output grain from one row per account to up to two rows per account. PostgreSQL allows the selected expression alias as a grouping key here, but that is logically incorrect.
+3. **High:** `SUM(pnl)` skips NULL values; its output may look valid despite missing values. Also a conflicting latest PnL must not be silently published.
+4. **Critical:** Trade 205 has conflicting version-2 payload values (8.0000 and 8.5000) at identical `event_time`. The chosen ingest 11 value 8.5000 is deterministic but untrusted, so account A3 must have `has_conflict = true` and `total_pnl = NULL` under the task contract.
+
+### Fixture-derived predictions (not observed execution)
+
+- Candidate: A1 = 2 filled / 5.5000 / false, A2 = 1 / 9.0000 / false, A3 = 1 / 8.5000 / false.
+- Required for A3: 1 filled / NULL / true; A1/A2 expected to remain unchanged.
+- Trade 204 has NULL status and NULL PnL, but is not FILLED. Missing value and conflicting values are distinct DQ categories.
+
+### Follow-up pending
+
+- Detect latest-version ties with distinct payloads **before collapsing them** to one representative trade row.
+- Reduce trade-level findings to one account-level `has_conflict` flag; do not add it as a grouping dimension.
+- Ensure `total_pnl` is NULL for conflicting accounts.
+- Explain behavior for a FILLED trade with NULL PnL and for an account with zero FILLED trades.
+
+No reference solution added yet; maintain interview conditions until candidate follow-up.

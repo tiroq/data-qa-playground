@@ -1,9 +1,9 @@
 # Session 02 — SQL Live Coding — Review Notes
 
 **Date:** 2026-11-06 (Asia/Bangkok)  
-**Status:** IN PROGRESS — awaiting candidate follow-up; no reference solution included.  
-**Attempt:** [initial candidate SQL](../solutions/02-latest-trades.sql)  
-**Preliminary score for Task 1:** 7/10 (subject to follow-up and execution-based checks). This is **not** the final session score.
+**Status:** IN PROGRESS — Task 1 reviewed after follow-up; Tasks 2–3 pending.  
+**Attempts:** [initial SQL](../solutions/02-latest-trades.sql), [candidate follow-up SQL](../solutions/02-latest-trades-followup.sql), [reviewed reference approach](../solutions/02-latest-trades-reviewed.sql)  
+**Provisional Task 1 score after follow-up:** 7.5/10 (static review only). This is **not** the final session score.
 
 ## Task 1 — Latest trade state per logical key
 
@@ -26,14 +26,24 @@
 3. **Medium — no final stable order.** Task requires `ORDER BY account_id, trade_id` for results; window ordering alone does not guarantee output order.
 4. **Unstated contracts.** Candidate did not explicitly describe physical and logical grain, handling of ties, or whether ingestion order is authoritative. This does not invalidate the query shape, but leaves acceptance criteria incomplete.
 
-### Follow-up (pending candidate)
+### Follow-up — candidate responded
 
-- Modify the submitted query to make selection reproducible under equal `version` and make final output ordering stable.
-- Explain the chosen tie-breaking policy and whether `ingested_at` can be treated as business-authoritative.
-- State how the QA pipeline should handle trade 205 conflicting same-version PnL, separately from its SQL row-selection rule.
+- Added `ORDER BY account_id, trade_id` to the outer query: **correct** and now guarantees display ordering.
+- Added `ORDER BY version, event_time DESC` to the CTE query **outside** the `ROW_NUMBER() OVER (...)` expression: **does not change rank assignments**. Ranking still depends only on `version DESC`; version ties remain unresolved. Furthermore, `version` ascending in that CTE sort does not match the intended business order.
+- Business reasoning: candidate distinguished `ingested_at` from `event_time`; correctly rejected ingestion order as authoritative; suggested comparing business payload fields, separating retries from out-of-order delivery, and escalating same-version conflicts for investigation.
+- Remaining nuance: for trade 205 the conflicting version-2 rows share **exactly the same event_time**, so event-time ordering cannot resolve the contradiction. `event_time` itself is trusted only if the source defines that semantic.
+- Corrected reference query stored separately after follow-up, ranking by `version DESC, event_time DESC, ingest_id DESC` and sorting final output by `account_id, trade_id`. Unique `ingest_id` breaks residual ties deterministically; this is a **representative** row selection, not validation of the data.
+- Data-quality policy: report identical deliveries separately from conflicting payloads for the same logical key/version; do not silently publish a potentially incorrect financial aggregate from unresolved conflicts.
+- **Score rationale:** 7.5/10 for Task 1 after follow-up — correct window partitioning, selected columns, NULL preservation, version precedence, final ordering, and sound DQ reasoning; one critical unfixed SQL tie-break bug. Business reasoning alone approximates 9/10.
+
+### Next work
+
+- Complete account-level latest PnL with deduplication before aggregation.
+- Compare `DISTINCT ON` / `ROW_NUMBER()` / ClickHouse `argMax`, including tie semantics.
+- Execute SQL on PostgreSQL and capture observed results; the reference is not a substitute for a live test.
 
 ### Verification evidence
 
 - **Static review only.** No live PostgreSQL query, `docker compose` run, or result-row assertion has been performed in this review.
 - Fixture expectations from checked-in SQL: 12 physical rows, 6 logical keys.
-- Final score, reference approach, edge-case tests, and roadmap update **pending** candidate follow-up and verification.
+- Reviewed reference approach is recorded, but **not executed**; final session score and edge-case test evidence remain pending.

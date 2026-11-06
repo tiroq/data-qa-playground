@@ -24,7 +24,13 @@ Select the latest defensible trade state without losing valid trades or inflatin
 
 ## Setup
 
-Run `docker compose exec -T postgres psql -U qa -d trading -v ON_ERROR_STOP=1 < postgres/fixtures/02-trade-versions.sql` to load the isolated `lab02` fixture.
+The isolated `lab02` fixture is loaded automatically by the one-shot `postgres-lab02-init` service whenever you run `docker compose up -d --wait`, even if the PostgreSQL volume already exists. Run `docker compose wait postgres-lab02-init` to ensure the loader has exited. Verify its output with `docker compose logs postgres-lab02-init` and check row counts:
+
+```bash
+docker compose exec -T postgres psql -U qa -d trading -c "SELECT COUNT(*) AS physical_rows, COUNT(DISTINCT (trade_id, account_id)) AS logical_keys FROM lab02.trade_versions;"
+```
+
+Expected initial fixture: **12 physical rows and 6 logical keys**. The loader is idempotent; `docker compose restart postgres` does not rerun it.
 
 ## Acceptance criteria
 

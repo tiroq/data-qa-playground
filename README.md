@@ -12,6 +12,7 @@ A hands-on lab for SQL diagnostics, trading-data reconciliation, and QA automati
 git clone https://github.com/tiroq/data-qa-playground.git
 cd data-qa-playground
 docker compose up -d --wait
+docker compose wait postgres-lab02-init
 docker compose exec postgres psql -U qa -d trading
 ```
 
@@ -38,7 +39,7 @@ psql 'postgresql://qa:qa@127.0.0.1:5433/trading'
 
 ## Dataset
 
-Two tables:
+Session 01 tables (public schema):
 
 - `trades`: eight source trading transactions, unique `trade_id`.
 - `processed_trades`: ten processing records, including duplicates, missing matches, an orphan record, a failed status, and a NULL status.
@@ -78,7 +79,7 @@ docker compose down -v
 docker compose up -d --wait
 ```
 
-Init files are executed only on the first startup of an **empty** PostgreSQL volume. A normal `docker compose restart` does not reload seed data.
+The original `postgres/init/` files are executed only when PostgreSQL first initializes an **empty** volume. On every `docker compose up`, the separate `postgres-lab02-init` service also applies the idempotent Session 02 fixture, including when the volume already exists. `docker compose restart postgres` alone does **not** rerun this fixture service.
 
 ## Roadmap
 
@@ -99,10 +100,15 @@ The repository now also includes a structured, **incremental** practice track fo
 
 **Language:** the actual interview and interactive training discussions are in **Russian**; SQL/Python, technical terms, repository code and written specifications remain in English.
 
-**Session 02 isolated SQL dataset:**
+**Session 02 isolated SQL dataset (auto-loaded):**
+
+`docker compose up -d --wait` starts `postgres-lab02-init` after PostgreSQL becomes healthy. It applies `postgres/fixtures/02-trade-versions.sql` on both fresh and existing database volumes. The loader exits with code 0 on success and leaves PostgreSQL running. Check the loader and dataset:
 
 ```bash
-docker compose exec -T postgres psql -U qa -d trading -v ON_ERROR_STOP=1 < postgres/fixtures/02-trade-versions.sql
+docker compose wait postgres-lab02-init
+docker compose ps --all
+docker compose logs postgres-lab02-init
+docker compose exec -T postgres psql -U qa -d trading -c "SELECT COUNT(*) AS physical_rows, COUNT(DISTINCT (trade_id, account_id)) AS logical_keys FROM lab02.trade_versions;"
 ```
 
-The fixture creates only the separate `lab02` schema and does not alter the original Session 01 seed. Do not assume Python, ClickHouse, Kafka or CI implementations are already present: these are added gradually in their designated sessions.
+Expected fixture counts: **12 physical rows, 6 logical keys**. Re-running `docker compose up` does not duplicate the fixture rows because it uses stable `ingest_id` values and `ON CONFLICT DO NOTHING`. The fixture creates only the separate `lab02` schema and does not alter the original Session 01 seed. Do not assume Python, ClickHouse, Kafka or CI implementations are already present: these are added gradually in their designated sessions.

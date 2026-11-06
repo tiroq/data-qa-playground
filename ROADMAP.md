@@ -7,7 +7,7 @@
 
 - **COMPLETE:** a real attempt and review exist in the repository.
 - **PLANNED:** exercise specification only. No claim of an implemented solution.
-- **IN PROGRESS:** a linked branch or PR contains a current attempt.
+- **IN PROGRESS:** a current attempt exists in the session directory on `main`, a linked branch, or a PR; remaining tasks or verification are pending.
 - **REVIEWED:** acceptance criteria and a recorded score have been checked.
 
 ## Timeline and cumulative value
@@ -15,7 +15,7 @@
 | # | Date (Bangkok) | Session | Status | Contribution to case |
 |---|---|---|---|---|
 | 01 | Nov 05 | [SQL diagnostics](exercises/01-sql-diagnostics/) | COMPLETE (learning session) | Existing PostgreSQL tables, SQL examples and detailed rationale |
-| 02 | 11 06 | [SQL Live Coding — Versions, Windows & Deduplication](exercises/02-sql-live-coding/README.md) | PLANNED | Latest-version selection and account PnL |
+| 02 | 11 06 | [SQL Live Coding — Versions, Windows & Deduplication](exercises/02-sql-live-coding/README.md) | IN PROGRESS (Task 1 reviewed; Tasks 2–3 and execution pending) | Latest-version selection and account PnL |
 | 03 | 11 06 | [ClickHouse Fundamentals — MergeTree & Row Semantics](exercises/03-clickhouse-fundamentals/README.md) | PLANNED | ClickHouse storage semantics |
 | 04 | 11 07 | [Source-to-Target Reconciliation & SLA](exercises/04-reconciliation/README.md) | PLANNED | Cardinality-safe reconciliation and timing SLA |
 | 05 | 11 08 | [Python Live Coding — Streaming Comparison](exercises/05-python-live-coding/README.md) | PLANNED | Python comparison core |

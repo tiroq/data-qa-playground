@@ -1,7 +1,7 @@
 # Session 02 — SQL Live Coding — Review Notes
 
 **Date:** 2026-11-06 (Asia/Bangkok)  
-**Status:** IN PROGRESS — Task 1 reviewed; Task 2 initial attempt under follow-up; Task 3 pending.  
+**Status:** IN PROGRESS — Task 1 reviewed; Task 2 explained with mentor reference after the candidate asked for a walkthrough; Task 3 pending.  
 **Attempts:** [initial SQL](../solutions/02-latest-trades.sql), [candidate follow-up SQL](../solutions/02-latest-trades-followup.sql), [reviewed reference approach](../solutions/02-latest-trades-reviewed.sql)  
 **Provisional Task 1 score after follow-up:** 7.5/10 (static review only). This is **not** the final session score.
 
@@ -81,4 +81,22 @@
 - Ensure `total_pnl` is NULL for conflicting accounts.
 - Explain behavior for a FILLED trade with NULL PnL and for an account with zero FILLED trades.
 
-No reference solution added yet; maintain interview conditions until candidate follow-up.
+### Mentor walkthrough (requested by candidate)
+
+Candidate explicitly stopped the live-coding follow-up and asked for a full explanation. The reference was then added as [02-account-pnl-reviewed.sql](../solutions/02-account-pnl-reviewed.sql). **This is mentor-authored, not candidate-authored and not proof of candidate mastery.** The original attempt and provisional score (6/10) remain unchanged.
+
+Core sequence:
+1. Compute MAX(version) per trade/account.
+2. Keep **all** rows matching that maximum.
+3. Deduplicate relevant payload fields with `DISTINCT (trade_id, account_id, event_time, status, pnl)` and mark `COUNT(*) > 1` as a same-version conflict.
+4. Independently rank trades deterministically; join the trade-level conflict before aggregating.
+5. Count FILLED only for latest rows, SUM their PnL and `BOOL_OR` DQ flags at the account grain.
+6. In this conservative policy, return NULL total_pnl if any same-version conflict is present or the selected FILLED trade has missing PnL. `has_conflict` only describes a payload conflict; missing PnL is a **separate** DQ issue.
+
+Fixture-derived expected output: A1: 2, 5.5000, false; A2: 1, 9.0000, false; A3: 1, NULL, true.
+
+Open contract question: What exact fields form a version payload? Here we assume event_time, status and pnl. Version-tied contradictory statuses would also make representative filled counts potentially untrusted. The reference uses conservative fail-closed reporting.
+
+### Verification status
+
+Reference has **not** been executed against PostgreSQL; outputs are derived from the checked-in fixture. Final session review and independent candidate mastery remain pending.

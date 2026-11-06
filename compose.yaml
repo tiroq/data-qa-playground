@@ -11,10 +11,35 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./postgres/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U qa -d trading"]
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U qa -d trading"]
       interval: 5s
       timeout: 3s
       retries: 10
+
+  # Idempotent Session 02 fixture loader. Runs on every "docker compose up",
+  # including existing postgres_data volumes (initdb.d only runs once).
+  postgres-lab02-init:
+    image: postgres:17
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PGPASSWORD: qa
+    volumes:
+      - ./postgres/fixtures/02-trade-versions.sql:/fixtures/02-trade-versions.sql:ro
+    command:
+      - psql
+      - -h
+      - postgres
+      - -U
+      - qa
+      - -d
+      - trading
+      - -v
+      - ON_ERROR_STOP=1
+      - -f
+      - /fixtures/02-trade-versions.sql
+    restart: "no"
 
 volumes:
   postgres_data:

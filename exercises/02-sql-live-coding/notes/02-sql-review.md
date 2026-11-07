@@ -113,3 +113,12 @@ The candidate used `SELECT DISTINCT ON (trade_id, account_id)` and `ORDER BY tra
 Minor contract mismatch: resulting display ordering is by `trade_id, account_id`, whereas original Task 1 required `account_id, trade_id`; a wrapper query would be needed to sort output separately while satisfying DISTINCT ON prefix restrictions. The original submission includes a harmless commented-out `WHERE rn = 1`.
 
 **Follow-ups pending:** articulate the semantic/portability differences between `ROW_NUMBER()` and `DISTINCT ON`, the behavior of omitted ORDER BY, and ClickHouse `argMax` tie/payload consistency. No reference comparison has been presented yet.
+
+
+### Candidate conceptual follow-up — DISTINCT ON vs ROW_NUMBER
+
+**Candidate's explanation (summarized, not verbatim):** DISTINCT ON groups/deduplicates and takes a representative row using ORDER BY; ROW_NUMBER was thought to support more complex selection logic; without ORDER BY, DISTINCT ON makes no guaranteed choice of physical row.
+
+**Review:** 8/10 for the conceptual comparison; correct core distinctions and exact response for missing ORDER BY (10/10). Correction: both support complex ORDER BY expressions, including CASE and multiple tie breakers. ROW_NUMBER is more flexible for top-N per group and exposes ranks; DISTINCT ON is PostgreSQL-specific and returns just one representative row per key. Both require authoritative domain rules to choose latest state; maximum PnL alone is not synonymous with latest version.
+
+**Status:** PostgreSQL comparison reviewed. ClickHouse argMax follow-up is pending. Scores are for the component only, **not the completed session**.

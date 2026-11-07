@@ -141,3 +141,22 @@ GROUP BY account_id, trade_id;
 **Assessment:** Correct reasoning, **1/1 for this follow-up**. Important qualifier: don't overgeneralize that all analytical queries must use `FINAL`; explicit latest-state aggregation, ordinary `VIEW` with correctly specified `argMax`, or a properly designed aggregate-state table are alternatives. Equal counts alone prove neither row identity nor PnL correctness. `FINAL` also does not provide a business-authoritative resolution of contradictory same-version payloads.
 
 **Runtime verification:** Still pending; no observed ClickHouse outputs provided. Next requested exercise: candidate writes account-level current-state PnL query from `lab03.trading_events_latest` and explains any remaining pitfalls.
+
+## Part C — candidate account-level PnL query
+
+**Candidate answer:** [solutions/03-account-pnl-attempt.sql](../solutions/03-account-pnl-attempt.sql).
+
+**Candidate query (substantively unchanged):**
+```sql
+SELECT account_id,
+SUM(pnl) AS total_pnl
+FROM trading_events_latest FINAL
+GROUP BY account_id
+ORDER BY account_id;
+```
+
+**Review:** Correct logical query for the six-row exercise given a correctly deployed `ReplacingMergeTree(version)` table, `ORDER BY (account_id, trade_id)`, stable partition key, and complete inputs. Query-level score **3/3**. Expected (not observed): A1 = 5.0000, A2 = 1.0000. No extra `trade_id` GROUP BY needed because FINAL reduces each business key before SUM.
+
+**Unverified conditions:** confirm the current DDL via SHOW CREATE TABLE because IF NOT EXISTS would not replace an earlier incorrect schema; no actual ClickHouse execution result supplied. Same-max-version contradictory PnL, NULL PnL semantics, delayed/missing input events, and cross-partition data violations remain QA risks. This query alone does not certify overall data correctness.
+
+**Follow-up required:** learner should report result of query execution and consider how to detect a contradictory same-version payload rather than relying on FINAL to choose an arbitrary winner.

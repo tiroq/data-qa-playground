@@ -1,6 +1,6 @@
 # Session 03 — ClickHouse Fundamentals — MergeTree & Row Semantics
 
-**Date (Asia/Bangkok):** 2026-11-06 (scheduled) · **Duration:** 60 minutes · **Status:** IN PROGRESS — local ClickHouse fixture prepared; runtime and candidate work pending  
+**Date (Asia/Bangkok):** 2026-11-06 (scheduled), interactive review 2026-11-07 · **Duration:** 60 minutes (planned) · **Status:** IN PROGRESS — learning review completed; runtime verification pending  
 **Track:** Exness QA Engineer (Data Stack) interview preparation
 
 > **Language contract:** The actual technical interview is in **Russian**. All live tasks, discussion, follow-up questions, code review, mock interviews, and feedback in ChatGPT must be **in Russian**. SQL, Python, identifiers, and technical terms may remain in English. This repository's written exercise specifications are in English.
@@ -36,9 +36,9 @@ The supplied `lab03.trading_events` is an **append-only raw input** with six phy
 
 ## Acceptance criteria
 
-- [ ] Can explain why two correct-looking queries may return different totals.
-- [ ] Proposes test data including retries, version ties and delayed merges.
-- [ ] Lists when `FINAL` is expensive or operationally unsuitable.
+- [x] Can explain why two correct-looking queries may return different totals (conceptual, not runtime verified).
+- [x] Proposes test data including retries, version ties and delayed merges (conceptual only).
+- [x] Lists `FINAL` overhead and alternatives (qualitative discussion; no benchmark).
 
 ## Artifacts to add **during** this session
 
@@ -51,10 +51,12 @@ Do not add a reference solution before the learner has attempted the assignment.
 
 > Ты — технический интервьюер Exness QA Engineer (Data Stack). Реальное интервью 16 ноября 2026 года проходит **на русском языке**. Проводим сессию 03: «ClickHouse Fundamentals — MergeTree & Row Semantics» (60 минут), и **всё общение — на русском**, включая задачу, вопросы, оценку, обсуждение SQL/Python-кода и разбор ошибок. Код и общепринятые технические названия могут быть на английском. Мой контекст: Python/Go SDET, FIX и post-trade, reconciliation, нагрузочное тестирование, CI, NATS JetStream; слабее практический ClickHouse и Kafka/Flink. Первая SQL-диагностика пройдена успешно, но нужно особенно проверять JOIN cardinality, полноту output columns, группировку на бизнес-ключ, версии и крайние случаи. Открой в GitHub репозитории `tiroq/data-qa-playground` файл `exercises/03-clickhouse-fundamentals/README.md`; используй задание и acceptance criteria как основной контракт. Начни с одной практической задачи, дождись моего решения, не показывай эталон заранее. Далее проведи code review и follow-up, оцени от 0 до 10 и назови три точечных пробела. Сохраняй в репозитории только действительно выполненные решения и подтверждённые результаты.
 
-## Session result (fill **after** completing)
+## Session result (interactive learning review)
 
-- **Attempt / PR:** _not yet completed_
-- **Score / 10:** _not assessed_
-- **What worked:** _not assessed_
-- **Bugs / edge cases:** _not assessed_
-- **Next-session adjustments:** _not assessed_
+- **Candidate attempts:** [initial DDL](solutions/03-trading-events-latest-attempt.sql), [revised DDL](solutions/03-trading-events-latest-revised.sql), [account PnL with FINAL](solutions/03-account-pnl-attempt.sql), [max-version conflict detector](solutions/03-conflicting-max-version-pnl-attempt.sql).
+- **Review / test-design notes:** [03-clickhouse-review.md](notes/03-clickhouse-review.md).
+- **Score / 10:** **7.5/10**, qualitative **guided** interview review (not a benchmark or verified runtime grade).
+- **What worked:** correct physical vs logical row-grain reasoning; proper revised `ReplacingMergeTree(version)` and stable `ORDER BY` / `PARTITION BY`; SQL with `FINAL` for account-level PnL; CTE/JOIN/HAVING detection of different PnL values on the same maximum version; recognition of replay, late arrivals, and financial data-quality risks.
+- **Bugs / edge cases:** first DDL omitted version and partition, first proposed ORDER BY included version; conflict query initially missed `NULL`-vs-non-NULL and required an explicit conflict indicator; initial use of `argMax` collapsed conflict evidence; test strategy remained high-level and partly guided. The mentor's earlier aggregate-alias example bug was **not** a candidate error.
+- **Next-session adjustments (three priorities):** (1) independently explain/prove engine, key and partition semantics; (2) define robust DQ conflict and NULL invariants; (3) automate a controlled pre/post-merge pytest with exact asserts and guaranteed cleanup.
+- **Runtime verification:** **NOT DONE / NOT CLAIMED**. Learner has not shared observed ClickHouse queries, smoke outputs, or a passing pytest run. No CI status asserted. Session remains **IN PROGRESS** until runtime checks are recorded.

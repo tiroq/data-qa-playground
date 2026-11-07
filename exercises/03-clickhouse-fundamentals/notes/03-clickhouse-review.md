@@ -160,3 +160,13 @@ ORDER BY account_id;
 **Unverified conditions:** confirm the current DDL via SHOW CREATE TABLE because IF NOT EXISTS would not replace an earlier incorrect schema; no actual ClickHouse execution result supplied. Same-max-version contradictory PnL, NULL PnL semantics, delayed/missing input events, and cross-partition data violations remain QA risks. This query alone does not certify overall data correctness.
 
 **Follow-up required:** learner should report result of query execution and consider how to detect a contradictory same-version payload rather than relying on FINAL to choose an arbitrary winner.
+
+## Follow-up — equal maximum versions with conflicting PnL
+
+**Learner's answer (paraphrased):** For a trade with two records at the same maximal version but PnL 8.0000 vs 8.5000, `FINAL` will probably retain one of them based on arrival/ingestion order; the learner was uncertain of exact engine semantics and rejected treating the result as financially authoritative.
+
+**Review:** **0.9/1**. Correct QA conclusion and recognition of equal-version ambiguity. Precise ClickHouse rule: `ReplacingMergeTree(version)` prefers maximum version, and on equal versions follows its no-version rule: the most recently inserted row in merge-part order wins (per official engine documentation). It does **not** automatically compare `ingest_id` or `ingested_at` columns. That tie-breaking is mechanically defined by insertion order, not by business event authority. Reference: https://clickhouse.com/docs/reference/engines/table-engines/mergetree-family/replacingmergetree.
+
+**Evidence scope:** No observed runtime result of this conflict was provided. Session 03's six-row `lab03.trading_events` fixture contains an identical same-version replay; the contradictory PnL case appears in the separate 12-row `lab03.trade_versions` fixture for trade 205. Do not confuse their differing `trade_id` types and table engines.
+
+**Remaining exercise:** Design a QA query/detection rule to flag different payload values among records at the maximum version for the same business key, before trusting account-level total PnL. Also collect actual local query outputs.

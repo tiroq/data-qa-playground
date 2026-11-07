@@ -34,3 +34,11 @@
 **Candidate's initial reasoning (paraphrased):** Has not previously worked with `MergeTree`/`ReplacingMergeTree(version)`, suspects replacing by highest version is better for a current-state table, and explicitly worries about out-of-order delivery when versions are equal. Does not yet understand the respective roles of `ORDER BY` and `PARTITION BY`.
 
 **Status:** Unassessed; no schema proposed yet. Tutor will explain the minimal semantics and ask the candidate to identify a logical sort/replacement key before writing any DDL. This is not a completed Part B solution.
+
+## Part B — ORDER BY follow-up attempt
+
+**Candidate selection:** `ORDER BY (account_id, trade_id, version)` for `ReplacingMergeTree(version)`.
+
+**Review:** Incorrect replacement identity. Including `version` in the sorting key preserves different versions as distinct keys; similarly adding a unique `ingest_id` would prevent logical-state deduplication. Appropriate logical-state replacement identity under this exercise contract: `ORDER BY (account_id, trade_id)` (the `version` remains the engine argument). The candidate has not yet attempted `PARTITION BY`, `PRIMARY KEY`, full DDL, or query-time correctness.
+
+**Important caveats from review:** asynchronous background merges mean ordinary `SELECT` cannot promise one row per logical key; ties on version with contradictory payload require DQ detection, not blind business acceptance. Background replacement is partition-scoped: choose partition fields stable across versions of a trade. No runtime result asserted.

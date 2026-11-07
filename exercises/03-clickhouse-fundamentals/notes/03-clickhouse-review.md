@@ -202,3 +202,39 @@ ORDER BY account_id;
 **Suggested QA policy (mentor recommendation, not a candidate solution):** Maintain independent flags for (1) invalid/missing PnL in an eligible business state, (2) same-version contradictory payload, and (3) duplicate identical delivery. Block or annotate authoritative financial reporting until the conflict is reconciled. Avoid forcing `coalesce(pnl, 0)` or blindly taking `argMax` as an authoritative truth.
 
 **Evidence:** Conceptual explanation only; no actual ClickHouse runtime output was supplied for this case.
+
+## Final follow-up — automated test plan for background merge independence
+
+**Candidate's answer (paraphrased):** The candidate selected `FINAL` to avoid relying on background merges, and proposed testing NULL PnL, duplicate deliveries, conflicting data, and out-of-order versions (v2 inserted before v1) to verify that v2 remains the current state. These are correct core scenarios, but the learner did **not** submit executable pytest code, exact assertions, or a method to guarantee that merges were still pending during the test.
+
+**Assessment of this follow-up:** **0.8/1** (qualitative). Good selection of test cases; incomplete test-oracle and reproducibility design. It is too strong to claim that `FINAL` is the only possible correct strategy: a version-aware latest-state aggregate such as `argMax` can be valid under an explicit tie policy.
+
+**Mentor test plan (not learner-authored code):**
+1. Create a temporary isolated `ReplacingMergeTree(version)` table with stable `ORDER BY` / partition semantics. Ensure cleanup using try/finally or pytest fixture teardown.
+2. Hold background merges for the test table when supported, insert versions out of order and retry deliveries in separate blocks. Assert that the intended pre-merge condition actually exists (e.g., more physical rows than logical keys), otherwise fail rather than record a vacuous PASS.
+3. Query using `FINAL`; assert exactly one state per `(account_id, trade_id)`, the expected **maximum version**, and the exact expected account-level PnL (not merely an equal row count).
+4. Re-enable background merges even if an assertion fails. When checking post-merge behavior, await actual completion with a bounded timeout instead of using a fixed sleep; then repeat the same `FINAL` result assertions.
+5. Run separate negative checks for equal-version contradictory PnL, missing required PnL, and identical replay. Keep financial data-quality failures separate from storage deduplication behavior.
+
+Do not treat `OPTIMIZE ... FINAL` as a routine production correctness mechanism; it rewrites storage. `SELECT ... FINAL` is query-time and does not physically merge parts.
+
+**Reference:** ClickHouse documentation and engineering guide:
+- https://clickhouse.com/blog/10-best-practice-tips
+- https://clickhouse.com/resources/engineering/clickhouse-optimize-table-final
+
+**Runtime status:** No ClickHouse query output or pytest execution evidence has been supplied. No test suite has been implemented or run during this learning session.
+
+## Session 03 — consolidated interview debrief
+
+**Overall: 7.5/10 (qualitative, guided interactive assessment, not benchmark or verified runtime score).**
+
+**What worked:** Business-grain reasoning and detection of overcounted PnL; sound explanation of query-time `FINAL` vs asynchronous merges; corrected DDL uses `ReplacingMergeTree(version)`, stable creation-month partition, and correct business-key sorting; latest-PnL SQL correctly aggregates after deduplication; max-version conflict query preserves all top-version rows and flags differing non-NULL PnLs; correctly rejected conflicting same-version data as financially authoritative.
+
+**Corrections and prompting required:** initial `ORDER BY` included `version`, and first DDL used `ReplacingMergeTree()` with no partition clause; CTE/JOIN/HAVING and `uniqExact` required syntax/function hints; conflict query omitted explicit flag and missed NULL-vs-value differences; automated test remained high-level, without deterministic merge control, concrete assertions or runnable code. The mentor's earlier alias-collision bug was not a candidate error.
+
+**Three priorities:**
+1. Reproduce ClickHouse engine, sorting, partition and query-time dedup semantics independently without prompts, including month-boundary edge cases.
+2. Design explicit data-quality rules for same-version conflicts, NULL PnL and output contract completeness, with authoritative tie policy defined by the source.
+3. Implement an isolated pytest scenario with controlled pre-merge state, exact `FINAL` output assertions, bounded post-merge polling, and guaranteed cleanup.
+
+**Evidence / completion gate:** Learner SQL attempts and review notes are committed. ClickHouse Docker startup, smoke output, query results and automated pytest have **not been independently observed**. Leave the roadmap session `IN PROGRESS` pending reproducible verification. No invented passing tests or CI status.

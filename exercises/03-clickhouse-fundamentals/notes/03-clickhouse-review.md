@@ -170,3 +170,11 @@ ORDER BY account_id;
 **Evidence scope:** No observed runtime result of this conflict was provided. Session 03's six-row `lab03.trading_events` fixture contains an identical same-version replay; the contradictory PnL case appears in the separate 12-row `lab03.trade_versions` fixture for trade 205. Do not confuse their differing `trade_id` types and table engines.
 
 **Remaining exercise:** Design a QA query/detection rule to flag different payload values among records at the maximum version for the same business key, before trusting account-level total PnL. Also collect actual local query outputs.
+
+## Clarification of equal-version tie-break answer — assessment corrected
+
+**Learner clarification:** By mentioning `ingest_id` / `ingested_at`, the learner meant them as conceptual indicators of the order in which records were inserted, not that ClickHouse explicitly compares these columns. The mentor had interpreted the phrasing too literally.
+
+**Updated review:** The learner correctly anticipated the insertion-order tie-break for equal maximal versions and that the chosen record cannot be treated as financially authoritative without a business conflict rule. **Follow-up score corrected from 0.9/1 to 1/1.** The earlier score should not be included in final totals.
+
+**Precision:** Although `ingest_id` and `ingested_at` might correlate with arrival/insertion order in a simple fixture, that correlation is not guaranteed for real batch loads, Kafka replays, or concurrent ingestion. ReplacingMergeTree does not implicitly use these fields as an ordering key.

@@ -192,3 +192,13 @@ ORDER BY account_id;
 2. The assignment requested an explicit conflict flag; output currently returns only key and states. A constant `1 AS has_pnl_conflict` is sufficient for this filtered-only result, or expose a computed Boolean for a full report.
 
 **Clarification:** The HAVING predicate does not deduplicate the `groupArray` payload. It filters whole groups by distinct-value cardinality. The query checks only PnL; contradictions in status or event metadata require a separate contract. Runtime query execution and observed output still pending.
+
+## Data Quality follow-up — NULL versus non-NULL at the same maximum version
+
+**Learner answer (paraphrased):** A NULL PnL next to a non-NULL PnL for the same trade and same version is potentially a lost/missing value, may indicate a retry or upstream processing issue, and deserves incident investigation.
+
+**Review:** **0.9/1 for this follow-up.** Correct to recognize it as an anomaly and investigate rather than silently select the non-NULL value. Precision: NULL is not categorically a defect; some event statuses can legitimately have NULL PnL. With contradictory payloads at equal maximal version, flag `same_version_payload_conflict` and assess `missing_required_pnl` independently according to status/contract. Retry or partial processing are hypotheses, not proven causes.
+
+**Suggested QA policy (mentor recommendation, not a candidate solution):** Maintain independent flags for (1) invalid/missing PnL in an eligible business state, (2) same-version contradictory payload, and (3) duplicate identical delivery. Block or annotate authoritative financial reporting until the conflict is reconciled. Avoid forcing `coalesce(pnl, 0)` or blindly taking `argMax` as an authoritative truth.
+
+**Evidence:** Conceptual explanation only; no actual ClickHouse runtime output was supplied for this case.

@@ -28,3 +28,9 @@
 - [ ] Part C: candidate SQL correctness across background merge states.
 - [ ] Five follow-up questions and overall score /10.
 - [ ] Execute ClickHouse fixture smoke checks, capture actual outputs and record verification.
+
+## Part B — first oral attempt (without SQL)
+
+**Candidate's initial reasoning (paraphrased):** Has not previously worked with `MergeTree`/`ReplacingMergeTree(version)`, suspects replacing by highest version is better for a current-state table, and explicitly worries about out-of-order delivery when versions are equal. Does not yet understand the respective roles of `ORDER BY` and `PARTITION BY`.
+
+**Status:** Unassessed; no schema proposed yet. Tutor will explain the minimal semantics and ask the candidate to identify a logical sort/replacement key before writing any DDL. This is not a completed Part B solution.

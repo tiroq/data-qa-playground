@@ -52,3 +52,13 @@
 **Review:** Correct core intuition: versions land in different **partitions** (`202610`, `202611`), not merely different physical data parts. Background merges never cross the partition boundary, so both versions remain physically present. Tutor distinguishes ordinary background merge semantics from `SELECT ... FINAL` at query time and will ask the candidate to propose a stable partition strategy.
 
 **Status:** Conceptual reasoning demonstrated; no local SQL runtime evidence and no user-authored DDL yet.
+
+## Part B — stable partition key follow-up
+
+**Question:** Given mutable `event_time` and immutable trade creation `trade_date`, propose `PARTITION BY` to keep all versions together.
+
+**Candidate's answer (paraphrased):** Partition by `trade_date` at monthly granularity; the value is shared by every event for a logical trade, so all its versions remain in one partition.
+
+**Review:** Correct. Concrete expression: `PARTITION BY toYYYYMM(trade_date)`, with an explicit data-quality invariant that `trade_date` is stable for every `(account_id, trade_id)`. Note: a `ReplacingMergeTree` current-state table cannot substitute for a retained append-only audit log.
+
+**Status:** Candidate has selected the intended replacement key and partition key after guided corrections. Full user-authored DDL and independent query-time verification remain pending.

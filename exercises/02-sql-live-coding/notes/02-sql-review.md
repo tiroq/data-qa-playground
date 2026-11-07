@@ -1,7 +1,7 @@
 # Session 02 — SQL Live Coding — Review Notes
 
 **Date:** 2026-11-06 (Asia/Bangkok)  
-**Status:** IN PROGRESS — Task 1 reviewed; Task 2 explained with mentor reference after the candidate asked for a walkthrough; Task 3 pending.  
+**Status:** Learning interview completed across Tasks 1–3; runtime verification pending.  
 **Attempts:** [initial SQL](../solutions/02-latest-trades.sql), [candidate follow-up SQL](../solutions/02-latest-trades-followup.sql), [reviewed reference approach](../solutions/02-latest-trades-reviewed.sql)  
 **Provisional Task 1 score after follow-up:** 7.5/10 (static review only). This is **not** the final session score.
 
@@ -121,4 +121,29 @@ Minor contract mismatch: resulting display ordering is by `trade_id, account_id`
 
 **Review:** 8/10 for the conceptual comparison; correct core distinctions and exact response for missing ORDER BY (10/10). Correction: both support complex ORDER BY expressions, including CASE and multiple tie breakers. ROW_NUMBER is more flexible for top-N per group and exposes ranks; DISTINCT ON is PostgreSQL-specific and returns just one representative row per key. Both require authoritative domain rules to choose latest state; maximum PnL alone is not synonymous with latest version.
 
-**Status:** PostgreSQL comparison reviewed. ClickHouse argMax follow-up is pending. Scores are for the component only, **not the completed session**.
+**Status:** PostgreSQL comparison reviewed. ClickHouse argMax follow-up subsequently completed; see below. Scores are component-only.
+
+
+## Task 3 — ClickHouse argMax candidate conceptual response
+
+**Conceptual score:** 9/10.
+
+The candidate correctly described `argMax(pnl, version)` as the `pnl` value corresponding to the highest version, contrasted it with `MAX(pnl)`, expressed uncertainty (correctly) about equal-version ties, and correctly identified that separate argMax aggregates over `pnl` and `status` need not choose values from the same physical row.
+
+Corrections: `MAX` returns the greatest aggregate value, not "all" values. Equal-maximum ties are **nondeterministic**, not guaranteed first; independent nullable args can be taken from different versions because `argMax` skips NULLs. A tuple argument keeps the chosen payload together; a lexicographic tuple comparison key `(version, event_time, ingest_id)` gives a deterministic representative if ingest_id is unique; no selection rule by itself validates the disputed PnL in trade 205.
+
+**Official source:** https://clickhouse.com/docs/reference/functions/aggregate-functions/argMax  
+**Saved full comparison:** [03-sql-alternatives.md](03-sql-alternatives.md).
+
+## Session 02 — overall debrief
+
+**Overall qualitative assessment: 7.5/10.** This is a learning assessment based on candidate attempts and discussion, **not** a verified execution score. Performance summary: Task 1 7.5/10, Task 2 6/10 (mentor walkthrough requested), Task 3 DISTINCT ON SQL 9.5/10 / comparison theory 8/10 / argMax 9/10.
+
+**Three priority areas for next practice:**
+1. Ranking semantics: window `ORDER BY` determines `ROW_NUMBER`; a query-level `ORDER BY` cannot change the rank.
+2. Data quality: inspect all candidate rows of the highest business version and compare business payloads **before** deduplication; keep NULL/missing-value indicators distinct from conflicting-value indicators and block untrusted aggregates.
+3. ClickHouse: `argMax` equal-version nondeterminism, independent column selection, tuple payload/tuple tie-break keys, and NULL-skipping behavior.
+
+**Unverified items:** No runtime has executed these SQL submissions or mentor reference queries. The results reported in these notes are fixture-derived predictions, not observed outputs; CI is not claimed to pass. The PostgreSQL fixture check and SQL verification remain a completion gate. ROADMAP remains IN PROGRESS for this reason.
+
+**No invented achievements:** The reviewed solutions and code samples written by the mentor are explicitly labeled reference material, not counted as unaided candidate solutions.

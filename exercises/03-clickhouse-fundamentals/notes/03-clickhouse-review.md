@@ -98,3 +98,16 @@ GROUP BY account_id, trade_id;
 **Caveat:** `argMax` does not guarantee a business-authoritative winner for contradictory payloads sharing the maximum version. The production data-quality contract must resolve or flag such conflicts before treating PnL as verified.
 
 **Runtime status:** error text supplied by the learner; corrected query has not been independently executed or claimed passing.
+
+## Part B — first candidate-authored CREATE TABLE
+
+**Original attempt:** [solutions/03-trading-events-latest-attempt.sql](../solutions/03-trading-events-latest-attempt.sql). Exact learner-supplied DDL preserved, with only non-functional file comments. Not verified against a running database.
+
+**Review:**
+- **Correct:** relevant physical columns, logical replacement identity `ORDER BY (account_id, trade_id)`; `version` is not included in the replacement key.
+- **Critical mistake:** `ENGINE = ReplacingMergeTree()` without a `version` parameter is not the same as choosing the highest business version. Under out-of-order deliveries, replacement may retain a stale state. Require explicit version-aware replacement.
+- **Missing:** `PARTITION BY` with the already-discussed stable creation-date month. The omitted partition expression is syntactically legal, but does not meet the partition-design part of the exercise.
+- **Source compatibility:** raw `lab03.trading_events.pnl` is `Nullable(Decimal(18,4))`, whereas the candidate used non-nullable `Decimal(18,4)`. The six-row Session 03 fixture has non-NULL PnL; however, the contract calls for NULL edge cases and a broader load could fail or need explicit filtering/default handling.
+- **Future test:** check how `SELECT ... FINAL` behaves before background merges and why same-version conflicts require explicit data-quality rules.
+
+**Provisional DDL review:** 1.5/3 on table-engine/key/partition design; not a complete session score. Ask learner to revise the DDL before showing a model answer. Note that if a table was already created locally, `CREATE TABLE IF NOT EXISTS` won't update its engine/schema: a new table name or an explicit drop/recreate (with data-loss warning) is needed.

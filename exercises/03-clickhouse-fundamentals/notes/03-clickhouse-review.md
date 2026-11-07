@@ -42,3 +42,13 @@
 **Review:** Incorrect replacement identity. Including `version` in the sorting key preserves different versions as distinct keys; similarly adding a unique `ingest_id` would prevent logical-state deduplication. Appropriate logical-state replacement identity under this exercise contract: `ORDER BY (account_id, trade_id)` (the `version` remains the engine argument). The candidate has not yet attempted `PARTITION BY`, `PRIMARY KEY`, full DDL, or query-time correctness.
 
 **Important caveats from review:** asynchronous background merges mean ordinary `SELECT` cannot promise one row per logical key; ties on version with contradictory payload require DQ detection, not blind business acceptance. Background replacement is partition-scoped: choose partition fields stable across versions of a trade. No runtime result asserted.
+
+## Part B — partition-boundary follow-up
+
+**Question:** With `PARTITION BY toYYYYMM(event_time)`, trade T100 v1 (October) and v2 (November) share `ORDER BY (account_id, trade_id)`. Will background merges collapse them?
+
+**Candidate answer (paraphrased):** The partition expression will split them into separate parts.
+
+**Review:** Correct core intuition: versions land in different **partitions** (`202610`, `202611`), not merely different physical data parts. Background merges never cross the partition boundary, so both versions remain physically present. Tutor distinguishes ordinary background merge semantics from `SELECT ... FINAL` at query time and will ask the candidate to propose a stable partition strategy.
+
+**Status:** Conceptual reasoning demonstrated; no local SQL runtime evidence and no user-authored DDL yet.

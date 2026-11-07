@@ -1,6 +1,6 @@
 # Session 03 — ClickHouse Fundamentals — MergeTree & Row Semantics
 
-**Date (Asia/Bangkok):** 2026-11-06 · **Duration:** 60 minutes · **Status:** PLANNED  
+**Date (Asia/Bangkok):** 2026-11-06 (scheduled) · **Duration:** 60 minutes · **Status:** IN PROGRESS — local ClickHouse fixture prepared; runtime and candidate work pending  
 **Track:** Exness QA Engineer (Data Stack) interview preparation
 
 > **Language contract:** The actual technical interview is in **Russian**. All live tasks, discussion, follow-up questions, code review, mock interviews, and feedback in ChatGPT must be **in Russian**. SQL, Python, identifiers, and technical terms may remain in English. This repository's written exercise specifications are in English.
@@ -24,7 +24,15 @@ Understand ClickHouse storage and why physical duplicates do not automatically d
 
 ## Setup
 
-PostgreSQL is the only preconfigured service. Add ClickHouse with a separate Compose profile or service during this session; do not assume it already exists.
+An optional ClickHouse profile and two raw fixtures have now been added; PostgreSQL remains the default service. See [the lab guide](../../clickhouse/README.md). Start the ClickHouse service without touching PostgreSQL:
+
+```bash
+docker compose --profile clickhouse up -d --wait clickhouse
+docker compose --profile clickhouse exec -T clickhouse clickhouse-client --user qa --password qa --multiquery < clickhouse/checks/smoke.sql
+docker compose --profile clickhouse exec clickhouse clickhouse-client --user qa --password qa --database lab03
+```
+
+The supplied `lab03.trading_events` is an **append-only raw input** with six physical rows, not the learner's requested deduplicating table. `lab03.trade_versions` mirrors the 12 PostgreSQL Session 02 events. Create a separate derived table when attempting the `ReplacingMergeTree` part. Counts are expectations until tested on the learner's Docker host.
 
 ## Acceptance criteria
 

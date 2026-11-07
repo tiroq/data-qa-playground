@@ -112,3 +112,17 @@ docker compose exec -T postgres psql -U qa -d trading -c "SELECT COUNT(*) AS phy
 ```
 
 Expected fixture counts: **12 physical rows, 6 logical keys**. Re-running `docker compose up` does not duplicate the fixture rows because it uses stable `ingest_id` values and `ON CONFLICT DO NOTHING`. The fixture creates only the separate `lab02` schema and does not alter the original Session 01 seed. Do not assume Python, ClickHouse, Kafka or CI implementations are already present: these are added gradually in their designated sessions.
+
+## Session 03 — ClickHouse practice environment
+
+ClickHouse is an **optional Compose profile**; it does not start during the default PostgreSQL workflow. First-run initialization loads two independent raw datasets (6-row interview case, plus a 12-row copy of Session 02). No latest-state or PnL solutions are prefilled.
+
+```bash
+docker compose --profile clickhouse up -d --wait clickhouse
+docker compose --profile clickhouse exec -T clickhouse clickhouse-client --user qa --password qa --multiquery < clickhouse/checks/smoke.sql
+docker compose --profile clickhouse exec clickhouse clickhouse-client --user qa --password qa --database lab03
+```
+
+Inside the client, run `SELECT * FROM lab03.trading_events ORDER BY ingest_id;`. The complete setup, client connection, practice sequence and safe fixture reload are in [clickhouse/README.md](clickhouse/README.md).
+
+**Status:** configured in Git; runtime validation on the learner's Docker host is still pending.

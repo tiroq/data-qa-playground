@@ -41,5 +41,32 @@ services:
       - /fixtures/02-trade-versions.sql
     restart: "no"
 
+  # Optional and independent from the existing PostgreSQL lab.
+  clickhouse:
+    image: clickhouse/clickhouse-server:26.8.36.3
+    profiles: ["clickhouse"]
+    environment:
+      CLICKHOUSE_DB: lab03
+      CLICKHOUSE_USER: qa
+      CLICKHOUSE_PASSWORD: qa # Demo-only local credentials; never use in production.
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: "1"
+    ports:
+      - "127.0.0.1:18123:8123" # HTTP
+      - "127.0.0.1:19000:9000" # Native client
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+      - ./clickhouse/init:/docker-entrypoint-initdb.d:ro
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    healthcheck:
+      test: ["CMD-SHELL", "clickhouse-client --user qa --password qa --query 'SELECT 1' >/dev/null"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 15s
+
 volumes:
   postgres_data:
+  clickhouse_data:

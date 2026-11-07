@@ -16,7 +16,7 @@
 |---|---|---|---|---|
 | 01 | Nov 05 | [SQL diagnostics](exercises/01-sql-diagnostics/) | COMPLETE (learning session) | Existing PostgreSQL tables, SQL examples and detailed rationale |
 | 02 | 11 06 | [SQL Live Coding — Versions, Windows & Deduplication](exercises/02-sql-live-coding/README.md) | IN PROGRESS (Tasks 1–3 discussed and reviewed; runtime verification pending) | Latest-version selection and account PnL |
-| 03 | 11 06 | [ClickHouse Fundamentals — MergeTree & Row Semantics](exercises/03-clickhouse-fundamentals/README.md) | PLANNED | ClickHouse storage semantics |
+| 03 | 11 06 | [ClickHouse Fundamentals — MergeTree & Row Semantics](exercises/03-clickhouse-fundamentals/README.md) | IN PROGRESS (Compose + raw fixtures prepared; local runtime/learner review pending) | ClickHouse storage semantics |
 | 04 | 11 07 | [Source-to-Target Reconciliation & SLA](exercises/04-reconciliation/README.md) | PLANNED | Cardinality-safe reconciliation and timing SLA |
 | 05 | 11 08 | [Python Live Coding — Streaming Comparison](exercises/05-python-live-coding/README.md) | PLANNED | Python comparison core |
 | 06 | 11 08 | [Data Quality — Contracts, Gates & Metrics](exercises/06-data-quality-rules/README.md) | PLANNED | DQ rules and severity |

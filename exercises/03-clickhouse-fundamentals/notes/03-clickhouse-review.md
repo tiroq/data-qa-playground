@@ -238,3 +238,41 @@ Do not treat `OPTIMIZE ... FINAL` as a routine production correctness mechanism;
 3. Implement an isolated pytest scenario with controlled pre-merge state, exact `FINAL` output assertions, bounded post-merge polling, and guaranteed cleanup.
 
 **Evidence / completion gate:** Learner SQL attempts and review notes are committed. ClickHouse Docker startup, smoke output, query results and automated pytest have **not been independently observed**. Leave the roadmap session `IN PROGRESS` pending reproducible verification. No invented passing tests or CI status.
+
+## Architecture Q&A — detecting same-version PnL conflicts inside ClickHouse
+
+**Learner's question:** Is ClickHouse capable of detecting same-trade/same-version contradictory PnL itself, or must an external component be added?
+
+**Answer (mentor explanation, not learner-authored solution):** Detection can be fully SQL-native, provided an immutable append-only `MergeTree` raw event log retains all physical deliveries. A `ReplacingMergeTree` current-state table is not a safe source for this check after background merges, because it can already have discarded conflicting equal-version evidence.
+
+Suggested exploratory SQL (not runtime-verified):
+
+```sql
+SELECT
+    account_id,
+    trade_id,
+    version,
+    count() AS deliveries,
+    uniqExact(tuple(pnl)) AS pnl_variants,
+    groupUniqArray(tuple(pnl)) AS pnl_values
+FROM lab03.trade_versions
+GROUP BY account_id, trade_id, version
+HAVING pnl_variants > 1
+ORDER BY account_id, trade_id, version;
+```
+
+Expected on the fixture: a row for `(A3, 205, version=2)` with two PnL variants `8.0000` and `8.5000`. Wrapping `pnl` in a tuple prevents NULL from being dropped by the aggregate. This checks *every* version (historical conflicts included); to check only the latest version, find max(version) by business key and JOIN to raw deliveries before calculating distinct payloads.
+
+**Within-ClickHouse automation options:**
+1. A normal SQL VIEW executes the detector when queried, with no data duplication; a caller/scheduler must run the query or check a quality gate.
+2. A refreshable materialized view can periodically recompute conflicts and store results when some detection delay is acceptable.
+3. An incremental materialized view can update per-(account_id, trade_id, version) `uniqExactState(tuple(pnl))` in an `AggregatingMergeTree`; read with `uniqExactMerge`. Merely running `HAVING uniqExact(...) > 1` inside a simple incremental MV would miss conflicts split across different insert blocks, as each MV execution sees only its current inserted block.
+
+**Production distinction:** ClickHouse does not by itself guarantee cross-row business uniqueness/consistency at ingest. Detect/alert/report is different from rejecting an invalid event. For blocking ingestion, stateful validation can run at a source or streaming processor; for alerting, a monitoring/notification path is usually added. Financial-publishing gates should use a defined completeness cutoff/watermark and avoid a check-to-publish race: zero observed conflicts is not proof no later event will arrive. Track violations independently (same-version PnL conflict, missing required PnL, duplicate deliveries, late/missing events). Avoid `FINAL` for conflict discovery on the replaced table.
+
+**Sources consulted:** 
+- https://clickhouse.com/blog/building-a-medallion-architecture-with-clickhouse
+- https://learn.clickhouse.com/visitor_catalog/class/show/1914307/Real-time-Analytics-with-ClickHouse-Level-3
+- https://clickhouse.com/resources/engineering/clickhouse-vs-postgresql-analytics
+
+**Status:** Discussed conceptually; no additional ClickHouse implementation or runtime tests completed by this note.

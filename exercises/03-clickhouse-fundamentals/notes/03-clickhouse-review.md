@@ -62,3 +62,16 @@
 **Review:** Correct. Concrete expression: `PARTITION BY toYYYYMM(trade_date)`, with an explicit data-quality invariant that `trade_date` is stable for every `(account_id, trade_id)`. Note: a `ReplacingMergeTree` current-state table cannot substitute for a retained append-only audit log.
 
 **Status:** Candidate has selected the intended replacement key and partition key after guided corrections. Full user-authored DDL and independent query-time verification remain pending.
+
+## Architecture discussion — one raw event table with a current-state abstraction
+
+**Learner's question:** Can raw history remain in a plain `MergeTree` table while client applications read a latest-state view, without copying all events into a separate `ReplacingMergeTree` table?
+
+**Mentor clarification (architectural explanation, NOT a learner-submitted solution):**
+1. **Ordinary SQL `VIEW` on raw `MergeTree`:** no additional physical data, compute latest state using a business-key grouping and a version-aware aggregate such as `argMax(tuple(pnl, status), version)` at query time. This is a virtual abstraction, not a `ReplacingMergeTree` engine layered onto a source table; a raw `MergeTree` plus `FINAL` is not a replacement policy.
+2. **Incremental materialized view + `AggregatingMergeTree`:** persist `argMaxState` per business identity and read via `argMaxMerge`; stores aggregate states instead of copying a full stream and shifts compute toward writes. Incremental MVs process inserted blocks, not source mutations/deletes or historical rows unless explicitly backfilled.
+3. **Materialized view + `ReplacingMergeTree(version)`:** persist a second table of versioned rows if desired; for immediate query-time deduplication, queries must still use `FINAL`. This is a physical table, not a zero-copy wrapper.
+
+**DQ caveats:** identical-version conflicting payloads cannot be resolved by maximum version alone; the authoritative ordering/tie policy must come from the data contract and conflicts may require quarantine. Preserve source event history for audit. Do not compute `sum(pnl)` directly over physical versions or incrementally sum new rows for a current-state PnL metric. Materialized-view backfill and recovery have to be tested against replay/late arrivals.
+
+**Status:** Architecture question answered conceptually, no candidate-created DDL or observed execution recorded. Keep original hands-on Part B/Part C exercises pending.

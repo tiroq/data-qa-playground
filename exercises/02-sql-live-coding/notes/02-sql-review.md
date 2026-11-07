@@ -100,3 +100,16 @@ Open contract question: What exact fields form a version payload? Here we assume
 ### Verification status
 
 Reference has **not** been executed against PostgreSQL; outputs are derived from the checked-in fixture. Final session review and independent candidate mastery remain pending.
+
+
+## Task 3 — PostgreSQL DISTINCT ON candidate attempt
+
+**Attempt:** [03-distinct-on-attempt.sql](../solutions/03-distinct-on-attempt.sql)
+**Status:** SQL component reviewed; conceptual comparison and ClickHouse argMax follow-ups pending.
+**Provisional SQL score:** 9.5/10 (static review, not executed).
+
+The candidate used `SELECT DISTINCT ON (trade_id, account_id)` and `ORDER BY trade_id, account_id, version DESC, event_time DESC, ingest_id DESC`. This is a valid PostgreSQL pattern for choosing one deterministically ranked physical row per logical key, including a unique `ingest_id` tie breaker. All eight requested columns are present. It is not a correctness proof for ambiguous same-version PnL (trade 205).
+
+Minor contract mismatch: resulting display ordering is by `trade_id, account_id`, whereas original Task 1 required `account_id, trade_id`; a wrapper query would be needed to sort output separately while satisfying DISTINCT ON prefix restrictions. The original submission includes a harmless commented-out `WHERE rn = 1`.
+
+**Follow-ups pending:** articulate the semantic/portability differences between `ROW_NUMBER()` and `DISTINCT ON`, the behavior of omitted ORDER BY, and ClickHouse `argMax` tie/payload consistency. No reference comparison has been presented yet.

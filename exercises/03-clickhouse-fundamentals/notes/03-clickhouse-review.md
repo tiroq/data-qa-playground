@@ -178,3 +178,17 @@ ORDER BY account_id;
 **Updated review:** The learner correctly anticipated the insertion-order tie-break for equal maximal versions and that the chosen record cannot be treated as financially authoritative without a business conflict rule. **Follow-up score corrected from 0.9/1 to 1/1.** The earlier score should not be included in final totals.
 
 **Precision:** Although `ingest_id` and `ingested_at` might correlate with arrival/insertion order in a simple fixture, that correlation is not guaranteed for real batch loads, Kafka replays, or concurrent ingestion. ReplacingMergeTree does not implicitly use these fields as an ordering key.
+
+## Follow-up — candidate's max-version PnL conflict detector
+
+**Original attempt:** [solutions/03-conflicting-max-version-pnl-attempt.sql](../solutions/03-conflicting-max-version-pnl-attempt.sql).
+
+**Assessment:** **9/10 on this single SQL task**, not an overall Session 03 score. Correct CTE computing one maximum version per `(account_id, trade_id)`, cardinality-safe JOIN back on account/trade/version, grouping at the logical trade grain, and `HAVING uniqExact(v.pnl) > 1` for conflicting distinct non-NULL PnLs.
+
+**Expected on supplied 12-row fixture (not observed):** one conflict group `(A3, 205)`, including `version=2` PnL `8.0000` and `8.5000` in the states array; no stable array element order guaranteed.
+
+**Two residual issues:**
+1. `uniqExact(v.pnl)` skips NULLs; a maximum-version group containing `NULL` and `8.0000` is not reported as a conflict. If NULL versus a value should count as contradictory, `uniqExact(tuple(v.pnl)) > 1` treats NULL as an observable tuple member. This is dependent on the business contract.
+2. The assignment requested an explicit conflict flag; output currently returns only key and states. A constant `1 AS has_pnl_conflict` is sufficient for this filtered-only result, or expose a computed Boolean for a full report.
+
+**Clarification:** The HAVING predicate does not deduplicate the `groupArray` payload. It filters whole groups by distinct-value cardinality. The query checks only PnL; contradictions in status or event metadata require a separate contract. Runtime query execution and observed output still pending.

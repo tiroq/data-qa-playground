@@ -131,3 +131,13 @@ GROUP BY account_id, trade_id;
 **Follow-up still pending:** If the plain `SELECT` and `SELECT ... FINAL` return identical rows in a test, does that prove that ordinary `SELECT` is safe in the future? Explain, then provide actual query outputs from the local ClickHouse lab.
 
 **Verification:** No actual outputs from the learner's ClickHouse session have been shared, so no local run is marked passing.
+
+## Follow-up — equal counts with and without FINAL
+
+**Question:** If both `SELECT count() FROM lab03.trading_events_latest` and the same query with `FINAL` return 3, can a downstream analytical application safely omit `FINAL`?
+
+**Candidate answer (paraphrased):** No. Future loads may add multiple versions and deliveries; before background merges complete, plain `SELECT` can overcount trades and produce incorrect analytical snapshots propagated downstream.
+
+**Assessment:** Correct reasoning, **1/1 for this follow-up**. Important qualifier: don't overgeneralize that all analytical queries must use `FINAL`; explicit latest-state aggregation, ordinary `VIEW` with correctly specified `argMax`, or a properly designed aggregate-state table are alternatives. Equal counts alone prove neither row identity nor PnL correctness. `FINAL` also does not provide a business-authoritative resolution of contradictory same-version payloads.
+
+**Runtime verification:** Still pending; no observed ClickHouse outputs provided. Next requested exercise: candidate writes account-level current-state PnL query from `lab03.trading_events_latest` and explains any remaining pitfalls.

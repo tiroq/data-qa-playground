@@ -111,3 +111,13 @@ GROUP BY account_id, trade_id;
 - **Future test:** check how `SELECT ... FINAL` behaves before background merges and why same-version conflicts require explicit data-quality rules.
 
 **Provisional DDL review:** 1.5/3 on table-engine/key/partition design; not a complete session score. Ask learner to revise the DDL before showing a model answer. Note that if a table was already created locally, `CREATE TABLE IF NOT EXISTS` won't update its engine/schema: a new table name or an explicit drop/recreate (with data-loss warning) is needed.
+
+## Part B — revised candidate-authored DDL
+
+**Attempt:** [solutions/03-trading-events-latest-revised.sql](../solutions/03-trading-events-latest-revised.sql), saved from candidate's message without modifying the SQL. The copied introductory comment still calls it the 'original' attempt; the linked filename and this note distinguish it as the revision.
+
+**Review:** The candidate corrected all the prior DDL deficiencies: uses `ReplacingMergeTree(version)`, `PARTITION BY toYYYYMM(trade_date)`, `ORDER BY (account_id, trade_id)`, and `Nullable(Decimal(18,4))` consistent with the raw table. **DDL design review 3/3 after feedback**; not evidence of independent first-pass proficiency.
+
+**Operational caution:** `CREATE TABLE IF NOT EXISTS` will leave an already-created table unchanged. Inspect `SHOW CREATE TABLE lab03.trading_events_latest`; if a stale version exists, create a separately named table or explicitly drop/recreate only after checking its data.
+
+**Pending runtime:** No observed ClickHouse create/insert/query outputs supplied. Need to load the 6 raw events into the derived table, compare ordinary reading with `FINAL` before assuming merges occurred, and inspect same-version conflicts from the extended fixture. The business invariant that `trade_date` stays stable for the same account/trade remains a necessary data-quality check.

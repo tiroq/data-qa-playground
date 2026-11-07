@@ -121,3 +121,13 @@ GROUP BY account_id, trade_id;
 **Operational caution:** `CREATE TABLE IF NOT EXISTS` will leave an already-created table unchanged. Inspect `SHOW CREATE TABLE lab03.trading_events_latest`; if a stale version exists, create a separately named table or explicitly drop/recreate only after checking its data.
 
 **Pending runtime:** No observed ClickHouse create/insert/query outputs supplied. Need to load the 6 raw events into the derived table, compare ordinary reading with `FINAL` before assuming merges occurred, and inspect same-version conflicts from the extended fixture. The business invariant that `trade_date` stays stable for the same account/trade remains a necessary data-quality check.
+
+## Part C — SELECT versus SELECT FINAL, oral reasoning
+
+**Candidate's answer (paraphrased):** Without `FINAL`, `ReplacingMergeTree` can expose multiple versions before background merges complete. `FINAL` applies deduplication at query time. Ordinary `SELECT` tends to be cheaper; `FINAL` can require extra resources.
+
+**Assessment:** Conceptually correct. **Provisional 2.5/3** for query-time semantics (not a full Part C completion: candidate has not supplied observed outputs or query-level PnL). Nuances: `FINAL` does not rewrite physical parts and is not an absolute data-correctness guarantee for conflicting equal-version payloads, incomplete ingestion, or distributed visibility. `FINAL` often has overhead but recent ClickHouse versions optimize it; the overhead depends on layout and data distribution.
+
+**Follow-up still pending:** If the plain `SELECT` and `SELECT ... FINAL` return identical rows in a test, does that prove that ordinary `SELECT` is safe in the future? Explain, then provide actual query outputs from the local ClickHouse lab.
+
+**Verification:** No actual outputs from the learner's ClickHouse session have been shared, so no local run is marked passing.

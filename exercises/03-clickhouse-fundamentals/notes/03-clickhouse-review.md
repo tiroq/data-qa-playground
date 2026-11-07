@@ -75,3 +75,26 @@
 **DQ caveats:** identical-version conflicting payloads cannot be resolved by maximum version alone; the authoritative ordering/tie policy must come from the data contract and conflicts may require quarantine. Preserve source event history for audit. Do not compute `sum(pnl)` directly over physical versions or incrementally sum new rows for a current-state PnL metric. Materialized-view backfill and recovery have to be tested against replay/late arrivals.
 
 **Status:** Architecture question answered conceptually, no candidate-created DDL or observed execution recorded. Keep original hands-on Part B/Part C exercises pending.
+
+## Lab SQL debugging — alias collides with aggregate input
+
+**Observed by learner:** ClickHouse error `Aggregate function max(version) AS version is found inside another aggregate function in query` when running mentor's suggested latest-state VIEW query.
+
+**Cause:** Mentor's original example used `max(version) AS version` alongside `argMax(tuple(pnl, status), version)`. ClickHouse can substitute a same-named SELECT alias into the other expression, effectively nesting `max(version)` inside `argMax`. **This was a mentor-provided query bug, not a candidate mistake.**
+
+**Correction proposed (not yet locally rerun/verified):**
+
+```sql
+CREATE OR REPLACE VIEW lab03.v_latest_trades AS
+SELECT
+    account_id,
+    trade_id,
+    max(version) AS latest_version,
+    argMax(tuple(pnl, status), version) AS state
+FROM lab03.trading_events
+GROUP BY account_id, trade_id;
+```
+
+**Caveat:** `argMax` does not guarantee a business-authoritative winner for contradictory payloads sharing the maximum version. The production data-quality contract must resolve or flag such conflicts before treating PnL as verified.
+
+**Runtime status:** error text supplied by the learner; corrected query has not been independently executed or claimed passing.

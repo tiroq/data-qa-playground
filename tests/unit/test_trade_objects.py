@@ -2,7 +2,8 @@
 
 import pytest
 
-from data_qa.data import Record, TradeGroup, TradeResult
+from data_qa.data.trade_group import Record, TradeGroup
+from data_qa.data.trade_result import TradeResult
 
 
 def test_record_business_key_is_typed_tuple() -> None:

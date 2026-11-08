@@ -1,0 +1,67 @@
+{
+  "cases": [
+    {
+      "name": "happy",
+      "payloads": [
+        {
+          "event_id": "API-1",
+          "trade_id": "T-100",
+          "account_id": "A1",
+          "version": 1,
+          "status": "NEW",
+          "pnl": "0.00"
+        }
+      ],
+      "fail_processing": false,
+      "expected_source": 1,
+      "expected_target": 1
+    },
+    {
+      "name": "processing_error",
+      "payloads": [
+        {
+          "event_id": "API-2",
+          "trade_id": "T-101",
+          "account_id": "A1",
+          "version": 1,
+          "status": "FILLED",
+          "pnl": "6.75"
+        }
+      ],
+      "fail_processing": true,
+      "expected_source": 1,
+      "expected_target": 0
+    },
+    {
+      "name": "repeated_submit",
+      "payloads": [
+        {
+          "event_id": "API-3",
+          "trade_id": "T-102",
+          "account_id": "A2",
+          "version": 1,
+          "status": "FILLED",
+          "pnl": "5.00"
+        },
+        {
+          "event_id": "API-3",
+          "trade_id": "T-102",
+          "account_id": "A2",
+          "version": 1,
+          "status": "FILLED",
+          "pnl": "5.00"
+        }
+      ],
+      "fail_processing": false,
+      "expected_source": 2,
+      "expected_target": 2
+    },
+    {
+      "name": "nothing_submitted",
+      "payloads": [],
+      "fail_processing": false,
+      "expected_source": 0,
+      "expected_target": 0
+    }
+  ]
+}

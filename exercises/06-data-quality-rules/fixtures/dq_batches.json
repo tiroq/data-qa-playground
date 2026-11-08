@@ -1,0 +1,166 @@
+{
+  "schema_version": 1,
+  "description": "Synthetic training cohorts; NOT production data",
+  "cohorts": [
+    {
+      "name": "mostly_healthy",
+      "as_of": "2026-11-08T12:30:00Z",
+      "expected_events": 4,
+      "records": [
+        {
+          "event_id": "E-001",
+          "trade_id": "T-01",
+          "account_id": "A1",
+          "version": 1,
+          "status": "NEW",
+          "pnl": "0.00",
+          "event_time": "2026-11-08T12:00:00Z",
+          "available_at": "2026-11-08T12:00:15Z"
+        },
+        {
+          "event_id": "E-002",
+          "trade_id": "T-01",
+          "account_id": "A1",
+          "version": 2,
+          "status": "FILLED",
+          "pnl": "12.75",
+          "event_time": "2026-11-08T12:02:00Z",
+          "available_at": "2026-11-08T12:02:18Z"
+        },
+        {
+          "event_id": "E-003",
+          "trade_id": "T-02",
+          "account_id": "A1",
+          "version": 1,
+          "status": "FILLED",
+          "pnl": "-3.20",
+          "event_time": "2026-11-08T12:05:00Z",
+          "available_at": "2026-11-08T12:06:00Z"
+        },
+        {
+          "event_id": "E-004",
+          "trade_id": "T-03",
+          "account_id": "A2",
+          "version": 1,
+          "status": "CANCELLED",
+          "pnl": "0.00",
+          "event_time": "2026-11-08T12:08:00Z",
+          "available_at": "2026-11-08T12:08:09Z"
+        }
+      ]
+    },
+    {
+      "name": "mixed_anomalies",
+      "as_of": "2026-11-08T13:00:00Z",
+      "expected_events": 9,
+      "records": [
+        {
+          "event_id": "E-101",
+          "trade_id": "T-10",
+          "account_id": "A3",
+          "version": 1,
+          "status": "NEW",
+          "pnl": "0.00",
+          "event_time": "2026-11-08T12:00:00Z",
+          "available_at": "2026-11-08T12:00:10Z"
+        },
+        {
+          "event_id": "E-102",
+          "trade_id": "T-10",
+          "account_id": "A3",
+          "version": 2,
+          "status": "FILLED",
+          "pnl": "19.99",
+          "event_time": "2026-11-08T12:01:00Z",
+          "available_at": "2026-11-08T12:03:00Z"
+        },
+        {
+          "event_id": "E-102",
+          "trade_id": "T-10",
+          "account_id": "A3",
+          "version": 2,
+          "status": "FILLED",
+          "pnl": "19.99",
+          "event_time": "2026-11-08T12:01:00Z",
+          "available_at": "2026-11-08T12:03:00Z"
+        },
+        {
+          "event_id": "E-103",
+          "trade_id": "T-11",
+          "account_id": "A3",
+          "version": 1,
+          "status": "FILLED",
+          "pnl": "2.50",
+          "event_time": "2026-11-08T12:04:00Z",
+          "available_at": "2026-11-08T12:19:00Z"
+        },
+        {
+          "event_id": "E-104",
+          "trade_id": null,
+          "account_id": "A4",
+          "version": 1,
+          "status": "NEW",
+          "pnl": "0.00",
+          "event_time": "2026-11-08T12:05:00Z",
+          "available_at": "2026-11-08T12:05:05Z"
+        },
+        {
+          "event_id": "E-105",
+          "trade_id": "T-12",
+          "account_id": "A4",
+          "version": 0,
+          "status": "FILLED",
+          "pnl": "bad-decimal",
+          "event_time": "2026-11-08T12:06:00Z",
+          "available_at": "2026-11-08T12:06:10Z"
+        },
+        {
+          "event_id": "E-106",
+          "trade_id": "T-13",
+          "account_id": "A4",
+          "version": 2,
+          "status": "FILLED",
+          "pnl": "7.00",
+          "event_time": "2026-11-08T12:07:00Z",
+          "available_at": "2026-11-08T12:07:10Z"
+        },
+        {
+          "event_id": "E-107",
+          "trade_id": "T-13",
+          "account_id": "A4",
+          "version": 2,
+          "status": "FILLED",
+          "pnl": "8.00",
+          "event_time": "2026-11-08T12:07:00Z",
+          "available_at": "2026-11-08T12:07:12Z"
+        },
+        {
+          "event_id": "E-108",
+          "trade_id": "T-14",
+          "account_id": "A5",
+          "version": 1,
+          "status": "UNRECOGNIZED",
+          "pnl": null,
+          "event_time": "2026-11-08T12:08:00Z",
+          "available_at": null
+        },
+        {
+          "event_id": "E-109",
+          "trade_id": "T-15",
+          "account_id": "A5",
+          "version": 1,
+          "status": "FAILED",
+          "pnl": "0.00",
+          "event_time": "2026-11-08T12:09:00Z",
+          "available_at": "2026-11-08T12:09:20Z"
+        }
+      ]
+    },
+    {
+      "name": "empty_input",
+      "as_of": "2026-11-08T13:00:00Z",
+      "expected_events": 5,
+      "records": []
+    }
+  ]
+}

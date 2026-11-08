@@ -61,3 +61,12 @@ For source `(trade_id=101, version=3, amount=120, created_at=12:03)` and ClickHo
 - Additional crucial explanation discussed: source and target **snapshots may represent different points in time**, creating apparent target-ahead-of-source without any delivery defect.
 - Classification policy pending: represent `TARGET_AHEAD` and `INCONSISTENT_SNAPSHOT` as investigative signals; don't mislabel target as automatically corrupt before checking cutoffs, commit order, and snapshot consistency.
 - No executable validation performed.
+
+## Follow-up: reconciliation cutoffs and snapshot consistency
+
+- Learner proposed (a) a time condition in the reconciliation query, (b) capturing PostgreSQL before ClickHouse, and (c) checking records after the contractual 10-minute allowance.
+- Review: these are relevant techniques, but source-first/target-second reads alone do not establish a consistent *as-of* snapshot. Example: source at 12:00 shows v2, source commits v3 at 12:02, target receives v3 at 12:03, target snapshot at 12:10 shows v3: apparent `TARGET_AHEAD` is not necessarily a defect.
+- Recommended distinction: delivery reconciliation over a closed source **event cohort** (explicit cutoff and maturity/deadline), versus state reconciliation as of the same source commit/version/CDC offset. Comparing two independently chosen latest versions need not yield meaningful mismatches.
+- Waiting past the 10-minute SLA reduces premature missing alerts but does not itself fix snapshot skew. A watermark is event-time progress, not confirmation that each event was materialized in ClickHouse.
+- Future discussion: if ClickHouse exposes only deduplicated latest state via `ReplacingMergeTree FINAL`, historical as-of comparison may be impossible without retained history or CDC/audit metadata.
+- Discussion only; no SQL test execution.

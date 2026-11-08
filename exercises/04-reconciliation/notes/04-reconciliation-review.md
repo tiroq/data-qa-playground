@@ -45,3 +45,11 @@ For source `(trade_id=101, version=3, amount=120, created_at=12:03)` and ClickHo
 - `has_null_amount=true`;
 - a *physical-delivery* SLA reports 2 minutes;
 - a *semantically-valid-delivery* SLA remains unsatisfied until the contractually correct state is query-visible; one record cannot decide a 95% cohort SLA.
+
+## Follow-up: version-first amount comparison
+
+- Learner correctly prioritized missing current version over comparing the values of different versions, recognizing the apparent amount discrepancy as a consequence of staleness rather than evidence of corrupted values.
+- Proposed diagnostic policy in discussion: when a source and target current version differ, return an explicit `missing_update` / stale-version signal and leave `amount_mismatch` **not evaluated** (nullable), rather than incorrectly reporting mismatched amounts across unlike versions.
+- Example: source v3/120 vs target v2/150 => `missing_update=true`, `amount_mismatch=NULL` (not evaluated); same version v3/120 vs v3/180 => `amount_mismatch=true`.
+- Required implementation refinement: handle missing sides and target-ahead-of-source independently; nullable comparability must not be silently interpreted as a PASS.
+- Discussion only; no executable SQL/test result has been observed yet.

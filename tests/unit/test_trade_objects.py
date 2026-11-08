@@ -56,6 +56,7 @@ def test_group_runs_each_checker_and_accumulates_issues() -> None:
             Record(trade_id="T1", account_id=100, event_id="E1"),
         ],
     )
-    data_checkers = MissingChecker().set_next(DuplicateChecker())
+    data_checkers = MissingChecker()
+    data_checkers.set_next(DuplicateChecker())
     result = group.run_checks(data_checkers)
     assert [issue.category for issue in result.issues] == ["missing", "duplicates"]

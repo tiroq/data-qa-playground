@@ -9,7 +9,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Iterable, Literal, Protocol
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 if TYPE_CHECKING:
     from data_qa.checkers.base import AbstractChecker
@@ -19,6 +19,12 @@ from .trade_result import TradeResult
 
 BusinessKey = tuple[str, int]
 Side = Literal["source", "target"]
+
+
+"""Exception raised when a trade group has no records on either side."""
+
+class EmptyTradeGroupError(ValueError):
+    """Raised when a trade group has no records on either side."""
 
 
 @dataclass(slots=True)
@@ -69,6 +75,9 @@ class TradeGroup:
 
     def run_checks(self, checker_chain: AbstractChecker) -> TradeResult:
         """Execute ALL supplied checkers for this group, accumulate issues."""
+        if len(self.source) == 0 and len(self.target) == 0:
+            raise EmptyTradeGroupError("TradeGroup has no records on either side")
+
         result = TradeResult(business_key=self.business_key)
         checker_chain.handle(self, result)
         return result

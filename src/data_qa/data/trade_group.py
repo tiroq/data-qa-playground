@@ -9,7 +9,10 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Iterable, Literal, Protocol
 
-from data_qa.checkers.base import AbstractChecker
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from data_qa.checkers.base import AbstractChecker
 
 from .base import Record
 from .trade_result import TradeResult

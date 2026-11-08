@@ -183,3 +183,22 @@ For source `(trade_id=101, version=3, amount=120, created_at=12:03)` and ClickHo
 **Review:** 2.5/3 (guided oral follow-up). Correct conceptual separation of current-state reconciliation vs event completeness, but selecting only latest rows would lose original physical source/target counts. Maintain independent pre-join COUNT aggregations and latest-state projections. For event-exact delivery prefer stable event_id to distinguish retransmissions from separate events with the same version. A matching latest version does not by itself establish lost historical data if the target deliberately keeps only current state.
 
 **Runtime:** No execution observed. Final score pending the third oral question; previous SQL files remain interviewer-authored guided examples.
+
+## Final short oral mock and session assessment (2026-11-08)
+
+**Question 1: version missing versus delivery SLA.** Candidate identified source v3 not present in target v2, identified that the event's ten-minute deadline had expired, and correctly declined to infer a 95% population SLA failure from one trade. **3/3.**
+
+**Question 2: join cardinality and event versus state reconciliation.** Candidate recognized that current state may be valid although older versions are absent, and that missing historical events are defects only when history retention/delivery is contracted. Candidate proposed selecting latest state for the JOIN but initially omitted independently preserving physical row counts. **2.5/3.**
+
+**Question 3: false PASS in daily PnL.** Candidate correctly rejected a matched sum when one of ten FILLED trades has a NULL latest PnL, and proposed per-trade PnL validity checks. An explicit combined `amount_matches AND aggregate_complete` quality gate needed follow-up. **2.5/3.**
+
+**Overall assessment: 8/10, guided conceptual/oral interview rating only.** This is not a grade for independently written code, a passing test suite, or full production integration.
+
+**What worked:** composite business keys; difference between physical events and latest state; version mismatch before amount comparison; NULL-aware DQ; event-level latency versus population SLA; reasoning about watermark and ClickHouse write acknowledgments.
+
+**Three targeted weaknesses / priorities:**
+1. Build cardinality-safe SQL without prompts: separately aggregate source and target counts, preserve version/row grain, and then FULL JOIN.
+2. Practice ClickHouse `ReplacingMergeTree`, `argMax` ties/NULL and incremental Materialized View behavior; distinguish latest-state correctness from dependent aggregates.
+3. State exact `PASS`/`FAIL`/`NOT_EVALUATED` rules for latest-version conflicts, nullable financial data, incomplete event cohorts, and aggregate completeness.
+
+**Implementation evidence:** four session-owned SQL files and deterministic assertions were authored by the interviewer after the learner requested to stop writing SQL manually. Their existence is verified in GitHub, but **runtime PostgreSQL execution has not been observed**. Repository status remains **IN PROGRESS** until assertion outcomes are collected. Original learner statements remain preserved above.

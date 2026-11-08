@@ -110,3 +110,11 @@ For source `(trade_id=101, version=3, amount=120, created_at=12:03)` and ClickHo
 - To keep the latest row's null payload visible, a tuple argument, e.g. `argMax(tuple(version, amount), version)`, retains the null member while the tuple itself remains non-null; inspect the result as (3, NULL).
 - This does not resolve conflicting payloads that have the same maximum version; independently check those conflicts before relying on any selected row.
 - This was a guided discussion only: no executed ClickHouse query has been observed.
+
+## Follow-up: equal-max-version ambiguity with nullable amounts
+
+- Given (v2, amount 150), (v3, amount NULL), (v3, amount 180), learner correctly concluded that `argMax(tuple(version, amount), version)` may return different tied v3 payloads, cannot be trusted as a unique current business state, and requires a separate DQ check.
+- Distinguish `latest_version=3` (known) from `latest_amount` (ambiguous); report `has_conflicting_version=true` and `has_null_amount=true` independently.
+- If business contract requires a unique valid state at maximum version, do **not** interpret an arbitrary selected value as proof of `amount_mismatch` or `OK`. Record amount comparison as not evaluated/ambiguous until data quality policy resolves the conflict.
+- Next discussion: historical conflict on superseded versions vs conflict on latest version; decide which affects the current-state reconciliation outcome and which remains a historical DQ incident.
+- This remains a guided design conversation; no runtime tests completed.

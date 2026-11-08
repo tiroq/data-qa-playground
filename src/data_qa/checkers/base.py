@@ -14,7 +14,7 @@ class Checker(ABC):
         pass
 
     @abstractmethod
-    def handle(self, group: TradeGroup) -> TradeResult:
+    def handle(self, group: TradeGroup, result: TradeResult) -> None:
         pass
 
 

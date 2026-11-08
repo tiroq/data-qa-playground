@@ -118,3 +118,10 @@ For source `(trade_id=101, version=3, amount=120, created_at=12:03)` and ClickHo
 - If business contract requires a unique valid state at maximum version, do **not** interpret an arbitrary selected value as proof of `amount_mismatch` or `OK`. Record amount comparison as not evaluated/ambiguous until data quality policy resolves the conflict.
 - Next discussion: historical conflict on superseded versions vs conflict on latest version; decide which affects the current-state reconciliation outcome and which remains a historical DQ incident.
 - This remains a guided design conversation; no runtime tests completed.
+
+## Follow-up: historical conflict on superseded version
+
+- Given two conflicting v2 payloads (150, 180), followed by an unambiguous v3/120 that matches PostgreSQL, learner proposed recognizing the **current reconciliation as valid** and separately recording/investigating the historical conflict.
+- Review: correct separation of current-state invariant and historical event-quality invariant. Potential fields: `current_state_valid=true` and `historical_conflict=true`. These independent findings must not suppress each other.
+- Important risk: historical conflicting states may already have influenced downstream PnL, risk exposure, materialized views, accounting, or regulatory reporting; subsequent correct v3 does not automatically repair previously derived outputs. Severity/quality gate depends on lineage, downstream impact, audit contract and remediation/replay requirements.
+- Interview assessment: appropriate pragmatic answer, with downstream contamination as key follow-up to strengthen it. No runtime verification performed.

@@ -28,6 +28,37 @@ Alternative (without uv): create a Python 3.12+ venv, install `-e '.[dev]'` only
 
 ## Comparison contract
 
+## Explicit input/output grain
+
+`compare_events(source, target)` accepts **complete lists of events for many trades**.
+It is a batch operation: do not preselect individual trades or their latest versions.
+
+The result is a dictionary grouping **lists of individual issues**, not a
+single batch-wide status/flag. Each issue is keyed by `(trade_id, account_id)`
+and must include enough `details` for debugging.
+
+```python
+{
+    "missing": [{"trade_id": "T2", "account_id": 100, "details": {"source_version": 1}}],
+    "extra": [{"trade_id": "T4", "account_id": 300, "details": {"target_version": 1}}],
+    "changed": [{"trade_id": "T1", "account_id": 100,
+                 "details": {"source_pnl": "15.50", "target_pnl": "15.00"}}],
+    "duplicates": [{"trade_id": "T3", "account_id": 200,
+                    "details": {"side": "source", "event_id": "E4"}}],
+    "malformed": [],
+}
+```
+
+An issue has precisely `trade_id`, `account_id` and `details` keys.
+`details` can contain any diagnostic fields required by the category.
+When an input row is malformed and cannot supply a valid business key, use
+`None` for the unavailable identifier and include `side`, `reason`,
+and available identity/payload information in `details`.
+
+A trade can have more than one issue category (e.g. `changed` and
+`duplicates`). Matched trades are omitted, not counted as failures.
+The report structure and grain are part of the test contract.
+
 - Business key: `(trade_id, account_id)`. Compare the latest state at maximum `version`.
 - Validate key, version, event identity and monetary values. Malformed input must not be dropped.
 - Compare current `version`, `status`, and `pnl` using `Decimal`, without tolerance.

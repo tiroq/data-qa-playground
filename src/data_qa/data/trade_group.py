@@ -67,8 +67,8 @@ class TradeGroup:
         """
         raise NotImplementedError("Session 05: implement TradeGroup.latest")
 
-    def run_checks(self, checkers: AbstractChecker) -> TradeResult:
+    def run_checks(self, checker_chain: AbstractChecker) -> TradeResult:
         """Execute ALL supplied checkers for this group, accumulate issues."""
         result = TradeResult(business_key=self.business_key)
-        checkers.handle(self, result)
+        checker_chain.handle(self, result)
         return result

@@ -125,3 +125,13 @@ For source `(trade_id=101, version=3, amount=120, created_at=12:03)` and ClickHo
 - Review: correct separation of current-state invariant and historical event-quality invariant. Potential fields: `current_state_valid=true` and `historical_conflict=true`. These independent findings must not suppress each other.
 - Important risk: historical conflicting states may already have influenced downstream PnL, risk exposure, materialized views, accounting, or regulatory reporting; subsequent correct v3 does not automatically repair previously derived outputs. Severity/quality gate depends on lineage, downstream impact, audit contract and remediation/replay requirements.
 - Interview assessment: appropriate pragmatic answer, with downstream contamination as key follow-up to strengthen it. No runtime verification performed.
+
+## Follow-up: downstream materialized PnL aggregation
+
+- Learner assumed that once the latest trade state is correct, the downstream account-level daily PnL becomes correct automatically and that no additional check beyond trade-level reconciliation is needed.
+- Reviewer correction: this is **not guaranteed** for an incremental ClickHouse materialized view over inserted full-state updates. Incremental MV logic processes inserted blocks; replacing old versions in a `ReplacingMergeTree` table does not retroactively retract contributions from previously inserted versions in the MV target.
+- Illustrative example for one trade with full-state PnL values `v2=+150`, conflicting `v2=+180`, `v3=+120`: a naive `sum(pnl)` over all three insert events produces `+450`, while the desired latest-state contribution is `+120`. This is hypothetical given the MV is append-sum, not an observed production result.
+- Thus both checks are necessary: (1) trade-level latest-state reconciliation and (2) aggregate-level reconciliation, e.g., independently compute account/day PnL from deduplicated and validated latest trade states and compare to `account_daily_pnl` at aligned cutoffs.
+- Remediation depends on contract/design: replay/rebuild of affected partitions, compensating deltas with idempotent event identity, or version-aware refreshable/state aggregation. Do not assume background merge repairs incremental aggregation.
+- Official ClickHouse guidance: https://clickhouse.com/resources/engineering/clickhouse-vs-postgresql-analytics and https://clickhouse.com/blog/postgres-to-clickhouse-data-modeling-tips-v2
+- Assessment: gap in downstream reconciliation and materialized view semantics identified; no runnable SQL/tests or empirical evidence yet.

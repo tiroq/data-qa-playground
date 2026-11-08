@@ -1,9 +1,13 @@
 # Session 07 — Pytest Architecture — Fixtures & Isolation
 
-**Date (Asia/Bangkok):** 2026-11-09 · **Duration:** 90 minutes · **Status:** PLANNED  
+**Date (Asia/Bangkok):** 202026-11-10 **Duration:** 90 minutes · **Status:** PLANNED  
 **Track:** Exness QA Engineer (Data Stack) interview preparation
 
 > **Language contract:** The actual technical interview is in **Russian**. All live tasks, discussion, follow-up questions, code review, mock interviews, and feedback in ChatGPT must be **in Russian**. SQL, Python, identifiers, and technical terms may remain in English. This repository's written exercise specifications are in English.
+
+## Ready-to-run laboratory (prebuilt)
+
+Start with [START_HERE.md](START_HERE.md): it links to verified input materials, setup commands, and deliberately incomplete learner implementation. Discuss all code and answers in Russian. **Fixture readiness is not interview-task completion.**
 
 ## Goal
 

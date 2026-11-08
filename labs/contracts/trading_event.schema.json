@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Synthetic Training TradingEvent v1",
+  "description": "Example logical event payload. Broker partition/offset belong to physical delivery envelope.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "event_id",
+    "trade_id",
+    "account_id",
+    "version",
+    "event_time",
+    "status",
+    "pnl"
+  ],
+  "properties": {
+    "event_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "trade_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "account_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "event_time": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "NEW",
+        "FILLED",
+        "CANCELLED",
+        "FAILED"
+      ]
+    },
+    "pnl": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^-?[0-9]+(\\.[0-9]{1,4})?$"
+    }
+  }
+}

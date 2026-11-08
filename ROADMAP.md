@@ -19,20 +19,24 @@
 | 03 | 11 06 | [ClickHouse Fundamentals — MergeTree & Row Semantics](exercises/03-clickhouse-fundamentals/README.md) | IN PROGRESS (guided review 7.5/10 recorded; local ClickHouse / pytest verification pending) | ClickHouse storage semantics |
 | 04 | 11 07 | [Source-to-Target Reconciliation & SLA](exercises/04-reconciliation/README.md) | IN PROGRESS (guided PostgreSQL fixture, reconciliation and SLA SQL, assertions authored; runtime checks pending) | Cardinality-safe reconciliation and timing SLA |
 | 05 | 11 08 | [Python Live Coding — Streaming Comparison](exercises/05-python-live-coding/README.md) | PLANNED | Python comparison core |
-| 06 | 11 08 | [Data Quality — Contracts, Gates & Metrics](exercises/06-data-quality-rules/README.md) | PLANNED | DQ rules and severity |
-| 07 | 11 09 | [Pytest Architecture — Fixtures & Isolation](exercises/07-pytest-architecture/README.md) | PLANNED | Pytest and containerized isolation |
-| 08 | 11 09 | [Async Testing — Eventual Consistency](exercises/08-async-testing/README.md) | PLANNED | Eventual-consistency testing |
-| 09 | 11 10 | [ClickHouse Advanced — MV, TTL & Backfill](exercises/09-clickhouse-advanced/README.md) | PLANNED | ClickHouse MV/migrations/backfill |
-| 10 | 11 10 | [SQL Mock Interview — Correctness Under Time Pressure](exercises/10-sql-mock/README.md) | PLANNED | Timed SQL assessment |
-| 11 | 11 11 | [Kafka / Flink — Streaming Failure Modes](exercises/11-kafka-flink/README.md) | PLANNED | Streaming delivery/replay invariants |
+| 06 | 11 09 | [Data Quality — Contracts, Gates & Metrics](exercises/06-data-quality-rules/README.md) | PLANNED | DQ rules and severity |
+| 07 | 11 10 | [Pytest Architecture — Fixtures & Isolation](exercises/07-pytest-architecture/README.md) | PLANNED | Pytest and containerized isolation |
+| 08 | 11 10 | [Async Testing — Eventual Consistency](exercises/08-async-testing/README.md) | PLANNED | Eventual-consistency testing |
+| 09 | 11 11 | [ClickHouse Advanced — MV, TTL & Backfill](exercises/09-clickhouse-advanced/README.md) | PLANNED | ClickHouse MV/migrations/backfill |
+| 10 | 11 11 | [SQL Mock Interview — Correctness Under Time Pressure](exercises/10-sql-mock/README.md) | PLANNED | Timed SQL assessment |
+| 11 | 11 12 | [Kafka / Flink — Streaming Failure Modes](exercises/11-kafka-flink/README.md) | PLANNED | Streaming delivery/replay invariants |
 | 12 | 11 12 | [Trading Data Pipeline Design — End-to-End QA](exercises/12-pipeline-design/README.md) | PLANNED | End-to-end design and test matrix |
-| 13 | 11 12 | [Quality Gates & CI — Reproducible Data Testing](exercises/13-quality-gates-ci/README.md) | PLANNED | CI quality gates |
+| 13 | 11 13 | [Quality Gates & CI — Reproducible Data Testing](exercises/13-quality-gates-ci/README.md) | PLANNED | CI quality gates |
 | 14 | 11 13 | [Mock Interview 1 — SQL, Python & Testing](exercises/14-mock-interview-1/README.md) | PLANNED | Timed coding mock |
 | 15 | 11 14 | [Mock Interview 2 — ClickHouse, Streaming & Incident QA](exercises/15-mock-interview-2/README.md) | PLANNED | Production/streaming mock |
 | 16 | 11 14 | [Experience Stories — Evidence-Based Interview Answers](exercises/16-experience-stories/README.md) | PLANNED | Verified STAR stories |
 | 17 | 11 15 | [Final Review — Confidence & Gaps](exercises/17-final-review/README.md) | PLANNED | Final revision sheet |
 
 Session 01's existing solutions and explanations are preserved as historical learning artifacts; the new session READMEs intentionally contain no reference solutions.
+
+## Prepared laboratory materials for Sessions 06–13
+
+The [ready-to-run lab index](labs/README.md) covers the dedicated fixtures, support fakes, SQL mock, transport traces, architecture case and smoke-only CI. **Planned remains planned** until actual learner implementations and acceptance tests have been reviewed.
 
 ## Incremental implementation strategy
 

@@ -126,3 +126,7 @@ docker compose --profile clickhouse exec clickhouse clickhouse-client --user qa 
 Inside the client, run `SELECT * FROM lab03.trading_events ORDER BY ingest_id;`. The complete setup, client connection, practice sequence and safe fixture reload are in [clickhouse/README.md](clickhouse/README.md).
 
 **Status:** configured in Git; runtime validation on the learner's Docker host is still pending.
+
+## Ready-to-run Exness labs (Sessions 06–13)
+
+Use [labs/README.md](labs/README.md) and the session-specific `START_HERE.md` files. Preparatory validation: `uv sync --group dev && uv run pytest -q tests/labs`. The GitHub Actions `lab-readiness` workflow checks only fixture structure and disposable PostgreSQL data. It **does not** claim that learner solutions, full DQ gates or live Kafka/Flink and ClickHouse advanced exercises have been completed. All interactive interview practice is in Russian.

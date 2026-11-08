@@ -102,3 +102,11 @@ For source `(trade_id=101, version=3, amount=120, created_at=12:03)` and ClickHo
 - Critical NULL caveat from official ClickHouse `argMax` docs: aggregate processing skips NULL arguments. `argMax(amount, version)` can select an earlier non-null amount rather than a later version with NULL amount. A tuple wrapper on the argument can preserve a nullable member for explicit validation, but does not solve tied-version conflicts.
 - Reference: https://clickhouse.com/docs/reference/functions/aggregate-functions/argMax
 - This is a guided correction, not an executed SQL attempt.
+
+## Follow-up: argMax skips nullable latest amount
+
+- Learner correctly predicted that `argMax(amount, version)` over (v2, 150) and (v3, NULL) will return 150 rather than the NULL amount of v3.
+- Official ClickHouse explanation: `argMax(x, t)` selects the latest **non-null** argument; later null values are skipped. https://clickhouse.com/blog/clickhouse-25-6-coalescingmergetree
+- To keep the latest row's null payload visible, a tuple argument, e.g. `argMax(tuple(version, amount), version)`, retains the null member while the tuple itself remains non-null; inspect the result as (3, NULL).
+- This does not resolve conflicting payloads that have the same maximum version; independently check those conflicts before relying on any selected row.
+- This was a guided discussion only: no executed ClickHouse query has been observed.

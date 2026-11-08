@@ -1,0 +1,17 @@
+{
+    "sqltools.connections": [
+        {
+            "server": "http://127.0.0.1",
+            "port": 18123,
+            "database": "lab03",
+            "useJWT": false,
+            "requestTimeout": 30000,
+            "enableTls": false,
+            "previewLimit": 50,
+            "password": "qa",
+            "username": "qa",
+            "driver": "ClickHouse",
+            "name": "ClickHouse - Data QA"
+        }
+    ]
+}

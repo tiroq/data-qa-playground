@@ -1,0 +1,5 @@
+{"step":1,"partition":0,"offset":0,"event_id":"EV-100","trade_id":"T100","account_id":"A1","version":1,"event_time":"2026-11-11T10:00:00Z","observed_at":"2026-11-11T10:00:01Z","pnl":"0.00","status":"NEW"}
+{"step":2,"partition":0,"offset":1,"event_id":"EV-101","trade_id":"T100","account_id":"A1","version":2,"event_time":"2026-11-11T10:01:00Z","observed_at":"2026-11-11T10:01:02Z","pnl":"10.00","status":"FILLED"}
+{"step":3,"partition":1,"offset":0,"event_id":"EV-200","trade_id":"T200","account_id":"A2","version":1,"event_time":"2026-11-11T10:02:00Z","observed_at":"2026-11-11T10:02:01Z","pnl":"-3.00","status":"FILLED"}
+{"step":4,"partition":0,"offset":1,"event_id":"EV-101","trade_id":"T100","account_id":"A1","version":2,"event_time":"2026-11-11T10:01:00Z","observed_at":"2026-11-11T10:01:02Z","pnl":"10.00","status":"FILLED"}
+{"step":5,"partition":1,"offset":1,"event_id":"EV-201","trade_id":"T201","account_id":"A2","version":1,"event_time":"2026-11-11T10:03:00Z","observed_at":"2026-11-11T10:03:01Z","pnl":"0.00","status":"CANCELLED"}

@@ -7,7 +7,17 @@ No database, network or framework dependencies.
 from typing import Any, TypedDict
 
 Event = dict[str, Any]
-Issue = dict[str, Any]
+class Issue(TypedDict):
+    """One issue for a single business key, or unkeyed malformed input.
+
+    No overall boolean status is returned for the batch.
+    trade_id/account_id can be None only when the invalid input cannot
+    supply a valid key; details must explain the mismatch or error.
+    """
+
+    trade_id: str | None
+    account_id: int | None
+    details: dict[str, Any]
 
 
 class ComparisonReport(TypedDict):
@@ -24,6 +34,13 @@ def compare_events(source: list[Event], target: list[Event]) -> ComparisonReport
     Business key: (trade_id, account_id).
     Current state: highest version per business key.
     Compare current version, status and pnl (using Decimal).
+
+    Inputs are entire event datasets (not one row or one trade).
+    Output is ONE report with five LISTS of individual, business-keyed
+    issues; it is never a single batch-level missing/changed flag.
+    Correctly matched trades need not appear in any list.
+    Every issue contains trade_id, account_id, and details. Only malformed
+    input may have a missing/null business key, with a reason in details.
 
     Classify missing, extra, changed, duplicate and malformed events.
     Do not silently overwrite conflicting events or versions.

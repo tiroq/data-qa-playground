@@ -10,5 +10,6 @@ class Record:
     status: str = field(default_factory=str)
     pnl: str = field(default_factory=str)
 
-    def business_key(self) -> str:
-        return f"{self.trade_id}:{self.account_id}"
+    def business_key(self) -> tuple[str, int]:
+        """Typed composite business key; not a serialized display string."""
+        return (self.trade_id, self.account_id)

@@ -150,7 +150,7 @@ def test_lab04_missing_and_extra_match_snapshot() -> None:
         (1, 1, []),
         pytest.param(
             0, 0, [],
-            marks=pytest.mark.xfail(strict=True, reason="Both sides empty: current handlers both flag it"),
+            marks=pytest.mark.xfail(strict=True, raises=AssertionError, reason="Both sides empty: current handlers both flag it"),
             id="both-empty-neither-missing-nor-extra",
         ),
     ],
@@ -165,7 +165,7 @@ def test_presence_truth_table(source_count: int, target_count: int, expected: li
     assert issues(group) == expected
 
 
-@pytest.mark.xfail(strict=True, reason="TradeGroup.latest() is the learner's TODO")
+@pytest.mark.xfail(strict=True, raises=NotImplementedError, reason="TradeGroup.latest() is the learner's TODO")
 @pytest.mark.parametrize(
     ("trade_id", "version", "status", "pnl"),
     [
@@ -183,7 +183,7 @@ def test_lab02_latest_version(
     assert (selected.version, selected.status, selected.pnl) == (version, status, pnl)
 
 
-@pytest.mark.xfail(strict=True, reason="Need an explicit same-max-version conflict policy")
+@pytest.mark.xfail(strict=True, raises=NotImplementedError, reason="Need an explicit same-max-version conflict policy")
 def test_lab02_conflicting_latest_version_must_not_win_arbitrarily() -> None:
     # lab02 205/A3: two physical v2 rows, pnl=8.0000 and pnl=8.5000.
     # This test chooses ValueError as a proposed policy. Change it explicitly
@@ -192,12 +192,12 @@ def test_lab02_conflicting_latest_version_must_not_win_arbitrarily() -> None:
         lab02_group(205).latest("source")
 
 
-@pytest.mark.xfail(strict=True, reason="Latest() must define empty-side behavior")
+@pytest.mark.xfail(strict=True, raises=NotImplementedError, reason="Latest() must define empty-side behavior")
 def test_latest_on_empty_side_is_none() -> None:
     assert lab02_group(201).latest("target") is None
 
 
-@pytest.mark.xfail(strict=True, reason="Wire a Changed checker into presence_chain()")
+@pytest.mark.xfail(strict=True, raises=AssertionError, reason="Wire a Changed checker into presence_chain()")
 @pytest.mark.parametrize(
     ("source_version", "target_version", "source_pnl", "target_pnl"),
     [
@@ -218,7 +218,7 @@ def test_latest_state_difference_reported_as_changed(
     assert "missing" not in issues(group)
 
 
-@pytest.mark.xfail(strict=True, reason="Wire a Duplicate checker into presence_chain()")
+@pytest.mark.xfail(strict=True, raises=AssertionError, reason="Wire a Duplicate checker into presence_chain()")
 def test_same_event_replayed_on_source_is_a_transport_duplicate() -> None:
     row = Record("T201", 1, 2, "E201V2", "FILLED", "7.0000")
     group = TradeGroup(("T201", 1), source=[row, Record("T201", 1, 2, "E201V2", "FILLED", "7.0000")],
@@ -229,7 +229,7 @@ def test_same_event_replayed_on_source_is_a_transport_duplicate() -> None:
     assert report.issues_of("duplicates")[0].details["event_id"] == "E201V2"
 
 
-@pytest.mark.xfail(strict=True, reason="Missing and duplicate must be independent issues")
+@pytest.mark.xfail(strict=True, raises=AssertionError, reason="Missing and duplicate must be independent issues")
 def test_missing_trade_can_also_have_duplicate_delivery() -> None:
     record = Record("T201", 1, 2, "E201V2", "FILLED", "7.0000")
     group = TradeGroup(("T201", 1), source=[record, record], target=[])
@@ -250,7 +250,7 @@ def test_distinct_lifecycle_versions_not_flagged_as_presence_errors() -> None:
     assert issues(group) == []
 
 
-@pytest.mark.xfail(strict=True, reason="Conflict detection is not implemented yet")
+@pytest.mark.xfail(strict=True, raises=AssertionError, reason="Conflict detection is not implemented yet")
 def test_same_event_id_with_conflicting_payload_is_reported() -> None:
     group = TradeGroup(
         ("T205", 3),
@@ -267,7 +267,7 @@ def test_same_event_id_with_conflicting_payload_is_reported() -> None:
     )
 
 
-@pytest.mark.xfail(strict=True, reason="Raw-row validation before grouping is not implemented")
+@pytest.mark.xfail(strict=True, raises=NotImplementedError, reason="Raw-row validation before grouping is not implemented")
 @pytest.mark.parametrize(
     ("side", "raw"),
     [

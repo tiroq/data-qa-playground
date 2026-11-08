@@ -70,3 +70,16 @@ For source `(trade_id=101, version=3, amount=120, created_at=12:03)` and ClickHo
 - Waiting past the 10-minute SLA reduces premature missing alerts but does not itself fix snapshot skew. A watermark is event-time progress, not confirmation that each event was materialized in ClickHouse.
 - Future discussion: if ClickHouse exposes only deduplicated latest state via `ReplacingMergeTree FINAL`, historical as-of comparison may be impossible without retained history or CDC/audit metadata.
 - Discussion only; no SQL test execution.
+
+## Follow-up: historical state after ReplacingMergeTree merges
+
+- Learner inferred correctly that reconstructing historical as-of states requires retained changes or differences, but was unsure whether ReplacingMergeTree keeps merge diffs.
+- Review conclusion: ReplacingMergeTree is **not** a historical revision store. Background merges discard superseded versions from the active table; `SELECT ... FINAL` performs deduplication over the currently available parts and **cannot recover versions already removed** by a merge.
+- A time condition on `trades_current FINAL` does not reconstruct an older as-of state once superseded rows have gone.
+- Potential architecture (design only; not yet implemented): append-only `trade_events` using ordinary `MergeTree` (or another retained immutable source event log), plus `trades_current` using `ReplacingMergeTree(version)`. Preserve stable event IDs, trade composite keys, versions, source commit sequence/LSN and timestamps so historical state can be reconstructed for a common as-of boundary.
+- Audit events need an explicit retention and replay policy; merge logs are not a substitute for durable event history.
+- ClickHouse references:
+  - https://clickhouse.com/blog/handling-updates-and-deletes-in-clickhouse
+  - https://clickhouse.com/blog/updates-in-clickhouse-1-purpose-built-engines
+  - https://clickhouse.com/blog/change-data-capture-solution-clickhouse-streamkap-cdc
+- This was a guided conceptual discussion, not a verified running test.

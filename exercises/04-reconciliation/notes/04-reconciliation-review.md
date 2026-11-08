@@ -92,3 +92,13 @@ For source `(trade_id=101, version=3, amount=120, created_at=12:03)` and ClickHo
 - Additional proof obligation: the target event journal must actually contain all source events eligible for the cutoff; otherwise an as-of query is a partial reconstruction.
 - Next exercise: guided, small-step SQL to filter and select the latest per-key historical version, while preserving invalid-key and conflicting-version diagnostics.
 - The exercise remains **IN PROGRESS**; no SQL execution evidence or final score.
+
+## Follow-up: argMax versus ROW_NUMBER for historical selection
+
+- Learner preferred ClickHouse `argMax` to a window function, expecting that tied versions might make conflicts easier to detect.
+- Review correction: `argMax(amount, version)` is a state-selection aggregate, **not** a version-conflict validator; if multiple rows tie for maximum version, selection of the associated amount is not deterministic.
+- `ROW_NUMBER()` ordered solely by descending version is similarly ambiguous when versions tie.
+- Separate DQ assertions must identify same-key/same-version conflicting payloads **before** choosing a representative state.
+- Critical NULL caveat from official ClickHouse `argMax` docs: aggregate processing skips NULL arguments. `argMax(amount, version)` can select an earlier non-null amount rather than a later version with NULL amount. A tuple wrapper on the argument can preserve a nullable member for explicit validation, but does not solve tied-version conflicts.
+- Reference: https://clickhouse.com/docs/reference/functions/aggregate-functions/argMax
+- This is a guided correction, not an executed SQL attempt.

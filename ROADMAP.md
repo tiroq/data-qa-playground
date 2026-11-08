@@ -17,7 +17,7 @@
 | 01 | Nov 05 | [SQL diagnostics](exercises/01-sql-diagnostics/) | COMPLETE (learning session) | Existing PostgreSQL tables, SQL examples and detailed rationale |
 | 02 | 11 06 | [SQL Live Coding — Versions, Windows & Deduplication](exercises/02-sql-live-coding/README.md) | IN PROGRESS (Tasks 1–3 discussed and reviewed; runtime verification pending) | Latest-version selection and account PnL |
 | 03 | 11 06 | [ClickHouse Fundamentals — MergeTree & Row Semantics](exercises/03-clickhouse-fundamentals/README.md) | IN PROGRESS (guided review 7.5/10 recorded; local ClickHouse / pytest verification pending) | ClickHouse storage semantics |
-| 04 | 11 07 | [Source-to-Target Reconciliation & SLA](exercises/04-reconciliation/README.md) | IN PROGRESS (guided discussion documented; executable SQL/tests pending) | Cardinality-safe reconciliation and timing SLA |
+| 04 | 11 07 | [Source-to-Target Reconciliation & SLA](exercises/04-reconciliation/README.md) | IN PROGRESS (guided PostgreSQL fixture, reconciliation and SLA SQL, assertions authored; runtime checks pending) | Cardinality-safe reconciliation and timing SLA |
 | 05 | 11 08 | [Python Live Coding — Streaming Comparison](exercises/05-python-live-coding/README.md) | PLANNED | Python comparison core |
 | 06 | 11 08 | [Data Quality — Contracts, Gates & Metrics](exercises/06-data-quality-rules/README.md) | PLANNED | DQ rules and severity |
 | 07 | 11 09 | [Pytest Architecture — Fixtures & Isolation](exercises/07-pytest-architecture/README.md) | PLANNED | Pytest and containerized isolation |

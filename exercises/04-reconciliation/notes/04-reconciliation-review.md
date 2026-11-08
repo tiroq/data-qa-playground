@@ -145,3 +145,12 @@ For source `(trade_id=101, version=3, amount=120, created_at=12:03)` and ClickHo
 - Independent expected aggregates should derive from authoritative source/history, not from the possibly incorrect target MV; compare with target account/day amounts and included trade counts, statuses and scope.
 - New risk to discuss: silently falling back to an older **valid** version when the actual latest version is invalid may mask a current-state data defect. Define explicit DQ and eligibility policy.
 - Guided discussion only; no tests or SQL runtime claims.
+
+## Follow-up: do not fall back to last valid PnL without explicit policy
+
+- Learner clarified that the intended full-volume calculation selects **the latest state of each business trade**, not all historical rows; for the previously illustrated three-trade case, the expected full-state aggregate was 320.
+- Given trade versions v1 `FILLED/pnl=100`, v2 `FILLED/pnl=150`, v3 `FILLED/pnl=NULL`, learner correctly concluded that the latest state is indeterminate for financial aggregation: do not silently replace v3 with v2's 150 or any assumed value.
+- Design decision for this exercise: current trade state is `INVALID_PNL` under the stipulated mandatory-PnL-for-FILLED contract; latest version remains v3. The trade's PnL is not eligible as a confirmed contribution until corrected or handled under explicit accounting policy.
+- A partial sum of other valid trades is diagnostic only: report `known_pnl_sum`, `invalid_trade_count`, and `is_aggregate_complete=false`; never certify partial sum as the complete daily PnL. SQL `SUM` ignores NULL by default, so add explicit completeness assertions.
+- Separate optional operational fallbacks such as last-known-good from the canonical authoritative state and label them stale/estimated if the business authorizes them.
+- This was a reasoned answer, not execution of runnable SQL.

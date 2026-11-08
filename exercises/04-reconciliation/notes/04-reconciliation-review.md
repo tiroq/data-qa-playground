@@ -83,3 +83,12 @@ For source `(trade_id=101, version=3, amount=120, created_at=12:03)` and ClickHo
   - https://clickhouse.com/blog/updates-in-clickhouse-1-purpose-built-engines
   - https://clickhouse.com/blog/change-data-capture-solution-clickhouse-streamkap-cdc
 - This was a guided conceptual discussion, not a verified running test.
+
+## Follow-up: selecting historical as-of state
+
+- Learner correctly argued that **the event set must first be restricted to the desired temporal or commit-position boundary**, and only then may the latest business state/version be selected. Selecting global `MAX(version)` first would choose a later update and fail to recover the historical state.
+- Example: trade 101 v1 committed 11:50, v2 at 11:58, v3 at 12:03; an as-of boundary of 12:00 yields v2, not v3.
+- Important nuance discussed: distinguish original source commit time/sequence from event occurrence time and ClickHouse arrival/ingestion time. Stable source ordering (e.g., CDC commit metadata with ordering rules, transaction position, and any needed tie-breakers) is preferable for consistent historical cuts.
+- Additional proof obligation: the target event journal must actually contain all source events eligible for the cutoff; otherwise an as-of query is a partial reconstruction.
+- Next exercise: guided, small-step SQL to filter and select the latest per-key historical version, while preserving invalid-key and conflicting-version diagnostics.
+- The exercise remains **IN PROGRESS**; no SQL execution evidence or final score.

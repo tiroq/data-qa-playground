@@ -44,7 +44,7 @@ the interviewer to write the SQL instead of doing further manual live coding.
 The following files are therefore **interviewer-authored guided implementation
 drafts**, not an independent candidate SQL submission:
 
-- [01-fixture.sql](sql/01-fixture.sql): isolated \`lab04\` source/target staging
+- [01-fixture.sql](sql/01-fixture.sql): isolated `lab04` source/target staging
   snapshots, version ties, invalid keys and deterministic delivery cohorts.
 - [02-reconciliation.sql](sql/02-reconciliation.sql): independent source and
   target aggregation BEFORE a FULL JOIN, plus version-aware mismatch flags.
@@ -55,7 +55,7 @@ drafts**, not an independent candidate SQL submission:
 
 **Run from the repository root with Docker running:**
 
-\`\`\`bash
+```bash
 docker compose up -d --wait
 for f in exercises/04-reconciliation/sql/0{1,2,3,4}-*.sql; do
   docker compose exec -T postgres psql -U qa -d trading \
@@ -68,9 +68,9 @@ docker compose exec -T postgres psql -U qa -d trading \
   -c "SELECT * FROM lab04.reconciliation_report ORDER BY trade_id, account_id;"
 docker compose exec -T postgres psql -U qa -d trading \
   -c "SELECT * FROM lab04.invalid_keys ORDER BY side, physical_id;"
-\`\`\`
+```
 
-The fixture is idempotent by dropping **only** schema \`lab04\` on reload; it
+The fixture is idempotent by dropping **only** schema `lab04` on reload; it
 does not change Session 01/02 data. The SQL operates on *staged snapshots*
 in PostgreSQL: it does **not** assume a direct SQL JOIN across PostgreSQL and
 ClickHouse servers.
@@ -84,26 +84,26 @@ ClickHouse servers.
 - Trade 108 has a missing latest version; 110 has target-ahead version;
   111 has conflicting latest payload including NULL; 112 has a historical
   version conflict but an unambiguous matching latest state.
-- SLA \`pass_95\`: 19 of 20 on time, one late, 95.00%, **PASS**.
-- SLA \`fail_90\`: 18 of 20 on time, one late, one undelivered overdue,
+- SLA `pass_95`: 19 of 20 on time, one late, 95.00%, **PASS**.
+- SLA `fail_90`: 18 of 20 on time, one late, one undelivered overdue,
   90.00%, **FAIL**. Three new in-flight events are excluded, one
   malformed timestamp is separately flagged.
 
 **Business definitions / limits:**
 
-- Business key is \`(trade_id, account_id)\`. Any row with a NULL component
-  goes into \`invalid_keys\`; it must not be called MISSING or ORPHAN.
+- Business key is `(trade_id, account_id)`. Any row with a NULL component
+  goes into `invalid_keys`; it must not be called MISSING or ORPHAN.
 - More than one *version* per trade is normal. The duplicate flag refers to
-  repeated **key plus version**, not simply \`COUNT(*) > 1\` on the trade.
-- \`amount_mismatch = NULL\` means *not evaluated*, due to missing side,
-  unequal versions, or conflicting latest version; not the same as \`FALSE\`.
-  Null-vs-null compares equal but \`has_null_amount\` still flags bad input.
-- \`has_failed\` and \`has_unknown_status\` are observed across the target's
+  repeated **key plus version**, not simply `COUNT(*) > 1` on the trade.
+- `amount_mismatch = NULL` means *not evaluated*, due to missing side,
+  unequal versions, or conflicting latest version; not the same as `FALSE`.
+  Null-vs-null compares equal but `has_null_amount` still flags bad input.
+- `has_failed` and `has_unknown_status` are observed across the target's
   physical history, not necessarily the status of the final business state.
 - SLA is per **unique event_id**, not physical delivery receipts. Query-visible
-  \`available_at\` is a simulated trusted observation; in a real pipeline this
+  `available_at` is a simulated trusted observation; in a real pipeline this
   requires an independently measured availability/commit contract.
-- The fixed \`evaluated_at\` and \`event_cutoff\` make examples reproducible.
+- The fixed `evaluated_at` and `event_cutoff` make examples reproducible.
   The SLA cohort includes only source events whose 10-minute deadlines have
   matured. Watermark/consumer lag are diagnostic signals and do not extend SLA.
 - These fixtures do not model a transactionally consistent CDC snapshot or

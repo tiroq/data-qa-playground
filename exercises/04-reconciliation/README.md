@@ -52,6 +52,15 @@ drafts**, not an independent candidate SQL submission:
   late/overdue/in-flight events and 95% SLA decision.
 - [04-assertions.sql](sql/04-assertions.sql): explicit cardinality, business-key,
   null, version-tie and SLA sample assertions.
+- [05-postgres-discussion-examples.sql](sql/05-postgres-discussion-examples.sql):
+  runnable PostgreSQL SELECT examples from our discussion — source/target counts,
+  independent status flags, invalid keys, null-aware version conflict checks,
+  point-in-time selection and prevention of false PnL aggregate PASS.
+- [06-clickhouse-discussion-examples.sql](sql/06-clickhouse-discussion-examples.sql):
+  independent ClickHouse lab — `argMax` NULL and version-tie traps,
+  `uniqExact` with explicit NULL state, historical cutoff and
+  `ReplacingMergeTree FINAL`. **Not PostgreSQL SQL**; resets ClickHouse
+  `lab04` tables only.
 
 **Run from the repository root with Docker running:**
 
@@ -74,6 +83,29 @@ The fixture is idempotent by dropping **only** schema `lab04` on reload; it
 does not change Session 01/02 data. The SQL operates on *staged snapshots*
 in PostgreSQL: it does **not** assume a direct SQL JOIN across PostgreSQL and
 ClickHouse servers.
+
+
+**Optional PostgreSQL examples** (after 01/02; SELECT-only):
+
+```bash
+docker compose exec -T postgres psql -U qa -d trading \
+  -v ON_ERROR_STOP=1 -f /dev/stdin \
+  < exercises/04-reconciliation/sql/05-postgres-discussion-examples.sql
+```
+
+**Optional ClickHouse examples** (separate dialect, isolated lab04 database;
+this script resets its own ClickHouse demo tables):
+
+```bash
+docker compose --profile clickhouse up -d --wait clickhouse
+docker compose --profile clickhouse exec -T clickhouse \
+  clickhouse-client --user qa --password qa --multiquery \
+  < exercises/04-reconciliation/sql/06-clickhouse-discussion-examples.sql
+```
+
+**Verification status:** PostgreSQL and ClickHouse SQL files are committed,
+but no live execution result was observed here. The examples are guided
+reference material, not an independently submitted learner solution.
 
 **Expected assertions (not yet observed in a running PostgreSQL instance):**
 

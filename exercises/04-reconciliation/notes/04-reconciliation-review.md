@@ -154,3 +154,22 @@ For source `(trade_id=101, version=3, amount=120, created_at=12:03)` and ClickHo
 - A partial sum of other valid trades is diagnostic only: report `known_pnl_sum`, `invalid_trade_count`, and `is_aggregate_complete=false`; never certify partial sum as the complete daily PnL. SQL `SUM` ignores NULL by default, so add explicit completeness assertions.
 - Separate optional operational fallbacks such as last-known-good from the canonical authoritative state and label them stale/estimated if the business authorizes them.
 - This was a reasoned answer, not execution of runnable SQL.
+
+## Follow-up: aggregate NULL/completeness guard and eligibility flags
+
+- Learner correctly observed that `SUM(pnl)` ignores NULL, while `COUNT(*)` still includes the trade, and proposed explicit per-trade data-quality flags to decide whether an individual current trade can contribute to a given calculation.
+- Learner emphasized that historic retransmits/duplicate rows do not necessarily invalidate an unambiguous, correct latest PnL state; a null PnL on the latest version does invalidate that contribution under the assumed `FILLED` contract.
+- Technical distinction clarified: `AVG(pnl)` excludes NULL values from its own denominator, whereas a manually calculated `SUM(pnl) / COUNT(*)` counts all rows and is wrong if NULL exists.
+- Proposed guided PostgreSQL aggregate:
+  ```sql
+  SELECT account_id,
+         COUNT(*) AS total_trades,
+         COUNT(pnl) AS valid_pnl_count,
+         COUNT(*) - COUNT(pnl) AS invalid_pnl_count,
+         SUM(pnl) AS known_pnl_sum
+  FROM latest_trades
+  WHERE status = 'FILLED'
+  GROUP BY account_id;
+  ```
+- Under the stated contract, `invalid_pnl_count=0` is necessary (not sufficient) to certify a complete account/day PnL: eligible business-key cohort, latest-version validity, status policy, and independent source/target comparison remain necessary. Filtering invalid trades before aggregation and then labelling the partial result PASS would be a false positive.
+- This is guided example SQL, not a submitted learner solution and not runtime-verified.

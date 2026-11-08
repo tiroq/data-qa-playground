@@ -104,3 +104,24 @@ def test_order_independent_report() -> None:
     reversed_input = compare_events(list(reversed(source)), list(reversed(target)))
 
     assert first == reversed_input
+
+def test_multiple_business_keys_have_separate_issue_records() -> None:
+    """A batch-wide boolean would lose which trade failed."""
+    source = [
+        event(trade_id="T1", event_id="E1", pnl="15.50"),
+        event(trade_id="T2", event_id="E2"),
+    ]
+    target = [
+        event(trade_id="T1", event_id="E1", pnl="15.00"),
+        event(trade_id="T3", event_id="E3"),
+    ]
+
+    report = compare_events(source, target)
+
+    assert {(x["trade_id"], x["account_id"]) for x in report["missing"]} == {("T2", 100)}
+    assert {(x["trade_id"], x["account_id"]) for x in report["extra"]} == {("T3", 100)}
+    assert {(x["trade_id"], x["account_id"]) for x in report["changed"]} == {("T1", 100)}
+    for category in CATEGORIES:
+        for issue in report[category]:
+            assert set(issue) == {"trade_id", "account_id", "details"}
+            assert isinstance(issue["details"], dict)

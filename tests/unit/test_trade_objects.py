@@ -21,10 +21,19 @@ def test_group_holds_both_sides_without_modifying_input_lists() -> None:
     assert len(source) == 1
 
 
-def test_group_rejects_events_from_other_trade() -> None:
+@pytest.mark.parametrize("side", ["source", "target"])
+def test_group_rejects_events_from_other_trade(side: str) -> None:
+    """An event for another account must never enter either side of this group."""
     group = TradeGroup(business_key=("T1", 100))
-    with pytest.raises(ValueError, match="belongs to"):
-        group.add_source(Record(trade_id="T1", account_id=200, event_id="E3"))
+    wrong_record = Record(trade_id="T1", account_id=200, event_id="E3")
+
+    with pytest.raises(ValueError, match="belongs to") as error:
+        getattr(group, f"add_{side}")(wrong_record)
+
+    assert repr(wrong_record.business_key()) in str(error.value)
+    assert repr(group.business_key) in str(error.value)
+    assert group.source == []
+    assert group.target == []
 
 
 def test_result_accumulates_multiple_findings_for_one_key() -> None:

@@ -34,17 +34,20 @@ use explicitly constructed synthetic event IDs.
 ## Test states
 
 **Should pass already:** fixture shape, exact missing/extra keys,
-three normal presence-table cases, and identity-only lifecycle guard.
+three normal presence-table cases, a dedicated test asserting that a
+completely empty TradeGroup raises EmptyTradeGroupError (with the business
+key in the error message), a parameterized test verifying that adding a
+wrong-key Record to either source or target raises ValueError without
+mutating the group, and the identity-only lifecycle guard.
 
 **Strict `xfail` (not yet implemented):**
 
-1. Empty-on-both-sides should not generate missing and extra.
-2. Latest version for 201, 202, 203, 206; empty target.
-3. Conflicting latest payload for 205 must not choose an arbitrary winner.
-4. Stale target, changed PnL, and Decimal precision.
-5. Same-event transport replay, missing **plus** replay, conflicting
+1. Latest version for 201, 202, 203, 206; empty target.
+2. Conflicting latest payload for 205 must not choose an arbitrary winner.
+3. Stale target, changed PnL, and Decimal precision.
+4. Same-event transport replay, missing **plus** replay, conflicting
    payload for one event ID.
-6. Null-key rows must be reported as malformed.
+5. Null-key rows must be reported as malformed.
 
 The `xfail(strict=True)` tests run and document expected failures.
 When one begins to pass, pytest reports **XPASS as a failure**: remove
@@ -54,7 +57,9 @@ with `xfailed` cases does **not** mean all acceptance criteria are met.
 ## Implementation checkpoint
 
 1. Run `uv run pytest -q tests/unit/test_trade_objects.py tests/unit/test_trade_scenarios.py`.
-2. Fix the empty-group presence edge case (does not need new classes).
+2. Keep both group invariants passing: a key mismatch must raise ValueError
+   on either side, and an empty source+target must raise EmptyTradeGroupError
+   when `run_checks()` is called.
 3. Implement `TradeGroup.latest(side)`; enable relevant tests.
 4. Add `Changed` and `Duplicate` checkers **in your naming style**.
    Extend `presence_chain()` inside the test file as you connect them.
@@ -62,5 +67,7 @@ with `xfailed` cases does **not** mean all acceptance criteria are met.
 6. Run `uv run pytest -q tests/unit/test_reconciliation.py` when the
    batch comparison contract is ready.
 
-The learner's five passing structural tests and all existing source files
-are preserved. No runtime/CI pass is claimed until separately verified.
+The learner's existing checker implementation and unrelated tests are preserved.
+The original wrong-business-key test was expanded to cover both sides;
+the zero/zero presence case is now an independent exception test.
+No runtime/CI pass is claimed until separately verified.

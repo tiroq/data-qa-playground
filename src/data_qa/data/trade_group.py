@@ -76,7 +76,9 @@ class TradeGroup:
     def run_checks(self, checker_chain: AbstractChecker) -> TradeResult:
         """Execute ALL supplied checkers for this group, accumulate issues."""
         if len(self.source) == 0 and len(self.target) == 0:
-            raise EmptyTradeGroupError("TradeGroup has no records on either side")
+            raise EmptyTradeGroupError(
+                f"TradeGroup {self.business_key!r} has no records on either side"
+            )
 
         result = TradeResult(business_key=self.business_key)
         checker_chain.handle(self, result)

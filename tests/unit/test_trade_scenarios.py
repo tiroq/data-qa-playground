@@ -15,7 +15,7 @@ import pytest
 
 from data_qa.checkers.base import ExtraHandler, MissingHandler
 from data_qa.data.base import Record
-from data_qa.data.trade_group import TradeGroup
+from data_qa.data.trade_group import EmptyTradeGroupError, TradeGroup
 from data_qa.reconciliation import compare_events
 
 
@@ -148,11 +148,6 @@ def test_lab04_missing_and_extra_match_snapshot() -> None:
         (1, 0, ["missing"]),
         (0, 1, ["extra"]),
         (1, 1, []),
-        pytest.param(
-            0, 0, [],
-            marks=pytest.mark.xfail(strict=True, raises=AssertionError, reason="Both sides empty: current handlers both flag it"),
-            id="both-empty-neither-missing-nor-extra",
-        ),
     ],
 )
 def test_presence_truth_table(source_count: int, target_count: int, expected: list[str]) -> None:
@@ -163,6 +158,17 @@ def test_presence_truth_table(source_count: int, target_count: int, expected: li
         target=[Record(trade_id=key[0], account_id=key[1], event_id="tgt-1")] * target_count,
     )
     assert issues(group) == expected
+
+
+def test_empty_trade_group_raises_with_business_key() -> None:
+    """Two empty sides violate the group invariant when checks begin."""
+    key = ("T999", 9)
+    group = TradeGroup(business_key=key)
+
+    with pytest.raises(EmptyTradeGroupError, match="has no records") as error:
+        group.run_checks(presence_chain())
+
+    assert repr(key) in str(error.value)
 
 
 @pytest.mark.xfail(strict=True, raises=NotImplementedError, reason="TradeGroup.latest() is the learner's TODO")

@@ -117,10 +117,12 @@ until the exact PostgreSQL command output has been observed.
 
 > Ты — технический интервьюер Exness QA Engineer (Data Stack). Реальное интервью 16 ноября 2026 года проходит **на русском языке**. Проводим сессию 04: «Source-to-Target Reconciliation & SLA» (90 минут), и **всё общение — на русском**, включая задачу, вопросы, оценку, обсуждение SQL/Python-кода и разбор ошибок. Код и общепринятые технические названия могут быть на английском. Мой контекст: Python/Go SDET, FIX и post-trade, reconciliation, нагрузочное тестирование, CI, NATS JetStream; слабее практический ClickHouse и Kafka/Flink. Первая SQL-диагностика пройдена успешно, но нужно особенно проверять JOIN cardinality, полноту output columns, группировку на бизнес-ключ, версии и крайние случаи. Открой в GitHub репозитории `tiroq/data-qa-playground` файл `exercises/04-reconciliation/README.md`; используй задание и acceptance criteria как основной контракт. Начни с одной практической задачи, дождись моего решения, не показывай эталон заранее. Далее проведи code review и follow-up, оцени от 0 до 10 и назови три точечных пробела. Сохраняй в репозитории только действительно выполненные решения и подтверждённые результаты.
 
-## Session result (fill **after** completing)
+## Session result (guided oral review, 2026-11-08)
 
-- **Attempt / PR:** _not yet completed_
-- **Score / 10:** _not assessed_
-- **What worked:** _not assessed_
-- **Bugs / edge cases:** _not assessed_
-- **Next-session adjustments:** _not assessed_
+- **Learner attempt:** guided oral answers; **no independently authored final SQL**. The four SQL files under `sql/` were drafted by the interviewer on explicit request.
+- **Score / 10:** **8/10** (qualitative conceptual/oral assessment; not a runtime or coding score). Short final mock: Q1 **3/3**, Q2 **2.5/3**, Q3 **2.5/3**.
+- **What worked:** composite keys and state-vs-event reconciliation; version-first comparison; NULL/data-quality reasoning; difference between per-event lateness and population-wide SLA.
+- **Bugs / edge cases:** first focused on latest-state extraction without preserving physical pre-join counts; underestimated risk of downstream incremental PnL aggregates; needed guidance on strict `PASS`/`FAIL`/`NOT_EVALUATED` criteria for invalid or incomplete financial records.
+- **Next-session priorities (three):** (1) independent pre-join cardinality-safe SQL; (2) `ReplacingMergeTree`, `argMax` NULL/ties, and MV re-aggregation; (3) explicit gates for conflicting versions, incomplete aggregates and matured SLA cohorts.
+- **Review notes:** [04-reconciliation-review.md](notes/04-reconciliation-review.md).
+- **Runtime verification:** **NOT OBSERVED**. Four SQL files and assertion checks exist, but successful execution has not been demonstrated. Remains **IN PROGRESS** until command outputs are recorded.

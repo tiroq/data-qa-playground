@@ -1,0 +1,20 @@
+[project]
+name = "data-qa-playground"
+version = "0.1.0"
+description = "Trading data QA interview exercises"
+requires-python = ">=3.12"
+dependencies = []
+
+[dependency-groups]
+dev = ["pytest>=8.3,<10"]
+
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/data_qa"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests/unit"]
+addopts = "-ra"

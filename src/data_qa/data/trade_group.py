@@ -9,18 +9,13 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Iterable, Literal, Protocol
 
+from data_qa.checkers.base import AbstractChecker
+
 from .base import Record
 from .trade_result import TradeResult
 
 BusinessKey = tuple[str, int]
 Side = Literal["source", "target"]
-
-
-class GroupChecker(Protocol):
-    """A pluggable checker that adds findings to a shared TradeResult."""
-
-    def check(self, group: TradeGroup, result: TradeResult) -> None:
-        ...
 
 
 @dataclass(slots=True)
@@ -69,9 +64,8 @@ class TradeGroup:
         """
         raise NotImplementedError("Session 05: implement TradeGroup.latest")
 
-    def run_checks(self, checkers: Iterable[GroupChecker]) -> TradeResult:
+    def run_checks(self, checkers: AbstractChecker) -> TradeResult:
         """Execute ALL supplied checkers for this group, accumulate issues."""
         result = TradeResult(business_key=self.business_key)
-        for checker in checkers:
-            checker.check(self, result)
+        checkers.handle(self, result)
         return result

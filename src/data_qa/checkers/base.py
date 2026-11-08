@@ -4,32 +4,28 @@ from data_qa.data.base import TradeGroup, TradeResult
 from data_qa.data.trade_result import IssueCategory
 
 
-class Handler(ABC):
+class Checker(ABC):
     """
     Interface for handling requests in a chain of responsibility pattern.
     """
 
     @abstractmethod
-    def set_next(self, handler: Handler) -> Handler:
+    def set_next(self, handler: Checker) -> Checker:
         pass
 
     @abstractmethod
-    def handle(self, trade_group: TradeGroup) -> TradeResult:
+    def handle(self, group: TradeGroup) -> TradeResult:
         pass
 
 
-class AbstractHandler(Handler):
+class AbstractChecker(Checker):
     """
     Default chaining behavior can be implemented inside this base handler class.
     """
 
-    def __init__(self) -> None:
-        self._next_handler = None
-        self.result = TradeResult()
+    _next_handler: Checker = None
 
-    # _next_handler: Handler = None
-
-    def set_next(self, handler: Handler) -> Handler:
+    def set_next(self, handler: Checker) -> Checker:
         self._next_handler = handler
         # Returning the handler from here will allow us to link handlers in a simple
         # way, like this:
@@ -37,28 +33,27 @@ class AbstractHandler(Handler):
         return handler
 
     @abstractmethod
-    def handle(self, trade_group: TradeGroup) -> None:
+    def handle(self, group: TradeGroup, result: TradeResult) -> None:
         if self._next_handler:
-            return self._next_handler.handle(trade_group)
+            return self._next_handler.handle(group, result)
 
         return None
 
 
 
-class MissingHandler(AbstractHandler):
-    def handle(self, trade_group: TradeGroup) -> None:
-        if len(trade_group.target) == 0:
+class MissingHandler(AbstractChecker):
+    def handle(self, group: TradeGroup, result: TradeResult) -> None:
+        if len(group.target) == 0:
             self.result.add_issue(IssueCategory.MISSING, {"message": "Target is missing"})
-        return super().handle(trade_group)
+        return super().handle(group, result)
 
 
-class SquirrelHandler(AbstractHandler):
-    def handle(self, trade_group: TradeGroup) -> None:
-        result = super().handle(trade_group)
-        return result
+class ExtraHandler(AbstractChecker):
+    def handle(self, group: TradeGroup, result: TradeResult) -> None:
+        if len(group.source) == 0:
+            result.add_issue(IssueCategory.EXTRA, {"message": "Source is missing"})
+        return super().handle(group, result)
 
 
-class DogHandler(AbstractHandler):
-    def handle(self, trade_group: TradeGroup) -> None:
-        result = super().handle(trade_group)
-        return result
+data_checkers = MissingHandler()
+data_checkers.set_next(ExtraHandler())

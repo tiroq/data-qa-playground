@@ -53,3 +53,11 @@ For source `(trade_id=101, version=3, amount=120, created_at=12:03)` and ClickHo
 - Example: source v3/120 vs target v2/150 => `missing_update=true`, `amount_mismatch=NULL` (not evaluated); same version v3/120 vs v3/180 => `amount_mismatch=true`.
 - Required implementation refinement: handle missing sides and target-ahead-of-source independently; nullable comparability must not be silently interpreted as a PASS.
 - Discussion only; no executable SQL/test result has been observed yet.
+
+## Follow-up: target version ahead of PostgreSQL
+
+- Learner proposed two timing/architecture explanations for target v3 vs source v2: PostgreSQL write not yet committed while target receives update, or separate workers/buffers causing source-side delay.
+- Review: such ordering is possible with **independent writers** or publication before the PostgreSQL transaction, but not the normal expectation of a strictly PostgreSQL-commit-driven CDC path (Postgres WAL -> Debezium -> Kafka -> ClickHouse). Debezium's main CDC contract streams committed database changes; see https://debezium.io/documentation/reference/connectors/postgresql.html for documented nuances during commit/failover.
+- Additional crucial explanation discussed: source and target **snapshots may represent different points in time**, creating apparent target-ahead-of-source without any delivery defect.
+- Classification policy pending: represent `TARGET_AHEAD` and `INCONSISTENT_SNAPSHOT` as investigative signals; don't mislabel target as automatically corrupt before checking cutoffs, commit order, and snapshot consistency.
+- No executable validation performed.

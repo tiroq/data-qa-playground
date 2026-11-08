@@ -175,3 +175,11 @@ For source `(trade_id=101, version=3, amount=120, created_at=12:03)` and ClickHo
   ```
 - Under the stated contract, `invalid_pnl_count=0` is necessary (not sufficient) to certify a complete account/day PnL: eligible business-key cohort, latest-version validity, status policy, and independent source/target comparison remain necessary. Filtering invalid trades before aggregation and then labelling the partial result PASS would be a false positive.
 - This is guided example SQL, not a submitted learner solution and not runtime-verified.
+
+## Short final mock — question 2 of 3 (2026-11-08)
+
+**Candidate reasoning:** For source versions v1/v2/v3 and target versions v2/v3, select the current state from each side to compare latest business data. The candidate correctly stated that matching v3 means the current state is usable; absent v1 is a reconciliation defect only if the delivery contract requires storing all versions. Candidate distinguished (trade_id, account_id) business identity from the per-version identity, with version as an extension when auditing history.
+
+**Review:** 2.5/3 (guided oral follow-up). Correct conceptual separation of current-state reconciliation vs event completeness, but selecting only latest rows would lose original physical source/target counts. Maintain independent pre-join COUNT aggregations and latest-state projections. For event-exact delivery prefer stable event_id to distinguish retransmissions from separate events with the same version. A matching latest version does not by itself establish lost historical data if the target deliberately keeps only current state.
+
+**Runtime:** No execution observed. Final score pending the third oral question; previous SQL files remain interviewer-authored guided examples.

@@ -1,3 +1,5 @@
+> **Implementation update (2026-11-08):** Following extensive guided reasoning, the interviewer authored `sql/01-fixture.sql`, `sql/02-reconciliation.sql`, `sql/03-sla.sql`, and `sql/04-assertions.sql`. These are **guided implementation drafts**, not the learner's independently written SQL and **not runtime-verified**. Run instructions, expected outcomes and caveats are in the session README. Prior discussion notes below are preserved as the historical learning record.
+
 # Session 04 — Reconciliation review notes (in progress)
 
 **Date:** 2026-11-08 (Asia/Bangkok)  

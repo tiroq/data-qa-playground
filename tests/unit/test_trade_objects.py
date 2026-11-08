@@ -1,6 +1,7 @@
 """Only structural scaffold tests: not a solution for reconciliation."""
 
 import pytest
+from data_qa.checkers.base import AbstractChecker
 
 from data_qa.data.trade_group import Record, TradeGroup
 from data_qa.data.trade_result import TradeResult
@@ -37,15 +38,16 @@ def test_result_accumulates_multiple_findings_for_one_key() -> None:
 
 
 def test_group_runs_each_checker_and_accumulates_issues() -> None:
-    class MissingChecker:
-        def check(self, group: TradeGroup, result: TradeResult) -> None:
+    class MissingChecker(AbstractChecker):
+        def handle(self, group: TradeGroup, result: TradeResult) -> None:
             if not group.target:
                 result.add_issue("missing", source_count=len(group.source))
-
-    class DuplicateChecker:
-        def check(self, group: TradeGroup, result: TradeResult) -> None:
+            return super().handle(group, result)
+    class DuplicateChecker(AbstractChecker):
+        def handle(self, group: TradeGroup, result: TradeResult) -> None:
             if len(group.source) > 1:
                 result.add_issue("duplicates", side="source")
+            return super().handle(group, result)
 
     group = TradeGroup(
         business_key=("T1", 100),
@@ -54,5 +56,6 @@ def test_group_runs_each_checker_and_accumulates_issues() -> None:
             Record(trade_id="T1", account_id=100, event_id="E1"),
         ],
     )
-    result = group.run_checks([MissingChecker(), DuplicateChecker()])
+    data_checkers = MissingChecker().set_next(DuplicateChecker())
+    result = group.run_checks(data_checkers)
     assert [issue.category for issue in result.issues] == ["missing", "duplicates"]

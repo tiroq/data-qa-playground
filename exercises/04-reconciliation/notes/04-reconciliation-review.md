@@ -135,3 +135,13 @@ For source `(trade_id=101, version=3, amount=120, created_at=12:03)` and ClickHo
 - Remediation depends on contract/design: replay/rebuild of affected partitions, compensating deltas with idempotent event identity, or version-aware refreshable/state aggregation. Do not assume background merge repairs incremental aggregation.
 - Official ClickHouse guidance: https://clickhouse.com/resources/engineering/clickhouse-vs-postgresql-analytics and https://clickhouse.com/blog/postgres-to-clickhouse-data-modeling-tips-v2
 - Assessment: gap in downstream reconciliation and materialized view semantics identified; no runnable SQL/tests or empirical evidence yet.
+
+## Follow-up: independent expected account PnL
+
+- Learner stated that if data quality checks pass, choosing the latest valid version of every trade should produce correct PnL, but suggested full-volume recomputation for confidence.
+- Reviewer clarified that full-volume reconciliation should include **all in-scope business trades**, not naively sum **all physical historical rows** when versions are complete-state snapshots.
+- Illustrative current-state contribution: trade 101 latest 120, trade 102 latest 250, trade 103 latest -50 -> expected account PnL = 320; naive sum of all versions would give 670.
+- Crucial unverified business contract: full-state PnL vs incremental deltas. For full-state snapshots, select current state per trade as of a consistent cutoff; for delta events, correct deduplicated event application rules differ.
+- Independent expected aggregates should derive from authoritative source/history, not from the possibly incorrect target MV; compare with target account/day amounts and included trade counts, statuses and scope.
+- New risk to discuss: silently falling back to an older **valid** version when the actual latest version is invalid may mask a current-state data defect. Define explicit DQ and eligibility policy.
+- Guided discussion only; no tests or SQL runtime claims.

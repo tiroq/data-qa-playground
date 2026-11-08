@@ -1,7 +1,7 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from typing import Any, Dict
-from data_qa.data.base import Record
+from data_qa.data.base import TradeGroup, TradeResult
+from data_qa.data.trade_result import IssueCategory
 
 
 class Handler(ABC):
@@ -14,7 +14,7 @@ class Handler(ABC):
         pass
 
     @abstractmethod
-    def handle(self, source: list[Record], target: list[Record]) -> Dict:
+    def handle(self, trade_group: TradeGroup) -> TradeResult:
         pass
 
 
@@ -23,7 +23,11 @@ class AbstractHandler(Handler):
     Default chaining behavior can be implemented inside this base handler class.
     """
 
-    _next_handler: Handler = None
+    def __init__(self) -> None:
+        self._next_handler = None
+        self.result = TradeResult()
+
+    # _next_handler: Handler = None
 
     def set_next(self, handler: Handler) -> Handler:
         self._next_handler = handler
@@ -33,32 +37,28 @@ class AbstractHandler(Handler):
         return handler
 
     @abstractmethod
-    def handle(self, source: list[Record], target: list[Record]) -> Dict:
+    def handle(self, trade_group: TradeGroup) -> None:
         if self._next_handler:
-            return self._next_handler.handle(source, target)
+            return self._next_handler.handle(trade_group)
 
         return None
 
 
 
 class MissingHandler(AbstractHandler):
-    def handle(self, source: list[Record], target: list[Record]) -> Dict:
-        s_business_keys = {record.business_key() for record in source}
-        t_business_keys = {record.business_key() for record in target}
-
-        
-
-        result = super().handle(source, target)
-        return result
+    def handle(self, trade_group: TradeGroup) -> None:
+        if len(trade_group.target) == 0:
+            self.result.add_issue(IssueCategory.MISSING, {"message": "Target is missing"})
+        return super().handle(trade_group)
 
 
 class SquirrelHandler(AbstractHandler):
-    def handle(self, source: list[Record], target: list[Record]) -> Dict:
-        result = super().handle(source, target)
+    def handle(self, trade_group: TradeGroup) -> None:
+        result = super().handle(trade_group)
         return result
 
 
 class DogHandler(AbstractHandler):
-    def handle(self, source: list[Record], target: list[Record]) -> Dict:
-        result = super().handle(source, target)
+    def handle(self, trade_group: TradeGroup) -> None:
+        result = super().handle(trade_group)
         return result

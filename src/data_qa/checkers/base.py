@@ -1,7 +1,7 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from data_qa.data.base import TradeGroup, TradeResult
-from data_qa.data.trade_result import IssueCategory
+from data_qa.data.trade_group import TradeGroup
+from data_qa.data.trade_result import TradeResult, IssueCategories
 
 
 class Checker(ABC):
@@ -44,14 +44,14 @@ class AbstractChecker(Checker):
 class MissingHandler(AbstractChecker):
     def handle(self, group: TradeGroup, result: TradeResult) -> None:
         if len(group.target) == 0:
-            self.result.add_issue(IssueCategory.MISSING, {"message": "Target is missing"})
+            result.add_issue(IssueCategories.MISSING, message="Target is missing")
         return super().handle(group, result)
 
 
 class ExtraHandler(AbstractChecker):
     def handle(self, group: TradeGroup, result: TradeResult) -> None:
         if len(group.source) == 0:
-            result.add_issue(IssueCategory.EXTRA, {"message": "Source is missing"})
+            result.add_issue(IssueCategories.EXTRA, message="Source is missing")
         return super().handle(group, result)
 
 

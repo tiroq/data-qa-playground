@@ -6,7 +6,23 @@ from dataclasses import dataclass, field
 from typing import Any, Literal
 
 BusinessKey = tuple[str, int]
-IssueCategory = Literal["missing", "extra", "changed", "duplicates", "malformed"]
+
+
+class IssueCategories:
+    MISSING = "missing"
+    EXTRA = "extra"
+    CHANGED = "changed"
+    DUPLICATES = "duplicates"
+    MALFORMED = "malformed"
+
+
+IssueCategory = Literal[
+    IssueCategories.MISSING,
+    IssueCategories.EXTRA,
+    IssueCategories.CHANGED,
+    IssueCategories.DUPLICATES,
+    IssueCategories.MALFORMED,
+]
 
 
 @dataclass(frozen=True, slots=True)

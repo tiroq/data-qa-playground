@@ -454,11 +454,11 @@ def test_historical_same_version_payload_conflict_is_visible() -> None:
 
 
 
-@pytest.mark.xfail(
-    strict=True,
-    raises=NotImplementedError,
-    reason="Raw-row validation before grouping is not implemented",
-)
+# @pytest.mark.xfail(
+#     strict=True,
+#     raises=NotImplementedError,
+#     reason="Raw-row validation before grouping is not implemented",
+# )
 @pytest.mark.parametrize(
     ("side", "raw"),
     [

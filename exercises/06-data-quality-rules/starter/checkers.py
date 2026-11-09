@@ -42,22 +42,22 @@ class AbstractChecker(Checker):
 
 class FieldsChecker(AbstractChecker):
     def handle(self, cohort: dict[str, Any], result: list[RuleOutcome]) -> None:
+        outcome = RuleOutcome(
+            rule_id="missing_field",
+            status="PASS",
+            severity="critical",
+            issues=[],
+        )
         for record in cohort["records"]:
             for field in ["event_id", "trade_id", "account_id", "version", "status"]:
                 if record.get(field, None) is None:
-                    result.append(
-                        RuleOutcome(
-                            rule_id="missing_field",
-                            status="FAIL",
-                            severity="critical",
-                            issues=[
-                                {
-                                    "event_id": record.get("event_id"),
-                                    "field": field,
-                                    "reason": "required_field_is_null",
-                                    "message": f"Required field '{field}' is null",
-                                }
-                                ],
-                        )
-                    )
+                    outcome.status = "FAIL"
+                    outcome.issues.append(
+                        {
+                            "event_id": record.get("event_id"),
+                            "field": field,
+                            "reason": "required_field_is_null",
+                            "message": f"Required field '{field}' is null",
+                        })
+        result.append(outcome)
         return super().handle(cohort, result)

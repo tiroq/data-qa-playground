@@ -213,3 +213,152 @@ def test_malformed_and_mixed_input_report_is_order_independent() -> None:
     assert compare_events(source, target) == compare_events(
         list(reversed(source)), list(reversed(target))
     )
+
+
+
+def _coverage_for(
+    detailed: dict, trade_id: str = "T1", account_id: int = 100
+) -> dict[str, str]:
+    entries = [
+        entry["checks"] for entry in detailed["coverage"]["business_keys"]
+        if entry["trade_id"] == trade_id and entry["account_id"] == account_id
+    ]
+    assert len(entries) == 1
+    return entries[0]
+
+
+def test_best_effort_keeps_duplicate_evidence_when_version_is_unknown() -> None:
+    from data_qa.reconciliation import compare_events_detailed
+
+    valid = event(version=2, event_id="E2", pnl="7.00")
+    invalid = event(version=None, event_id="E3", pnl="8.00")
+    detailed = compare_events_detailed([valid, valid, invalid], [valid])
+    report = detailed["report"]
+    assert len(report["duplicates"]) == 1
+    assert report["duplicates"][0]["details"]["duplicate_count"] == 1
+    assert len(report["malformed"]) == 1
+    assert report["changed"] == []
+
+    coverage = _coverage_for(detailed)
+    assert coverage["presence"] == "complete"
+    assert coverage["duplicates"] == "partial"
+    assert coverage["payload_conflict"] == "partial"
+    assert coverage["version_mismatch"] == "blocked"
+    assert coverage["state_mismatch"] == "blocked"
+
+
+def test_known_old_malformed_version_does_not_block_latest_comparison() -> None:
+    from data_qa.reconciliation import compare_events_detailed
+
+    malformed_old = event(version=1, event_id="E1", status=None)
+    valid_new = event(version=2, event_id="E2", pnl="9.00")
+    target_old = event(version=1, event_id="T1", pnl="5.00")
+    detailed = compare_events_detailed([malformed_old, valid_new], [target_old])
+    report = detailed["report"]
+    reasons = {row["details"].get("reason") for row in report["changed"]}
+    assert reasons == {"version_mismatch"}
+    assert len(report["malformed"]) == 1
+    coverage = _coverage_for(detailed)
+    assert coverage["version_mismatch"] == "complete"
+    assert coverage["duplicates"] == "partial"
+
+
+def test_malformed_latest_payload_blocks_state_mismatch_but_not_validation() -> None:
+    from data_qa.reconciliation import compare_events_detailed
+
+    bad_latest = event(version=2, event_id="E3", pnl="not-numeric")
+    valid_source = event(version=2, event_id="E2", pnl="7.00")
+    valid_target = event(version=2, event_id="T2", pnl="8.00")
+    detailed = compare_events_detailed(
+        [bad_latest, valid_source], [valid_target]
+    )
+    assert len(detailed["report"]["malformed"]) == 1
+    assert detailed["report"]["changed"] == []
+    assert _coverage_for(detailed)["state_mismatch"] == "blocked"
+
+
+def test_unkeyed_malformed_target_suppresses_only_plausible_missing() -> None:
+    from data_qa.reconciliation import compare_events_detailed
+
+    source = [
+        event(trade_id="T1", account_id=100),
+        event(trade_id="T2", account_id=100, event_id="E2"),
+    ]
+    bad_target = event(trade_id="T1", account_id=None)
+    detailed = compare_events_detailed(source, [bad_target])
+    report = detailed["report"]
+    assert {(row["trade_id"], row["account_id"]) for row in report["missing"]} == {
+        ("T2", 100)
+    }
+    assert _coverage_for(detailed, "T1")["presence"] == "blocked"
+    assert _coverage_for(detailed, "T2")["presence"] == "complete"
+    assert detailed["coverage"]["unkeyed_malformed_count"] == 1
+
+
+def test_partial_account_identity_only_impacts_matching_account() -> None:
+    from data_qa.reconciliation import compare_events_detailed
+
+    source = [
+        event(trade_id="T1", account_id=100),
+        event(trade_id="T2", account_id=200, event_id="E2"),
+    ]
+    bad_target = event(trade_id=None, account_id=100)
+    detailed = compare_events_detailed(source, [bad_target])
+    assert [row["trade_id"] for row in detailed["report"]["missing"]] == ["T2"]
+    assert _coverage_for(detailed, "T1", 100)["presence"] == "blocked"
+    assert _coverage_for(detailed, "T2", 200)["presence"] == "complete"
+
+
+def test_malformed_source_does_not_create_false_extra_on_same_key() -> None:
+    from data_qa.reconciliation import compare_events_detailed
+
+    detailed = compare_events_detailed([event(version=0)], [event()])
+    report = detailed["report"]
+    assert report["extra"] == []
+    assert len(report["malformed"]) == 1
+    assert _coverage_for(detailed)["presence"] == "blocked"
+
+
+def test_valid_payload_conflict_survives_unrelated_malformed_same_key() -> None:
+    from data_qa.reconciliation import compare_events_detailed
+
+    valid = event(version=2, event_id="E2", pnl="8.00")
+    conflicting = event(version=2, event_id="E2", pnl="9.00")
+    bad_old = event(version=1, event_id="E1", status=None)
+    detailed = compare_events_detailed([valid, conflicting, bad_old], [valid])
+    reasons = [row["details"].get("reason") for row in detailed["report"]["changed"]]
+    assert reasons == ["payload_conflict"]
+    assert _coverage_for(detailed)["payload_conflict"] == "partial"
+    assert _coverage_for(detailed)["version_mismatch"] == "blocked"
+
+
+def test_malformed_only_key_gets_blocked_coverage_without_running_empty_group() -> None:
+    from data_qa.reconciliation import compare_events_detailed
+
+    detailed = compare_events_detailed([event(version=None)], [])
+    assert len(detailed["report"]["malformed"]) == 1
+    assert detailed["report"]["missing"] == []
+    coverage = _coverage_for(detailed)
+    assert coverage["presence"] == "blocked"
+    assert coverage["duplicates"] == "blocked"
+    assert coverage["state_mismatch"] == "blocked"
+
+
+def test_detailed_result_is_order_independent_and_preserves_old_api() -> None:
+    from data_qa.reconciliation import compare_events_detailed
+
+    source = [
+        event(event_id="E2", version=2),
+        event(version=None, event_id="E3"),
+        event(event_id="E2", version=2),
+        event(trade_id="T2", event_id="E1"),
+    ]
+    target = [
+        event(event_id="E2", version=2),
+        event(trade_id="T3", event_id="E9"),
+    ]
+    first = compare_events_detailed(source, target)
+    second = compare_events_detailed(list(reversed(source)), list(reversed(target)))
+    assert first == second
+    assert compare_events(source, target) == first["report"]
+    assert set(first["report"]) == set(CATEGORIES)

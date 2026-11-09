@@ -45,8 +45,9 @@ mutating the group, and the identity-only lifecycle guard.
 1. Latest version for 201, 202, 203, 206; empty target.
 2. Conflicting latest payload for 205 must not choose an arbitrary winner.
 3. Stale target, changed PnL, and Decimal precision.
-4. Same-event transport replay, missing **plus** replay, conflicting
-   payload for one event ID.
+4. Same-event transport replay and missing **plus** replay. Payload
+   conflicts at the same version (including the same event ID) are now
+   detected by ChangedHandler and asserted with reason=payload_conflict.
 5. Null-key rows must be reported as malformed.
 
 The `xfail(strict=True)` tests run and document expected failures.
@@ -61,8 +62,10 @@ with `xfailed` cases does **not** mean all acceptance criteria are met.
    on either side, and an empty source+target must raise EmptyTradeGroupError
    when `run_checks()` is called.
 3. Implement `TradeGroup.latest(side)`; enable relevant tests.
-4. Add `Changed` and `Duplicate` checkers **in your naming style**.
-   Extend `presence_chain()` inside the test file as you connect them.
+4. Continue refining `ChangedHandler` and `DuplicateHandler` in your
+   naming style. ChangedHandler reports same-version payload conflicts
+   (within either side) and current-state differences at equal versions;
+   a separate policy is still needed for stale target versions.
 5. Implement raw-key validation and `compare_events` aggregation.
 6. Run `uv run pytest -q tests/unit/test_reconciliation.py` when the
    batch comparison contract is ready.
@@ -71,3 +74,18 @@ The learner's existing checker implementation and unrelated tests are preserved.
 The original wrong-business-key test was expanded to cover both sides;
 the zero/zero presence case is now an independent exception test.
 No runtime/CI pass is claimed until separately verified.
+
+## ChangedHandler behavior (current implementation)
+
+- Same-version rows with different status/PnL on one side produce one
+  `changed` issue with `reason=payload_conflict`, side, version, event_ids,
+  and sorted record evidence. `event_id` is included when all conflicting
+  rows share it. The checker inspects both sides independently.
+- Identical replays are handled by DuplicateHandler, not ChangedHandler.
+- With an unambiguous latest payload on both sides and the same latest
+  version, differing status or numeric PnL produces `state_mismatch`.
+  Valid PnL strings are compared with Decimal; malformed/NULL PnL is a
+  future validation responsibility.
+- A conflict at the latest version blocks cross-side current-state comparison
+  for that side, but still gets reported as an issue.
+- Version mismatches remain outside this handler's current policy.

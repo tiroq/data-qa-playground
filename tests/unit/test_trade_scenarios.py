@@ -317,12 +317,88 @@ def test_same_event_id_with_conflicting_payload_is_reported() -> None:
         target=[Record("T205", 3, 2, "E205V2", "FILLED", "8.0000")],
     )
     report = group.run_checks(presence_chain())
-    assert any(
-        issue.category == "changed"
-        and issue.details.get("event_id") == "E205V2"
-        and issue.details.get("side") == "source"
-        for issue in report.issues
+    changed = report.issues_of("changed")
+    assert len(changed) == 1
+    assert changed[0].details["reason"] == "payload_conflict"
+    assert changed[0].details["event_id"] == "E205V2"
+    assert changed[0].details["side"] == "source"
+    assert changed[0].details["version"] == 2
+    assert {entry["pnl"] for entry in changed[0].details["records"]} == {
+        "8.0000", "8.5000"
+    }
+    assert report.issues_of("duplicates") == []
+
+
+@pytest.mark.parametrize("side", [Side.SOURCE, Side.TARGET])
+def test_changed_conflict_detected_on_either_side(side: str) -> None:
+    """The other side's presence must not suppress a local payload conflict."""
+    first = Record("T205", 3, 2, "E205V2", "FILLED", "8.0000")
+    conflicting = Record("T205", 3, 2, "E205V2", "FILLED", "8.5000")
+    group = TradeGroup(
+        ("T205", 3),
+        source=[first, conflicting] if side == Side.SOURCE else [],
+        target=[first, conflicting] if side == Side.TARGET else [],
     )
+
+    report = group.run_checks(presence_chain())
+    changed = report.issues_of("changed")
+    assert len(changed) == 1
+    assert changed[0].details["reason"] == "payload_conflict"
+    assert changed[0].details["side"] == side
+    assert changed[0].details["event_id"] == "E205V2"
+
+
+def test_identical_replay_produces_duplicate_but_not_changed() -> None:
+    row = Record("T201", 1, 2, "E201V2", "FILLED", "7.0000")
+    group = TradeGroup(
+        ("T201", 1),
+        source=[row, Record("T201", 1, 2, "E201V2", "FILLED", "7.0000")],
+        target=[row],
+    )
+
+    report = group.run_checks(presence_chain())
+    assert len(report.issues_of("duplicates")) == 1
+    assert report.issues_of("changed") == []
+
+
+def test_changed_state_mismatch_provides_reason_and_field() -> None:
+    group = TradeGroup(
+        ("T201", 1),
+        source=[Record("T201", 1, 2, "S2", "FILLED", "7.0001")],
+        target=[Record("T201", 1, 2, "T2", "NEW", "7.0000")],
+    )
+    report = group.run_checks(presence_chain())
+    assert {
+        (issue.details["reason"], issue.details["field"])
+        for issue in report.issues_of("changed")
+    } == {("state_mismatch", "pnl"), ("state_mismatch", "status")}
+
+
+def test_equivalent_decimal_pnl_is_not_changed() -> None:
+    group = TradeGroup(
+        ("T201", 1),
+        source=[Record("T201", 1, 2, "S2", "FILLED", "7.00")],
+        target=[Record("T201", 1, 2, "T2", "FILLED", "7.0000")],
+    )
+    assert group.run_checks(presence_chain()).issues_of("changed") == []
+
+
+def test_historical_same_version_payload_conflict_is_visible() -> None:
+    """Conflicting historical data must not be silently lost to latest()."""
+    group = TradeGroup(
+        ("T205", 3),
+        source=[
+            Record("T205", 3, 1, "E1", "NEW", "4.0000"),
+            Record("T205", 3, 1, "E1", "NEW", "4.5000"),
+            Record("T205", 3, 2, "E2", "FILLED", "8.0000"),
+        ],
+        target=[Record("T205", 3, 2, "E2", "FILLED", "8.0000")],
+    )
+    result = group.run_checks(presence_chain())
+    conflicts = [issue for issue in result.issues_of("changed") if issue.details.get("reason") == "payload_conflict"]
+    assert len(conflicts) == 1
+    assert conflicts[0].details["version"] == 1
+
 
 
 @pytest.mark.xfail(

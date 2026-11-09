@@ -50,7 +50,14 @@ class FieldsChecker(AbstractChecker):
                             rule_id="missing_field",
                             status="FAIL",
                             severity="critical",
-                            issues=[{"field": field}],
+                            issues=[
+                                {
+                                    "event_id": record.get("event_id"),
+                                    "field": field,
+                                    "reason": "required_field_is_null",
+                                    "message": f"Required field '{field}' is null",
+                                }
+                                ],
                         )
                     )
         return super().handle(cohort, result)

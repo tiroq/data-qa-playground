@@ -1,0 +1,30 @@
+name: Session 05 Python reconciliation tests
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/data_qa/**'
+      - 'tests/unit/**'
+      - '.github/workflows/session05-unit-tests.yml'
+  pull_request:
+    paths:
+      - 'src/data_qa/**'
+      - 'tests/unit/**'
+      - '.github/workflows/session05-unit-tests.yml'
+  workflow_dispatch:
+
+jobs:
+  session05:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install unit-test dependencies
+        run: uv sync --group dev
+      - name: Run Session 05 and other unit tests
+        run: uv run pytest -q tests/unit

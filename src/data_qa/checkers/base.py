@@ -61,7 +61,7 @@ class DuplicateHandler(AbstractChecker):
         versions = [src.version for src in group.source] + [
             src.version for src in group.target
         ]
-        versions = tuple(versions)
+        versions = sorted(set(versions))
         for side in [Side.SOURCE, Side.TARGET]:
             for version in versions:
                 records = group.get_side_version(side, version)
@@ -77,7 +77,7 @@ class DuplicateHandler(AbstractChecker):
                         result.add_issue(
                             IssueCategories.DUPLICATES,
                             side=side,
-                            version=version,
+                            **records[0].__dict__,
                             message="Duplicate records found",
                         )
                 else:

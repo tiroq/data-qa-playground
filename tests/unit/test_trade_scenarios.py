@@ -13,9 +13,9 @@ from __future__ import annotations
 
 import pytest
 
-from data_qa.checkers.base import ExtraHandler, MissingHandler
+from data_qa.checkers.base import data_checkers, AbstractChecker
 from data_qa.data.base import Record
-from data_qa.data.trade_group import EmptyTradeGroupError, Side, TradeGroup
+from data_qa.data.trade_group import AmbiguousLatestVersionError, EmptyTradeGroupError, Side, TradeGroup
 from data_qa.reconciliation import compare_events
 
 
@@ -104,11 +104,9 @@ def lab02_group(trade_id: int) -> TradeGroup:
     return TradeGroup(business_key=key, source=source)
 
 
-def presence_chain() -> MissingHandler:
+def presence_chain() -> AbstractChecker:
     """Currently implemented checkers; add new ones here when available."""
-    first = MissingHandler()
-    first.set_next(ExtraHandler())
-    return first
+    return data_checkers  # type: ignore[return-value]
 
 
 def issues(group: TradeGroup) -> list[str]:
@@ -157,8 +155,15 @@ def test_presence_truth_table(source_count: int, target_count: int, expected: li
         source=[Record(trade_id=key[0], account_id=key[1], event_id="src-1")] * source_count,
         target=[Record(trade_id=key[0], account_id=key[1], event_id="tgt-1")] * target_count,
     )
+    print(f"source_count={source_count}, target_count={target_count}, expected={expected}")
+    print(f"Group: {group}")
+    print(f"Checker chain:")
+    checker = presence_chain()
+    while checker:
+        print(f"- {checker.__class__.__name__}")
+        checker = checker._next_handler
+    print(f"Result: {group.run_checks(presence_chain())}")
     assert issues(group) == expected
-
 
 def test_empty_trade_group_raises_with_business_key() -> None:
     """Two empty sides violate the group invariant when checks begin."""
@@ -171,7 +176,7 @@ def test_empty_trade_group_raises_with_business_key() -> None:
     assert repr(key) in str(error.value)
 
 
-@pytest.mark.xfail(strict=True, raises=NotImplementedError, reason="TradeGroup.latest() is the learner's TODO")
+# @pytest.mark.xfail(strict=True, raises=NotImplementedError, reason="TradeGroup.latest() is the learner's TODO")
 @pytest.mark.parametrize(
     ("trade_id", "version", "status", "pnl"),
     [
@@ -189,22 +194,22 @@ def test_lab02_latest_version(
     assert (selected.version, selected.status, selected.pnl) == (version, status, pnl)
 
 
-@pytest.mark.xfail(strict=True, raises=NotImplementedError, reason="Need an explicit same-max-version conflict policy")
+# @pytest.mark.xfail(strict=True, raises=NotImplementedError, reason="Need an explicit same-max-version conflict policy")
 def test_lab02_conflicting_latest_version_must_not_win_arbitrarily() -> None:
     # lab02 205/A3: two physical v2 rows, pnl=8.0000 and pnl=8.5000.
     # This test chooses ValueError as a proposed policy. Change it explicitly
     # if the checker will instead record an ambiguity in TradeResult.
-    with pytest.raises(ValueError, match="(?i)conflict|ambig"):
+    with pytest.raises(AmbiguousLatestVersionError, match="(?i)conflict|ambig"):
         lab02_group(205).latest(Side.SOURCE)
 
 
-@pytest.mark.xfail(strict=True, raises=NotImplementedError, reason="Latest() must define empty-side behavior")
+# @pytest.mark.xfail(strict=True, raises=NotImplementedError, reason="Latest() must define empty-side behavior")
 def test_latest_on_empty_side_is_none() -> None:
     print(lab02_group(201).latest(Side.TARGET))
     assert lab02_group(201).latest(Side.TARGET) is None
 
 
-@pytest.mark.xfail(strict=True, raises=AssertionError, reason="Wire a Changed checker into presence_chain()")
+# @pytest.mark.xfail(strict=True, raises=AssertionError, reason="Wire a Changed checker into presence_chain()")
 @pytest.mark.parametrize(
     ("source_version", "target_version", "source_pnl", "target_pnl"),
     [
@@ -225,18 +230,20 @@ def test_latest_state_difference_reported_as_changed(
     assert "missing" not in issues(group)
 
 
-@pytest.mark.xfail(strict=True, raises=AssertionError, reason="Wire a Duplicate checker into presence_chain()")
+# @pytest.mark.xfail(strict=True, raises=AssertionError, reason="Wire a Duplicate checker into presence_chain()")
 def test_same_event_replayed_on_source_is_a_transport_duplicate() -> None:
     row = Record("T201", 1, 2, "E201V2", "FILLED", "7.0000")
     group = TradeGroup(("T201", 1), source=[row, Record("T201", 1, 2, "E201V2", "FILLED", "7.0000")],
                        target=[row])
     report = group.run_checks(presence_chain())
+    print(group)
+    print(report)
     assert len(report.issues_of("duplicates")) == 1
     assert report.issues_of("duplicates")[0].details["side"] == "source"
     assert report.issues_of("duplicates")[0].details["event_id"] == "E201V2"
 
 
-@pytest.mark.xfail(strict=True, raises=AssertionError, reason="Missing and duplicate must be independent issues")
+# @pytest.mark.xfail(strict=True, raises=AssertionError, reason="Missing and duplicate must be independent issues")
 def test_missing_trade_can_also_have_duplicate_delivery() -> None:
     record = Record("T201", 1, 2, "E201V2", "FILLED", "7.0000")
     group = TradeGroup(("T201", 1), source=[record, record], target=[])
@@ -257,7 +264,7 @@ def test_distinct_lifecycle_versions_not_flagged_as_presence_errors() -> None:
     assert issues(group) == []
 
 
-@pytest.mark.xfail(strict=True, raises=AssertionError, reason="Conflict detection is not implemented yet")
+# @pytest.mark.xfail(strict=True, raises=AssertionError, reason="Conflict detection is not implemented yet")
 def test_same_event_id_with_conflicting_payload_is_reported() -> None:
     group = TradeGroup(
         ("T205", 3),

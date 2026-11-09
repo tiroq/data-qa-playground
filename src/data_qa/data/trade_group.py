@@ -85,7 +85,12 @@ class TradeGroup:
             return None
         max_version = max(record.version for record in records)
         latest_records = [record for record in records if record.version == max_version]
-        if len(latest_records) == 1:
+        payloads = {
+            (record.status, record.pnl)
+            for record in latest_records
+        }
+
+        if len(payloads) == 1:
             return latest_records[0]
         # Ambiguous: multiple records with the same max version
         raise AmbiguousLatestVersionError(f"Ambiguous latest version conflict for side {side}")

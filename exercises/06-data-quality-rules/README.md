@@ -1,13 +1,13 @@
 # Session 06 — Data Quality — Contracts, Gates & Metrics
 
-**Date (Asia/Bangkok):** 2026-11-09 · **Duration:** 60 minutes · **Status:** PLANNED  
+**Date (Asia/Bangkok):** 2026-11-09 · **Duration:** 60 minutes · **Status:** IN PROGRESS  
 **Track:** Exness QA Engineer (Data Stack) interview preparation
 
 > **Language contract:** The actual technical interview is in **Russian**. All live tasks, discussion, follow-up questions, code review, mock interviews, and feedback in ChatGPT must be **in Russian**. SQL, Python, identifiers, and technical terms may remain in English. This repository's written exercise specifications are in English.
 
 ## Ready-to-run laboratory (prebuilt)
 
-Start with [START_HERE.md](START_HERE.md): it links to verified input materials, setup commands, and deliberately incomplete learner implementation. Discuss all code and answers in Russian. **Fixture readiness is not interview-task completion.**
+Start with [START_HERE.md](START_HERE.md): it now documents the runnable DQ-01 CLI, machine-readable reporting and targeted unit tests. Discuss all code and answers in Russian. **DQ-01 is the only implemented rule; fixture readiness and a passing unit test do not complete the interview assignment.**
 
 ## Goal
 
@@ -45,8 +45,9 @@ Do not add a reference solution before the learner has attempted the assignment.
 
 ## Session result (fill **after** completing)
 
-- **Attempt / PR:** _not yet completed_
+- **Attempt / PR:** Learner DQ-01 in `starter/checkers.py` (commits `31cd8db` through `f8437b7`); runnable CLI, result model, and unit tests wired in `8168b89`. Still in progress.
 - **Score / 10:** _not assessed_
-- **What worked:** _not assessed_
-- **Bugs / edge cases:** _not assessed_
-- **Next-session adjustments:** _not assessed_
+- **What worked:** DQ-01 emits one explicit PASS/FAIL per nonempty cohort with per-record issues. CLI returns text/JSON, includes an input gate for empty cohorts, and does not mark unimplemented DQ rules as passing.
+- **Bugs / edge cases:** Unexpectedly empty cohort now FAILs the input gate while DQ-01 remains INDETERMINATE. DQ-01 does not yet check empty string values, invalid versions, status domain, duplicates, or SLA; those are distinct future rules.
+- **Verification:** GitHub Actions unit-test job succeeded on `8168b89` ([run](https://github.com/tiroq/data-qa-playground/actions/runs/42633248278)); lab readiness also succeeded ([run](https://github.com/tiroq/data-qa-playground/actions/runs/42633248275)).
+- **Next-session adjustments:** Implement DQ-02 event ID uniqueness; define thresholds/denominators and evaluate late-event SLA and warning vs blocking gates.

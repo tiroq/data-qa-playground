@@ -1,53 +1,57 @@
 from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from typing import Any
-from rule_runner import RuleOutcome
+
+from rule_result import RuleOutcome
 
 
 class Checker(ABC):
-    """
-    Interface for handling requests in a chain of responsibility pattern.
-    """
+    """Interface for independent data-quality checks in a chain."""
 
     @abstractmethod
     def set_next(self, handler: Checker) -> Checker:
         pass
 
     @abstractmethod
-    def handle(self, cohort: dict[str, Any]) -> None:
+    def handle(self, cohort: dict[str, Any], result: list[RuleOutcome]) -> None:
         pass
 
 
 class AbstractChecker(Checker):
-    """
-    Default chaining behavior can be implemented inside this base handler class.
-    """
+    """Call the next checker after the current rule finishes."""
 
-    _next_handler: Checker = None
+    _next_handler: Checker | None = None
 
     def set_next(self, handler: Checker) -> Checker:
         self._next_handler = handler
-        # Returning the handler from here will allow us to link handlers in a simple
-        # way, like this:
-        # _handler.set_next(squirrel).set_next(dog)
         return handler
 
-    @abstractmethod
     def handle(self, cohort: dict[str, Any], result: list[RuleOutcome]) -> None:
         if self._next_handler:
-            return self._next_handler.handle(cohort, result)
-
-        return None
+            self._next_handler.handle(cohort, result)
 
 
 class FieldsChecker(AbstractChecker):
+    """DQ-01: report absent/null required fields for physical event records."""
+
     def handle(self, cohort: dict[str, Any], result: list[RuleOutcome]) -> None:
-        outcome = RuleOutcome(
-            rule_id="DQ-01",
-            status="PASS",
-            severity="critical",
-            issues=[],
-        )
+        # No physical records means this rule has not evaluated any fields.
+        # A separate cohort-level input gate decides if the empty input is allowed.
+        if not cohort["records"]:
+            result.append(
+                RuleOutcome(
+                    rule_id="DQ-01",
+                    status="INDETERMINATE",
+                    severity="critical",
+                    issues=[{
+                        "reason": "no_records_to_validate",
+                        "message": "No physical records to validate",
+                    }],
+                )
+            )
+            return super().handle(cohort, result)
+
         issues = []
         for record in cohort["records"]:
             for field in ["event_id", "trade_id", "account_id", "version", "status"]:
@@ -58,15 +62,15 @@ class FieldsChecker(AbstractChecker):
                             "field": field,
                             "reason": "required_field_is_null",
                             "message": f"Required field '{field}' is null",
-                        })
+                        }
+                    )
 
-        if issues:
-            outcome = RuleOutcome(
+        result.append(
+            RuleOutcome(
                 rule_id="DQ-01",
-                status="FAIL",
+                status="FAIL" if issues else "PASS",
                 severity="critical",
                 issues=issues,
             )
-
-        result.append(outcome)
+        )
         return super().handle(cohort, result)

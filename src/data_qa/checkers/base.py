@@ -1,9 +1,8 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections import Counter
-from dataclasses import fields
-from decimal import Decimal, InvalidOperation
-from data_qa.data.base import Record
+from decimal import Decimal
+from data_qa.data.base import Record, pnl_value
 from data_qa.data.trade_group import AmbiguousLatestVersionError, TradeGroup, Side
 from data_qa.data.trade_result import TradeResult, IssueCategories
 
@@ -62,7 +61,7 @@ class DuplicateHandler(AbstractChecker):
     def handle(self, group: TradeGroup, result: TradeResult) -> None:
         for side in (Side.SOURCE, Side.TARGET):
             counts = Counter(
-                (r.event_id, r.version, r.status, r.pnl)
+                (r.event_id, r.version, r.status, pnl_value(r.pnl))
                 for r in group.get_side(side)
             )
 
@@ -99,16 +98,7 @@ class ChangedHandler(AbstractChecker):
     rather than letting latest() select a winner or raise before reporting.
     """
 
-    @staticmethod
-    def _pnl_key(value: str | None) -> Decimal | str | None:
-        """Compare valid money values exactly; raw invalid values await validation."""
-        if value is None:
-            return None
-        try:
-            amount = Decimal(value)
-        except (InvalidOperation, TypeError, ValueError):
-            return value
-        return amount if amount.is_finite() else value
+    _pnl_key = staticmethod(pnl_value)
 
     @classmethod
     def _payload(cls, record: Record) -> tuple[str | None, Decimal | str | None]:

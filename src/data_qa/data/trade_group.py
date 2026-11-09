@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING, Literal
 if TYPE_CHECKING:
     from data_qa.checkers.base import AbstractChecker
 
-from .base import Record
+from .base import Record, pnl_value
 from .trade_result import TradeResult
 
 BusinessKey = tuple[str, int]
@@ -86,12 +86,12 @@ class TradeGroup:
         max_version = max(record.version for record in records)
         latest_records = [record for record in records if record.version == max_version]
         payloads = {
-            (record.status, record.pnl)
+            (record.status, pnl_value(record.pnl))
             for record in latest_records
         }
 
         if len(payloads) == 1:
-            return latest_records[0]
+            return min(latest_records, key=lambda record: record.event_id)
         # Ambiguous: multiple records with the same max version
         raise AmbiguousLatestVersionError(f"Ambiguous latest version conflict for side {side}")
 

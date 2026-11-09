@@ -18,7 +18,16 @@ from .base import Record
 from .trade_result import TradeResult
 
 BusinessKey = tuple[str, int]
-Side = Literal["source", "target"]
+
+
+class Side(str):
+    SOURCE = "source"
+    TARGET = "target"
+
+Sides = Literal[
+    Side.SOURCE,
+    Side.TARGET,
+]
 
 
 """Exception raised when a trade group has no records on either side."""

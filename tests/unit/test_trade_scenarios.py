@@ -15,7 +15,7 @@ import pytest
 
 from data_qa.checkers.base import ExtraHandler, MissingHandler
 from data_qa.data.base import Record
-from data_qa.data.trade_group import EmptyTradeGroupError, TradeGroup
+from data_qa.data.trade_group import EmptyTradeGroupError, Side, TradeGroup
 from data_qa.reconciliation import compare_events
 
 
@@ -184,7 +184,7 @@ def test_empty_trade_group_raises_with_business_key() -> None:
 def test_lab02_latest_version(
     trade_id: int, version: int, status: str, pnl: str
 ) -> None:
-    selected = lab02_group(trade_id).latest("source")
+    selected = lab02_group(trade_id).latest(Side.SOURCE)
     assert selected is not None
     assert (selected.version, selected.status, selected.pnl) == (version, status, pnl)
 
@@ -195,12 +195,13 @@ def test_lab02_conflicting_latest_version_must_not_win_arbitrarily() -> None:
     # This test chooses ValueError as a proposed policy. Change it explicitly
     # if the checker will instead record an ambiguity in TradeResult.
     with pytest.raises(ValueError, match="(?i)conflict|ambig"):
-        lab02_group(205).latest("source")
+        lab02_group(205).latest(Side.SOURCE)
 
 
 @pytest.mark.xfail(strict=True, raises=NotImplementedError, reason="Latest() must define empty-side behavior")
 def test_latest_on_empty_side_is_none() -> None:
-    assert lab02_group(201).latest("target") is None
+    print(lab02_group(201).latest(Side.TARGET))
+    assert lab02_group(201).latest(Side.TARGET) is None
 
 
 @pytest.mark.xfail(strict=True, raises=AssertionError, reason="Wire a Changed checker into presence_chain()")

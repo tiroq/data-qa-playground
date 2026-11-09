@@ -1,5 +1,6 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
+from collections import Counter
 from dataclasses import fields
 from decimal import Decimal, InvalidOperation
 from data_qa.data.base import Record
@@ -58,33 +59,35 @@ class ExtraHandler(AbstractChecker):
 
 
 class DuplicateHandler(AbstractChecker):
-    def handle(self, group: TradeGroup, result: TradeResult):
-        versions = [src.version for src in group.source] + [
-            src.version for src in group.target
-        ]
-        versions = sorted(set(versions))
-        for side in [Side.SOURCE, Side.TARGET]:
-            for version in versions:
-                records = group.get_side_version(side, version)
-                if len(records) <= 1:
+    def handle(self, group: TradeGroup, result: TradeResult) -> None:
+        for side in (Side.SOURCE, Side.TARGET):
+            counts = Counter(
+                (r.event_id, r.version, r.status, r.pnl)
+                for r in group.get_side(side)
+            )
+
+            for (event_id, version, status, pnl), count in sorted(
+                counts.items(),
+                key=lambda item: (
+                    str(item[0][0]),
+                    item[0][1],
+                    str(item[0][2]),
+                    str(item[0][3]),
+                ),
+            ):
+                if count <= 1:
                     continue
-                if len(records) == 2:
-                    for field in fields(records[0]):
-                        if getattr(records[0], field.name) != getattr(
-                            records[1], field.name
-                        ):
-                            break
-                    else:
-                        result.add_issue(
-                            IssueCategories.DUPLICATES,
-                            side=side,
-                            **records[0].__dict__,
-                            message="Duplicate records found",
-                        )
-                else:
-                    raise ValueError(
-                        f"More than 2 records found for side {side} and version {version}"
-                    )
+
+                result.add_issue(
+                    IssueCategories.DUPLICATES,
+                    side=side,
+                    event_id=event_id,
+                    version=version,
+                    delivery_count=count,
+                    duplicate_count=count - 1,
+                    message="Duplicate deliveries found",
+                )
+
         return super().handle(group, result)
 
 

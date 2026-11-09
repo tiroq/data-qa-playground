@@ -286,10 +286,7 @@ def test_version_mismatch_reports_latest_versions_and_direction(
 ) -> None:
     group = TradeGroup(
         business_key=("T201", 1),
-        source=[
-            Record("T201", 1, 1, "S1", "NEW", "5.0000"),
-            Record("T201", 1, source_version, "S2", "FILLED", "7.0000"),
-        ],
+        source=[Record("T201", 1, source_version, "S2", "FILLED", "7.0000")],
         target=[Record("T201", 1, target_version, "T2", "FILLED", "7.0000")],
     )
 

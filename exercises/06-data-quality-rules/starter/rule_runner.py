@@ -34,7 +34,7 @@ def load_cohorts(path: Path) -> list[dict[str, Any]]:
     return cohorts
 
 
-def evaluate_rules(cohort: dict[str, Any]) -> list[RuleOutcome]:
+def evaluate_rules(cohort: dict[str, Any], result: list[RuleOutcome]) -> None:
     """TODO (learner): implement the rules and thresholds from CONTRACT.md."""
     raise NotImplementedError("Session 06: rule evaluation is your live-coding task")
 

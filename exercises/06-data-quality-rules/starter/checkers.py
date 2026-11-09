@@ -43,7 +43,7 @@ class AbstractChecker(Checker):
 class FieldsChecker(AbstractChecker):
     def handle(self, cohort: dict[str, Any], result: list[RuleOutcome]) -> None:
         outcome = RuleOutcome(
-            rule_id="missing_field",
+            rule_id="DQ-01",
             status="PASS",
             severity="critical",
             issues=[],

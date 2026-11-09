@@ -65,7 +65,7 @@ with `xfailed` cases does **not** mean all acceptance criteria are met.
 4. Continue refining `ChangedHandler` and `DuplicateHandler` in your
    naming style. ChangedHandler reports same-version payload conflicts
    (within either side) and current-state differences at equal versions;
-   a separate policy is still needed for stale target versions.
+   latest-version mismatches are now reported by VersionMismatchHandler.
 5. Implement raw-key validation and `compare_events` aggregation.
 6. Run `uv run pytest -q tests/unit/test_reconciliation.py` when the
    batch comparison contract is ready.
@@ -88,4 +88,18 @@ No runtime/CI pass is claimed until separately verified.
   future validation responsibility.
 - A conflict at the latest version blocks cross-side current-state comparison
   for that side, but still gets reported as an issue.
-- Version mismatches remain outside this handler's current policy.
+- Version mismatches remain outside this handler's policy and are handled
+  by the separate VersionMismatchHandler.
+
+## VersionMismatchHandler (implemented)
+
+- Compares `group.latest(source)` and `group.latest(target)` only when
+  both sides have records and latest states are unambiguous.
+- Emits `changed` with `reason=version_mismatch`, `source_version`,
+  `target_version`, and `direction=target_behind|target_ahead`.
+- If either side has an ambiguous latest payload, it does not choose
+  arbitrarily. `ChangedHandler` reports the underlying `payload_conflict`.
+- The Session 04 fixture presence test explicitly filters to missing/extra;
+  it does not fail simply because VersionMismatchHandler now reports valid
+  additional findings (e.g. trade 108/A5 and 110/A6).
+- DuplicateHandler still needs a separate change to handle 3+ deliveries.

@@ -163,7 +163,12 @@ def test_lab04_fixture_identity_and_cardinality() -> None:
 
 def test_lab04_missing_and_extra_match_snapshot() -> None:
     reports = {group.business_key: issues(group) for group in lab04_groups()}
-    anomalies = {key: categories for key, categories in reports.items() if categories}
+    # This is a presence test; version divergence is diagnosed separately.
+    anomalies = {
+        key: presence
+        for key, categories in reports.items()
+        if (presence := [c for c in categories if c in {"missing", "extra"}])
+    }
 
     assert anomalies == {
         ("T102", 1): ["missing"],  # source row 3, absent in target
@@ -267,6 +272,57 @@ def test_latest_state_difference_reported_as_changed(
     )
     assert "changed" in issues(group)
     assert "missing" not in issues(group)
+
+
+@pytest.mark.parametrize(
+    ("source_version", "target_version", "direction"),
+    [
+        (2, 1, "target_behind"),
+        (1, 2, "target_ahead"),
+    ],
+)
+def test_version_mismatch_reports_latest_versions_and_direction(
+    source_version: int, target_version: int, direction: str
+) -> None:
+    group = TradeGroup(
+        business_key=("T201", 1),
+        source=[
+            Record("T201", 1, 1, "S1", "NEW", "5.0000"),
+            Record("T201", 1, source_version, "S2", "FILLED", "7.0000"),
+        ],
+        target=[Record("T201", 1, target_version, "T2", "FILLED", "7.0000")],
+    )
+
+    report = group.run_checks(presence_chain())
+    mismatches = [
+        issue for issue in report.issues_of("changed")
+        if issue.details.get("reason") == "version_mismatch"
+    ]
+
+    if source_version == target_version:
+        assert mismatches == []
+    else:
+        assert len(mismatches) == 1
+        assert mismatches[0].details["source_version"] == source_version
+        assert mismatches[0].details["target_version"] == target_version
+        assert mismatches[0].details["direction"] == direction
+    assert report.issues_of("missing") == []
+    assert report.issues_of("extra") == []
+
+
+def test_version_mismatch_skips_ambiguous_latest_without_losing_conflict() -> None:
+    group = TradeGroup(
+        business_key=("T205", 3),
+        source=[
+            Record("T205", 3, 2, "E2", "FILLED", "8.0000"),
+            Record("T205", 3, 2, "E2", "FILLED", "8.5000"),
+        ],
+        target=[Record("T205", 3, 1, "E1", "NEW", "4.0000")],
+    )
+    report = group.run_checks(presence_chain())
+    reasons = [issue.details.get("reason") for issue in report.issues_of("changed")]
+    assert "payload_conflict" in reasons
+    assert "version_mismatch" not in reasons
 
 
 # @pytest.mark.xfail(strict=True, raises=AssertionError, reason="Wire a Duplicate checker into presence_chain()")

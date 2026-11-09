@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from dataclasses import fields
 from decimal import Decimal, InvalidOperation
 from data_qa.data.base import Record
-from data_qa.data.trade_group import TradeGroup, Side
+from data_qa.data.trade_group import AmbiguousLatestVersionError, TradeGroup, Side
 from data_qa.data.trade_result import TradeResult, IssueCategories
 
 
@@ -189,5 +189,43 @@ class ChangedHandler(AbstractChecker):
         return super().handle(group, result)
 
 
+
+class VersionMismatchHandler(AbstractChecker):
+    """Report latest-version divergence independently from payload comparison."""
+
+    def handle(self, group: TradeGroup, result: TradeResult) -> None:
+        if not group.source or not group.target:
+            return super().handle(group, result)
+
+        try:
+            source_latest = group.latest(Side.SOURCE)
+            target_latest = group.latest(Side.TARGET)
+        except AmbiguousLatestVersionError:
+            # ChangedHandler reports contradictory same-version payloads.
+            # We must not choose a winner just to compare version numbers.
+            return super().handle(group, result)
+
+        if source_latest is None or target_latest is None:
+            return super().handle(group, result)
+
+        if source_latest.version != target_latest.version:
+            result.add_issue(
+                IssueCategories.CHANGED,
+                reason="version_mismatch",
+                source_version=source_latest.version,
+                target_version=target_latest.version,
+                direction=(
+                    "target_behind"
+                    if source_latest.version > target_latest.version
+                    else "target_ahead"
+                ),
+                message="Latest source and target versions do not match",
+            )
+
+        return super().handle(group, result)
+
+
 data_checkers = MissingHandler()
-data_checkers.set_next(ExtraHandler()).set_next(DuplicateHandler()).set_next(ChangedHandler())
+data_checkers.set_next(ExtraHandler()).set_next(DuplicateHandler()).set_next(
+    ChangedHandler()
+).set_next(VersionMismatchHandler())

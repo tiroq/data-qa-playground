@@ -35,6 +35,9 @@ Sides = Literal[
 class EmptyTradeGroupError(ValueError):
     """Raised when a trade group has no records on either side."""
 
+class AmbiguousLatestVersionError(ValueError):
+    """Raised when multiple records share the latest version on a side."""
+
 
 @dataclass(slots=True)
 class TradeGroup:
@@ -74,13 +77,21 @@ class TradeGroup:
         self._check_membership(record)
         self.target.append(record)
 
-    def latest(self, side: Side) -> Record | None:
-        """TODO: select latest unambiguous version on the chosen side.
+    def latest(self, side: Sides) -> Record | None:
+        """Select latest unambiguous version on the chosen side.
 
         Decide what to do if distinct events at the same maximum version
         disagree. Do not silently pick an arbitrary record.
         """
-        raise NotImplementedError("Session 05: implement TradeGroup.latest")
+        records = self.source if side == Side.SOURCE else self.target
+        if not records or len(records) == 0:
+            return None
+        max_version = max(record.version for record in records)
+        latest_records = [record for record in records if record.version == max_version]
+        if len(latest_records) == 1:
+            return latest_records[0]
+        # Ambiguous: multiple records with the same max version
+        raise AmbiguousLatestVersionError(f"Ambiguous latest version for side {side}")
 
     def run_checks(self, checker_chain: AbstractChecker) -> TradeResult:
         """Execute ALL supplied checkers for this group, accumulate issues."""

@@ -74,3 +74,34 @@ class FieldsChecker(AbstractChecker):
             )
         )
         return super().handle(cohort, result)
+
+
+class DuplicateChecker(AbstractChecker):
+    """DQ-02: report duplicate event_id values for physical event records."""
+
+    def handle(self, cohort: dict[str, Any], result: list[RuleOutcome]) -> None:
+
+        seen = []
+        duplicates = []
+        for record in cohort["records"]:
+            event_id = record.get("event_id")
+            if event_id in seen:
+                duplicates.append(
+                    {
+                        "event_id": event_id,
+                        "reason": "duplicate_event_id",
+                        "message": f"Duplicate event_id '{event_id}' found",
+                    }
+                )
+            else:
+                seen.add(event_id)
+
+        result.append(
+            RuleOutcome(
+                rule_id="DQ-02",
+                status="FAIL" if duplicates else "PASS",
+                severity="critical",
+                issues=duplicates,
+            )
+        )
+        return super().handle(cohort, result)

@@ -48,16 +48,25 @@ class FieldsChecker(AbstractChecker):
             severity="critical",
             issues=[],
         )
+        issues = []
         for record in cohort["records"]:
             for field in ["event_id", "trade_id", "account_id", "version", "status"]:
                 if record.get(field, None) is None:
-                    outcome.status = "FAIL"
-                    outcome.issues.append(
+                    issues.append(
                         {
                             "event_id": record.get("event_id"),
                             "field": field,
                             "reason": "required_field_is_null",
                             "message": f"Required field '{field}' is null",
                         })
+
+        if issues:
+            outcome = RuleOutcome(
+                rule_id="DQ-01",
+                status="FAIL",
+                severity="critical",
+                issues=issues,
+            )
+
         result.append(outcome)
         return super().handle(cohort, result)

@@ -45,14 +45,14 @@ class AbstractChecker(Checker):
 
 class MissingHandler(AbstractChecker):
     def handle(self, group: TradeGroup, result: TradeResult) -> None:
-        if len(group.target) == 0:
+        if len(group.target) == 0 and not group.context.target.possibly_excluded:
             result.add_issue(IssueCategories.MISSING, message="Target is missing")
         return super().handle(group, result)
 
 
 class ExtraHandler(AbstractChecker):
     def handle(self, group: TradeGroup, result: TradeResult) -> None:
-        if len(group.source) == 0:
+        if len(group.source) == 0 and not group.context.source.possibly_excluded:
             result.add_issue(IssueCategories.EXTRA, message="Source is missing")
         return super().handle(group, result)
 
@@ -154,7 +154,12 @@ class ChangedHandler(AbstractChecker):
         source_latest = latest_unambiguous.get(Side.SOURCE)
         target_latest = latest_unambiguous.get(Side.TARGET)
 
-        if source_latest is not None and target_latest is not None:
+        if (
+            source_latest is not None
+            and target_latest is not None
+            and not group.context.source.latest_uncertain
+            and not group.context.target.latest_uncertain
+        ):
             if source_latest.version == target_latest.version:
                 if self._pnl_key(source_latest.pnl) != self._pnl_key(target_latest.pnl):
                     result.add_issue(
@@ -187,7 +192,12 @@ class VersionMismatchHandler(AbstractChecker):
     """Report latest-version divergence independently from payload comparison."""
 
     def handle(self, group: TradeGroup, result: TradeResult) -> None:
-        if not group.source or not group.target:
+        if (
+            not group.source
+            or not group.target
+            or group.context.source.latest_uncertain
+            or group.context.target.latest_uncertain
+        ):
             return super().handle(group, result)
 
         try:

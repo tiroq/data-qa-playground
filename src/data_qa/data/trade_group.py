@@ -15,6 +15,7 @@ if TYPE_CHECKING:
     from data_qa.checkers.base import AbstractChecker
 
 from .base import Record, pnl_value
+from .check_context import CheckContext
 from .trade_result import TradeResult
 
 BusinessKey = tuple[str, int]
@@ -47,6 +48,7 @@ class TradeGroup:
     business_key: BusinessKey
     source: list[Record] = field(default_factory=list)
     target: list[Record] = field(default_factory=list)
+    context: CheckContext = field(default_factory=CheckContext, repr=False)
 
     def __post_init__(self) -> None:
         # Copy input lists so subsequent additions do not mutate caller lists.

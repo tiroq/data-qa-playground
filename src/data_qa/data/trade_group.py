@@ -24,10 +24,7 @@ class Side(str):
     SOURCE = "source"
     TARGET = "target"
 
-Sides = Literal[
-    Side.SOURCE,
-    Side.TARGET,
-]
+Sides = Literal["source", "target"]
 
 
 """Exception raised when a trade group has no records on either side."""
@@ -91,7 +88,7 @@ class TradeGroup:
         if len(latest_records) == 1:
             return latest_records[0]
         # Ambiguous: multiple records with the same max version
-        raise AmbiguousLatestVersionError(f"Ambiguous latest version for side {side}")
+        raise AmbiguousLatestVersionError(f"Ambiguous latest version conflict for side {side}")
 
     def run_checks(self, checker_chain: AbstractChecker) -> TradeResult:
         """Execute ALL supplied checkers for this group, accumulate issues."""
@@ -103,3 +100,16 @@ class TradeGroup:
         result = TradeResult(business_key=self.business_key)
         checker_chain.handle(self, result)
         return result
+
+    def get_side(self, side: Sides | None = None) -> list[Record]:
+        if side is None:
+            return [*self.source, *self.target]
+        if side == Side.SOURCE:
+            return list(self.source)
+        if side == Side.TARGET:
+            return list(self.target)
+        raise ValueError(f"Unknown side {side!r}")
+
+    def get_side_version(self, side: Sides, version: int) -> list[Record]:
+        records = self.get_side(side=side)
+        return [r for r in records if r.version == version]

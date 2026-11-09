@@ -1,6 +1,8 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from data_qa.data.trade_group import TradeGroup
+from dataclasses import fields
+from data_qa.data.base import Record
+from data_qa.data.trade_group import TradeGroup, Side
 from data_qa.data.trade_result import TradeResult, IssueCategories
 
 
@@ -40,7 +42,6 @@ class AbstractChecker(Checker):
         return None
 
 
-
 class MissingHandler(AbstractChecker):
     def handle(self, group: TradeGroup, result: TradeResult) -> None:
         if len(group.target) == 0:
@@ -55,5 +56,36 @@ class ExtraHandler(AbstractChecker):
         return super().handle(group, result)
 
 
+class DuplicateHandler(AbstractChecker):
+    def handle(self, group: TradeGroup, result: TradeResult):
+        versions = [src.version for src in group.source] + [
+            src.version for src in group.target
+        ]
+        versions = tuple(versions)
+        for side in [Side.SOURCE, Side.TARGET]:
+            for version in versions:
+                records = group.get_side_version(side, version)
+                if len(records) <= 1:
+                    continue
+                if len(records) == 2:
+                    for field in fields(records[0]):
+                        if getattr(records[0], field.name) != getattr(
+                            records[1], field.name
+                        ):
+                            break
+                    else:
+                        result.add_issue(
+                            IssueCategories.DUPLICATES,
+                            side=side,
+                            version=version,
+                            message="Duplicate records found",
+                        )
+                else:
+                    raise ValueError(
+                        f"More than 2 records found for side {side} and version {version}"
+                    )
+        return super().handle(group, result)
+
+
 data_checkers = MissingHandler()
-data_checkers.set_next(ExtraHandler())
+data_checkers.set_next(ExtraHandler()).set_next(DuplicateHandler())

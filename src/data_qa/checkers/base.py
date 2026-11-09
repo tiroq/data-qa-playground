@@ -87,5 +87,36 @@ class DuplicateHandler(AbstractChecker):
         return super().handle(group, result)
 
 
+class ChangedHandler(AbstractChecker):
+    def handle(self, group: TradeGroup, result: TradeResult) -> None:
+        if len(group.source) == 0 or len(group.target) == 0:
+            return super().handle(group, result)
+
+        source_latest = group.latest(Side.SOURCE)
+        target_latest = group.latest(Side.TARGET)
+
+        if source_latest.version != target_latest.version:
+            # Not responsible for version mismatches
+            return super().handle(group, result)
+
+        if source_latest.pnl != target_latest.pnl:
+            result.add_issue(
+                IssueCategories.CHANGED,
+                source=source_latest,
+                target=target_latest,
+                message="PNL has changed between source and target",
+            )
+
+        if source_latest.status != target_latest.status:
+            result.add_issue(
+                IssueCategories.CHANGED,
+                source=source_latest,
+                target=target_latest,
+                message="Status has changed between source and target",
+            )
+
+        return super().handle(group, result)
+
+
 data_checkers = MissingHandler()
-data_checkers.set_next(ExtraHandler()).set_next(DuplicateHandler())
+data_checkers.set_next(ExtraHandler()).set_next(DuplicateHandler()).set_next(ChangedHandler())

@@ -15,7 +15,12 @@ import pytest
 
 from data_qa.checkers.base import data_checkers, AbstractChecker
 from data_qa.data.base import Record
-from data_qa.data.trade_group import AmbiguousLatestVersionError, EmptyTradeGroupError, Side, TradeGroup
+from data_qa.data.trade_group import (
+    AmbiguousLatestVersionError,
+    EmptyTradeGroupError,
+    Side,
+    TradeGroup,
+)
 from data_qa.reconciliation import compare_events
 
 
@@ -23,24 +28,39 @@ from data_qa.reconciliation import compare_events
 # exercises/04-reconciliation/sql/01-fixture.sql. Rows with NULL business
 # identity are intentionally excluded HERE and tested independently below.
 LAB04_SOURCE = [
-    (1, 101, "A1", 1), (2, 101, "A1", 1),
-    (3, 102, "A1", 1), (4, 103, "A2", 2),
-    (5, 105, "A3", 1), (6, 106, "A3", 1),
-    (7, 107, "A4", 1), (8, 108, "A5", 2),
-    (9, 108, "A5", 3), (10, 109, "A5", 3),
-    (11, 110, "A6", 2), (12, 111, "A6", 3),
-    (13, 112, "A7", 3), (14, 113, "A7", 2),
+    (1, 101, "A1", 1),
+    (2, 101, "A1", 1),
+    (3, 102, "A1", 1),
+    (4, 103, "A2", 2),
+    (5, 105, "A3", 1),
+    (6, 106, "A3", 1),
+    (7, 107, "A4", 1),
+    (8, 108, "A5", 2),
+    (9, 108, "A5", 3),
+    (10, 109, "A5", 3),
+    (11, 110, "A6", 2),
+    (12, 111, "A6", 3),
+    (13, 112, "A7", 3),
+    (14, 113, "A7", 2),
     (15, 113, "A7", 3),
 ]
 LAB04_TARGET = [
-    (11, 101, "A1", 1), (12, 101, "A1", 1),
-    (13, 103, "A2", 2), (14, 104, "A2", 1),
-    (15, 105, "A3", 1), (16, 106, "A3", 1),
-    (17, 107, "A4", 1), (19, 108, "A5", 2),
-    (20, 109, "A5", 3), (21, 110, "A6", 3),
-    (22, 111, "A6", 3), (23, 111, "A6", 3),
-    (24, 112, "A7", 2), (25, 112, "A7", 2),
-    (26, 112, "A7", 3), (27, 113, "A7", 3),
+    (11, 101, "A1", 1),
+    (12, 101, "A1", 1),
+    (13, 103, "A2", 2),
+    (14, 104, "A2", 1),
+    (15, 105, "A3", 1),
+    (16, 106, "A3", 1),
+    (17, 107, "A4", 1),
+    (19, 108, "A5", 2),
+    (20, 109, "A5", 3),
+    (21, 110, "A6", 3),
+    (22, 111, "A6", 3),
+    (23, 111, "A6", 3),
+    (24, 112, "A7", 2),
+    (25, 112, "A7", 2),
+    (26, 112, "A7", 3),
+    (27, 113, "A7", 3),
     (29, 115, "A8", 1),
 ]
 
@@ -81,8 +101,10 @@ def lab04_groups() -> list[TradeGroup]:
             # Session 04 has "amount", NOT pnl, and source has no status:
             # these are identity-only projections. Do not fake a pnl mapping.
             record = Record(
-                trade_id=key[0], account_id=key[1],
-                version=version, event_id=f"{side}-{row_id}",
+                trade_id=key[0],
+                account_id=key[1],
+                version=version,
+                event_id=f"{side}-{row_id}",
             )
             getattr(group, f"add_{side}")(record)
     return [groups[key] for key in sorted(groups)]
@@ -95,9 +117,12 @@ def lab02_group(trade_id: int) -> TradeGroup:
     key = fixture_key(trade_id, rows[0][2])
     source = [
         Record(
-            trade_id=key[0], account_id=key[1],
-            version=version, event_id=f"ingest-{ingest_id}",
-            status=status, pnl=pnl,
+            trade_id=key[0],
+            account_id=key[1],
+            version=version,
+            event_id=f"ingest-{ingest_id}",
+            status=status,
+            pnl=pnl,
         )
         for ingest_id, _, _, version, status, pnl in rows
     ]
@@ -119,24 +144,31 @@ def test_lab04_fixture_identity_and_cardinality() -> None:
     assert sum(len(g.source) for g in groups) == 15
     assert sum(len(g.target) for g in groups) == 17
     assert {g.business_key for g in groups} == {
-        ("T101", 1), ("T102", 1), ("T103", 2), ("T104", 2),
-        ("T105", 3), ("T106", 3), ("T107", 4), ("T108", 5),
-        ("T109", 5), ("T110", 6), ("T111", 6), ("T112", 7),
-        ("T113", 7), ("T115", 8),
+        ("T101", 1),
+        ("T102", 1),
+        ("T103", 2),
+        ("T104", 2),
+        ("T105", 3),
+        ("T106", 3),
+        ("T107", 4),
+        ("T108", 5),
+        ("T109", 5),
+        ("T110", 6),
+        ("T111", 6),
+        ("T112", 7),
+        ("T113", 7),
+        ("T115", 8),
     }
 
 
 def test_lab04_missing_and_extra_match_snapshot() -> None:
-    reports = {
-        group.business_key: issues(group)
-        for group in lab04_groups()
-    }
+    reports = {group.business_key: issues(group) for group in lab04_groups()}
     anomalies = {key: categories for key, categories in reports.items() if categories}
 
     assert anomalies == {
         ("T102", 1): ["missing"],  # source row 3, absent in target
-        ("T104", 2): ["extra"],    # target record 14, absent in source
-        ("T115", 8): ["extra"],    # target record 29, absent in source
+        ("T104", 2): ["extra"],  # target record 14, absent in source
+        ("T115", 8): ["extra"],  # target record 29, absent in source
     }
 
 
@@ -148,14 +180,20 @@ def test_lab04_missing_and_extra_match_snapshot() -> None:
         (1, 1, []),
     ],
 )
-def test_presence_truth_table(source_count: int, target_count: int, expected: list[str]) -> None:
+def test_presence_truth_table(
+    source_count: int, target_count: int, expected: list[str]
+) -> None:
     key = ("T999", 9)
     group = TradeGroup(
         business_key=key,
-        source=[Record(trade_id=key[0], account_id=key[1], event_id="src-1")] * source_count,
-        target=[Record(trade_id=key[0], account_id=key[1], event_id="tgt-1")] * target_count,
+        source=[Record(trade_id=key[0], account_id=key[1], event_id="src-1")]
+        * source_count,
+        target=[Record(trade_id=key[0], account_id=key[1], event_id="tgt-1")]
+        * target_count,
     )
-    print(f"source_count={source_count}, target_count={target_count}, expected={expected}")
+    print(
+        f"source_count={source_count}, target_count={target_count}, expected={expected}"
+    )
     print(f"Group: {group}")
     print(f"Checker chain:")
     checker = presence_chain()
@@ -164,6 +202,7 @@ def test_presence_truth_table(source_count: int, target_count: int, expected: li
         checker = checker._next_handler
     print(f"Result: {group.run_checks(presence_chain())}")
     assert issues(group) == expected
+
 
 def test_empty_trade_group_raises_with_business_key() -> None:
     """Two empty sides violate the group invariant when checks begin."""
@@ -180,9 +219,9 @@ def test_empty_trade_group_raises_with_business_key() -> None:
 @pytest.mark.parametrize(
     ("trade_id", "version", "status", "pnl"),
     [
-        (201, 2, "FILLED", "7.0000"),   # same-version identical payload twice
+        (201, 2, "FILLED", "7.0000"),  # same-version identical payload twice
         (202, 2, "FILLED", "-1.5000"),
-        (203, 2, "FILLED", "9.0000"),   # v1 ingested after v2
+        (203, 2, "FILLED", "9.0000"),  # v1 ingested after v2
         (206, 1, "CANCELLED", "0.0000"),
     ],
 )
@@ -233,8 +272,11 @@ def test_latest_state_difference_reported_as_changed(
 # @pytest.mark.xfail(strict=True, raises=AssertionError, reason="Wire a Duplicate checker into presence_chain()")
 def test_same_event_replayed_on_source_is_a_transport_duplicate() -> None:
     row = Record("T201", 1, 2, "E201V2", "FILLED", "7.0000")
-    group = TradeGroup(("T201", 1), source=[row, Record("T201", 1, 2, "E201V2", "FILLED", "7.0000")],
-                       target=[row])
+    group = TradeGroup(
+        ("T201", 1),
+        source=[row, Record("T201", 1, 2, "E201V2", "FILLED", "7.0000")],
+        target=[row],
+    )
     report = group.run_checks(presence_chain())
     print(group)
     print(report)
@@ -276,21 +318,59 @@ def test_same_event_id_with_conflicting_payload_is_reported() -> None:
     )
     report = group.run_checks(presence_chain())
     assert any(
-        issue.category in {"duplicates", "malformed"} and issue.details.get("event_id") == "E205V2"
+        issue.category == "changed"
+        and issue.details.get("event_id") == "E205V2"
+        and issue.details.get("side") == "source"
         for issue in report.issues
     )
 
 
-@pytest.mark.xfail(strict=True, raises=NotImplementedError, reason="Raw-row validation before grouping is not implemented")
+@pytest.mark.xfail(
+    strict=True,
+    raises=NotImplementedError,
+    reason="Raw-row validation before grouping is not implemented",
+)
 @pytest.mark.parametrize(
     ("side", "raw"),
     [
-        ("source", {"trade_id": None, "account_id": 4, "version": 1, "event_id": "src-16", "status": "NEW", "pnl": "0"}),
-        ("target", {"trade_id": None, "account_id": 4, "version": 1, "event_id": "tgt-18", "status": "SUCCESS", "pnl": "0"}),
-        ("target", {"trade_id": "T114", "account_id": None, "version": 1, "event_id": "tgt-28", "status": "SUCCESS", "pnl": "0"}),
+        (
+            "source",
+            {
+                "trade_id": None,
+                "account_id": 4,
+                "version": 1,
+                "event_id": "src-16",
+                "status": "NEW",
+                "pnl": "0",
+            },
+        ),
+        (
+            "target",
+            {
+                "trade_id": None,
+                "account_id": 4,
+                "version": 1,
+                "event_id": "tgt-18",
+                "status": "SUCCESS",
+                "pnl": "0",
+            },
+        ),
+        (
+            "target",
+            {
+                "trade_id": "T114",
+                "account_id": None,
+                "version": 1,
+                "event_id": "tgt-28",
+                "status": "SUCCESS",
+                "pnl": "0",
+            },
+        ),
     ],
 )
-def test_lab04_invalid_business_key_is_not_silently_dropped(side: str, raw: dict) -> None:
+def test_lab04_invalid_business_key_is_not_silently_dropped(
+    side: str, raw: dict
+) -> None:
     # Adapted from lab04 rows with missing identifiers; details must preserve
     # a reason and side even when no TradeGroup can be constructed.
     source, target = ([raw], []) if side == "source" else ([], [raw])

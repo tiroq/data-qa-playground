@@ -31,49 +31,36 @@ the Python projection. An ingest row ID is **not** evidence that two
 rows are repeated deliveries of the same immutable event; replay cases
 use explicitly constructed synthetic event IDs.
 
-## Test states
+## Test state
 
-**Should pass already:** fixture shape, exact missing/extra keys,
-three normal presence-table cases, a dedicated test asserting that a
-completely empty TradeGroup raises EmptyTradeGroupError (with the business
-key in the error message), a parameterized test verifying that adding a
-wrong-key Record to either source or target raises ValueError without
-mutating the group, and the identity-only lifecycle guard.
+The Session 05 Python unit suite is enabled: the previously planned
+`latest()`, missing/extra, duplicate, changed, version mismatch and
+malformed tests are now implemented. No strict xfail is required for these
+cases. CI runs `uv run pytest -q tests/unit` independently of lab readiness.
 
-**Strict `xfail` (not yet implemented):**
+Additional best-effort tests in `tests/unit/test_reconciliation.py` cover:
 
-1. Latest version for 201, 202, 203, 206; empty target.
-2. Conflicting latest payload for 205 must not choose an arbitrary winner.
-3. Stale target, changed PnL, and Decimal precision.
-4. Same-event transport replay and missing **plus** replay. Payload
-   conflicts at the same version (including the same event ID) are now
-   detected by ChangedHandler and asserted with reason=payload_conflict.
-5. Null-key rows must be reported as malformed.
+- Valid duplicates plus malformed records on the same business key
+- Unknown latest version blocking only version/state-dependent checks
+- Known *older* malformed versions allowing latest-version comparison
+- Partially known identity limiting the affected candidate business keys
+- Malformed-only keys yielding blocked coverage without running an empty group
+- Input-order independence of both issues and coverage
 
-The `xfail(strict=True)` tests run and document expected failures.
-When one begins to pass, pytest reports **XPASS as a failure**: remove
-the marker once the behavior is correctly implemented. A green suite
-with `xfailed` cases does **not** mean all acceptance criteria are met.
+The compatibility API `compare_events()` still returns exactly five issue
+lists. The detailed API `compare_events_detailed()` additionally returns
+per-key check coverage and a count of unkeyed malformed observations.
 
 ## Implementation checkpoint
 
-1. Run `uv run pytest -q tests/unit/test_trade_objects.py tests/unit/test_trade_scenarios.py`.
-2. Keep both group invariants passing: a key mismatch must raise ValueError
-   on either side, and an empty source+target must raise EmptyTradeGroupError
-   when `run_checks()` is called.
-3. Implement `TradeGroup.latest(side)`; enable relevant tests.
-4. Continue refining `ChangedHandler` and `DuplicateHandler` in your
-   naming style. ChangedHandler reports same-version payload conflicts
-   (within either side) and current-state differences at equal versions;
-   latest-version mismatches are now reported by VersionMismatchHandler.
-5. Implement raw-key validation and `compare_events` aggregation.
-6. Run `uv run pytest -q tests/unit/test_reconciliation.py` when the
-   batch comparison contract is ready.
+1. Run `uv run pytest -q tests/unit`.
+2. Inspect `src/data_qa/reconciliation.py` and `src/data_qa/data/check_context.py`.
+3. Review the trade-offs of best-effort findings versus blocked conclusions.
+4. For scaling, index each group's events by side/version once and define
+   a time cutoff/watermark for real streaming reconciliation.
 
-The learner's existing checker implementation and unrelated tests are preserved.
-The original wrong-business-key test was expanded to cover both sides;
-the zero/zero presence case is now an independent exception test.
-No runtime/CI pass is claimed until separately verified.
+The tests use synthetic fixtures; passing them is not proof of correctness
+for production post-trade schemas or timing rules.
 
 ## ChangedHandler behavior (current implementation)
 
@@ -102,4 +89,4 @@ No runtime/CI pass is claimed until separately verified.
 - The Session 04 fixture presence test explicitly filters to missing/extra;
   it does not fail simply because VersionMismatchHandler now reports valid
   additional findings (e.g. trade 108/A5 and 110/A6).
-- DuplicateHandler still needs a separate change to handle 3+ deliveries.
+- DuplicateHandler now supports arbitrary repeated deliveries with Counter.

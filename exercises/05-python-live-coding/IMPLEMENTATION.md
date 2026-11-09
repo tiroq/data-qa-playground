@@ -14,15 +14,16 @@ findings: missing, extra, changed, duplicates, malformed.
 2. **Keep evidence for bad rows.** Every malformed row receives its own issue,
    even without a usable business key. The report retains the side, reason,
    all validation errors and a detached JSON-like copy of the row.
-3. **Quarantine keys containing malformed records.** If a malformed row still
-   has a valid trade/account key, skip normal reconciliation for that key.
-   Otherwise a valid target plus invalid source would incorrectly become
-   `extra`. This is a conservative design choice: other valid records for
-   that key are also skipped and may contain additional issues. This should
-   eventually be exposed as a quarantined/partial population metric.
+3. **Continue checks despite malformed records.** Preserve usable records
+   while recording excluded observations by known business identity. A row
+   with only a valid trade ID or account ID can plausibly belong to multiple
+   keys; unknown identity can affect all keys. Suppress a presence finding
+   only if an excluded row could belong to the apparently missing side.
+   Suppress latest-version and latest-state findings only if an excluded row
+   could alter the maximum version or its payload.
 4. **Group all valid records using** `(trade_id, account_id)`. Do not use
    `event_id` or `version` as the business grouping key.
-5. **Invoke the existing chain** once for every non-quarantined group. An
+5. **Invoke the existing chain** once for every group with valid events. An
    empty *batch* is valid (empty report), whereas a constructed empty
    `TradeGroup` is invalid if sent to `run_checks()`.
 6. **Flatten findings** to dicts with exactly
@@ -30,6 +31,10 @@ findings: missing, extra, changed, duplicates, malformed.
    instead of reducing every trade to one boolean status.
 7. **Sort every category** using business identity and stable serialized
    details, making output independent of source/target input order.
+8. **Expose check coverage separately.** `compare_events_detailed()` returns
+   `{"report": ..., "coverage": ...}`. Each business key has per-check
+   `complete`, `partial`, or `blocked` status. `compare_events()` retains the
+   original five-category shape for existing callers.
 
 ## Reasoning about separation of responsibilities
 
@@ -43,6 +48,24 @@ findings: missing, extra, changed, duplicates, malformed.
 - `latest()`: pure choice of current state; equal semantic Decimal PnL
   representations are equivalent. It is not a substitute for diagnostics.
 
+## Check uncertainty policy
+
+- **presence**: complete if both sides have valid records or a missing side
+  has no potentially matching malformed observation; otherwise blocked.
+- **duplicates / payload_conflict**: keep confirmed findings from valid
+  records and mark coverage partial when excluded rows could also belong
+  to either side. Block only if there are no valid rows to inspect.
+- **version_mismatch / state_mismatch**: block if a candidate malformed row
+  has an unknown version or a version equal to or greater than the maximum
+  known version on its side. A known *older* malformed row does not prevent
+  an otherwise unambiguous latest comparison.
+- **identity matching**: a malformed row with known trade and account affects
+  only its key; one known field constrains plausible matches; two unknown
+  fields can affect all observed keys. Unkeyed malformed rows are also
+  counted in `coverage.unkeyed_malformed_count`.
+- **malformed-only keys**: report validation problems and blocked coverage
+  without invoking `TradeGroup.run_checks()` on an empty group.
+
 ## Complexity and limitations
 
 Let N be the total number of input events. Validation and grouping are
@@ -53,6 +76,10 @@ O(V*M), up to quadratic. This is the first optimization target for large
 histories (pre-index each group by side and version once).
 
 The function is not a streaming algorithm: it materializes groups in memory.
+Coverage lookup indexes malformed observations by full key, partial trade ID,
+partial account ID and completely unknown identity. An unkeyed observation
+may affect many business keys, so very large malformed populations can make
+coverage construction expensive.
 It also does not enforce Kafka/warehouse event-time cutoffs, SLA eligibility,
 watermarks, or status-specific PnL rules. A missing trade cannot be declared
 lost without a defined reconciliation cutoff in a real pipeline.

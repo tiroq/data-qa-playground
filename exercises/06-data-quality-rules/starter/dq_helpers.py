@@ -98,13 +98,15 @@ def emit(
     severity: str,
     violations: list[dict[str, Any]] | None = None,
     uncertain: list[dict[str, Any]] | None = None,
+    metrics: dict[str, Any] | None = None,
 ) -> None:
     """Confirmed FAIL dominates incomplete coverage; preserve both kinds of evidence."""
     failed = list(violations or [])
     unknown = list(uncertain or [])
     status = "FAIL" if failed else "INDETERMINATE" if unknown else "PASS"
     target.append(RuleOutcome(
-        rule_id=rule_id, status=status, severity=severity, issues=[*failed, *unknown],
+        rule_id=rule_id, status=status, severity=severity,
+        issues=[*failed, *unknown], metrics=metrics or {},
     ))
 
 

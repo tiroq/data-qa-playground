@@ -131,6 +131,6 @@ business-key diagnostics, **not DQ-02 event-replay checks**.
 - [INVALID business key](../sql/06-invalid-processing-keys.sql)
 
 For version-aware SQL and source-to-target SLA, reuse Session 04's
-[reconciliation SQL](../../../04-reconciliation/sql/02-reconciliation.sql)
-and [SLA SQL](../../../04-reconciliation/sql/03-sla.sql) with lab04 fixtures,
+[reconciliation SQL](../../04-reconciliation/sql/02-reconciliation.sql)
+and [SLA SQL](../../04-reconciliation/sql/03-sla.sql) with lab04 fixtures,
 rather than running them against the unversioned base tables.

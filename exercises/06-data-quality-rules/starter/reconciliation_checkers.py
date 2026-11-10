@@ -27,7 +27,9 @@ def current_state(rows: list[dict]) -> tuple[dict | None, str | None]:
     if latest is None:
         return None, "invalid_or_missing_version"
     # Two distinct payloads in same version are not deterministically orderable.
-    if len({fingerprint(row) for row in latest}) > 1:
+    if len({(str(row.get("status")), str(decimal_value(row.get("pnl")))
+             if row.get("pnl") is not None else None)
+            for row in latest}) > 1:
         return None, "ambiguous_latest_version"
     return latest[0], None
 
@@ -206,7 +208,8 @@ class UnknownProcessingStatusChecker(AbstractChecker):
             {"trade_id": row.get("trade_id"), "account_id": row.get("account_id"),
              "status": row.get("status"), "reason": "unknown_processing_status"}
             for row in target if row.get("status") is None or
-            row.get("status") not in (ALLOWED_STATUSES | {"SUCCESS"})
+            (not isinstance(row.get("status"), str) or
+            row.get("status") not in (ALLOWED_STATUSES | {"SUCCESS"}))
         ]
         emit(result, "DQ-19", "critical", failures,
              [{"reason": "empty_target_input"}] if not target else [])

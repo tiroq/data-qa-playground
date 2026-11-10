@@ -84,8 +84,8 @@ class DuplicateChecker(AbstractChecker):
     """
 
     def handle(self, cohort: dict[str, Any], result: list[RuleOutcome]) -> None:
-        import json
         from collections import defaultdict
+        from dq_helpers import fingerprint
 
         records = cohort["records"]
         if not records:
@@ -113,11 +113,7 @@ class DuplicateChecker(AbstractChecker):
         for event_id, deliveries in sorted(groups.items()):
             payloads: dict[str, list[dict[str, Any]]] = defaultdict(list)
             for record in deliveries:
-                payload = {
-                    key: value for key, value in record.items()
-                    if key not in ("event_id", "available_at")
-                }
-                signature = json.dumps(payload, sort_keys=True, default=str)
+                signature = fingerprint(record)
                 payloads[signature].append(record)
 
             for equivalent in payloads.values():
@@ -138,8 +134,7 @@ class DuplicateChecker(AbstractChecker):
                 uncertain = True
                 issues.append({
                     "event_id": event_id,
-                    "reason": "conflicting_payload_deferred_to_DQ-03",
-                    "distinct_payloads": len(payloads),
+                    "reason": "same_event_id_requires_DQ-03",
                 })
         if invalid_count:
             issues.append({

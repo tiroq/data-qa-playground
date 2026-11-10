@@ -29,10 +29,10 @@ def test_all_cohorts_have_an_explicit_report() -> None:
     assert report["summary"] == {
         "overall_status": "FAIL",
         "cohorts": 3,
-        "pass": 1,
+        "pass": 0,
         "fail": 2,
-        "indeterminate": 0,
-        "implemented_rules": ["DQ-01", "DQ-02"],
+        "indeterminate": 1,
+        "implemented_rules": [f"DQ-{i:02}" for i in range(1, 21)],
     }
     by_name = {row["cohort"]: row for row in report["cohorts"]}
     assert by_name["mostly_healthy"]["results"][0]["status"] == "PASS"
@@ -54,13 +54,15 @@ def test_all_cohorts_have_an_explicit_report() -> None:
 
 def test_healthy_cohort_exits_successfully() -> None:
     completed = run_cli("--cohort", "mostly_healthy")
-    assert completed.returncode == 0, completed.stderr
+    assert completed.returncode == 1, completed.stderr
     row = json.loads(completed.stdout)["cohorts"][0]
-    assert row["overall_status"] == "PASS"
-    assert row["results"] == [
-        {"rule_id": "DQ-01", "status": "PASS", "severity": "critical", "issues": []},
-        {"rule_id": "DQ-02", "status": "PASS", "severity": "warning", "issues": []},
-    ]
+    assert row["overall_status"] == "INDETERMINATE"
+    assert row["coverage_status"] == "PARTIAL"
+    assert row["results"][0]["status"] == "PASS"
+    assert row["results"][1]["status"] == "PASS"
+    assert row["results"][7]["rule_id"] == "DQ-08"
+    assert row["results"][7]["status"] == "INDETERMINATE"
+    assert row["results"][7]["issues"][0]["reason"] == "missing_source_event_manifest"
 
 
 def test_json_output_can_be_saved(tmp_path: Path) -> None:

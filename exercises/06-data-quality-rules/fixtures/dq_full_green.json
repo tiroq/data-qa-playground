@@ -1,0 +1,89 @@
+{
+  "schema_version": 1,
+  "description": "Full-evidence synthetic green case, not production data",
+  "cohorts": [
+    {
+      "name": "full_green",
+      "as_of": "2026-11-08T13:00:00Z",
+      "expected_events": 2,
+      "expected_event_ids": [
+        "E1",
+        "E2"
+      ],
+      "expected_event_manifest": [
+        {
+          "event_id": "E1",
+          "event_time": "2026-11-08T12:00:00Z"
+        },
+        {
+          "event_id": "E2",
+          "event_time": "2026-11-08T12:02:00Z"
+        }
+      ],
+      "reconciliation_finalized": true,
+      "target_grain": "snapshot",
+      "records": [
+        {
+          "event_id": "E1",
+          "trade_id": "T1",
+          "account_id": "A1",
+          "version": 1,
+          "status": "FILLED",
+          "pnl": "10.00",
+          "event_time": "2026-11-08T12:00:00Z",
+          "available_at": "2026-11-08T12:00:20Z"
+        },
+        {
+          "event_id": "E2",
+          "trade_id": "T2",
+          "account_id": "A1",
+          "version": 1,
+          "status": "FILLED",
+          "pnl": "-1.50",
+          "event_time": "2026-11-08T12:02:00Z",
+          "available_at": "2026-11-08T12:02:20Z"
+        }
+      ],
+      "source_records": [
+        {
+          "event_id": "E1",
+          "trade_id": "T1",
+          "account_id": "A1",
+          "version": 1,
+          "status": "FILLED",
+          "pnl": "10.00",
+          "event_time": "2026-11-08T12:00:00Z"
+        },
+        {
+          "event_id": "E2",
+          "trade_id": "T2",
+          "account_id": "A1",
+          "version": 1,
+          "status": "FILLED",
+          "pnl": "-1.50",
+          "event_time": "2026-11-08T12:02:00Z"
+        }
+      ],
+      "target_records": [
+        {
+          "event_id": "E1",
+          "trade_id": "T1",
+          "account_id": "A1",
+          "version": 1,
+          "status": "FILLED",
+          "pnl": "10.00",
+          "event_time": "2026-11-08T12:00:00Z"
+        },
+        {
+          "event_id": "E2",
+          "trade_id": "T2",
+          "account_id": "A1",
+          "version": 1,
+          "status": "FILLED",
+          "pnl": "-1.50",
+          "event_time": "2026-11-08T12:02:00Z"
+        }
+      ]
+    }
+  ]
+}

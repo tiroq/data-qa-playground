@@ -14,3 +14,4 @@ class RuleOutcome:
     status: Status
     severity: Literal["critical", "warning"]
     issues: list[dict[str, Any]] = field(default_factory=list)
+    metrics: dict[str, Any] = field(default_factory=dict)

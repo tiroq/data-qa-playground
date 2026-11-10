@@ -26,6 +26,12 @@ jobs:
         run: docker compose up -d --wait postgres
       - name: Check Session 01 original seed
         run: docker compose exec -T postgres psql -U qa -d trading -v ON_ERROR_STOP=1 < postgres/checks/smoke.sql
+      - name: Verify Session 06 baseline SQL diagnostics
+        run: |
+          for sql_file in exercises/06-data-quality-rules/sql/*.sql; do
+            echo "Checking $sql_file"
+            docker compose exec -T postgres psql -U qa -d trading -v ON_ERROR_STOP=1 < "$sql_file"
+          done
       - name: Load isolated Session 10 mock fixture
         run: docker compose exec -T postgres psql -U qa -d trading -v ON_ERROR_STOP=1 < postgres/fixtures/10-sql-mock.sql
       - name: Check Session 10 mock fixture structure

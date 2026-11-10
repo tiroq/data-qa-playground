@@ -17,6 +17,15 @@ from pathlib import Path
 from typing import Any
 
 from checkers import DuplicateChecker, FieldsChecker
+from cohort_checkers import (ExpectedCompletenessChecker, VisibilitySLAChecker,
+    FreshnessChecker, EmptyCohortChecker)
+from record_checkers import (PayloadConsistencyChecker, VersionDomainChecker,
+    StatusDomainChecker, DecimalValidityChecker, VersionConsistencyChecker,
+    BusinessConsistencyChecker, BusinessKeyValidityChecker)
+from reconciliation_checkers import (SourceTargetLifecycleChecker,
+    SourceTargetPresenceChecker, ProcessedSnapshotUniquenessChecker,
+    CrossSideVersionChecker, FailedProcessingChecker,
+    UnknownProcessingStatusChecker, SourceTargetPnlChecker)
 from rule_result import RuleOutcome, Status
 
 DEFAULT_FIXTURE = Path(__file__).resolve().parents[1] / "fixtures" / "dq_batches.json"
@@ -35,13 +44,25 @@ def load_cohorts(path: Path) -> list[dict[str, Any]]:
 def evaluate_rules(cohort: dict[str, Any]) -> list[RuleOutcome]:
     """Execute only rules which have an actual implementation.
 
-    Add subsequent checkers to this chain as they are implemented.
-    Do not invent PASS results for DQ-03 or other future rules.
+    Every named rule returns explicit PASS / FAIL / INDETERMINATE.
+    Missing source-side evidence never becomes an invented PASS.
     """
     outcomes: list[RuleOutcome] = []
-    root = FieldsChecker()
-    root.set_next(DuplicateChecker())
-    root.handle(cohort, outcomes)
+    # One rule per responsibility. Maintain one chain instance per cohort.
+    checkers = [
+        FieldsChecker(), DuplicateChecker(), PayloadConsistencyChecker(),
+        VersionDomainChecker(), StatusDomainChecker(), DecimalValidityChecker(),
+        ExpectedCompletenessChecker(), VisibilitySLAChecker(),
+        VersionConsistencyChecker(), SourceTargetLifecycleChecker(),
+        FreshnessChecker(), EmptyCohortChecker(), BusinessConsistencyChecker(),
+        SourceTargetPresenceChecker(), ProcessedSnapshotUniquenessChecker(),
+        BusinessKeyValidityChecker(), CrossSideVersionChecker(),
+        FailedProcessingChecker(), UnknownProcessingStatusChecker(),
+        SourceTargetPnlChecker(),
+    ]
+    for current, following in zip(checkers, checkers[1:]):
+        current.set_next(following)
+    checkers[0].handle(cohort, outcomes)
     if not outcomes:
         raise RuntimeError("No DQ rules executed; refusing a vacuous PASS")
     rule_ids = [outcome.rule_id for outcome in outcomes]
@@ -90,6 +111,14 @@ def evaluate_cohort(cohort: dict[str, Any]) -> dict[str, Any]:
 
     return {
         "cohort": name,
+        "coverage_status": (
+            "PARTIAL" if any(r.status == "INDETERMINATE" for r in outcomes)
+            else "COMPLETE"
+        ),
+        "eligible_count": next(
+            (r.metrics.get("eligible_count") for r in outcomes if r.rule_id == "DQ-08"),
+            None,
+        ),
         "as_of": cohort.get("as_of"),
         "expected_events": expected,
         "physical_records": len(records),
@@ -131,6 +160,7 @@ def format_text(report: dict[str, Any]) -> str:
         f'Cohorts: {summary["cohorts"]} | PASS: {summary["pass"]} '
         f'| FAIL: {summary["fail"]} | INDETERMINATE: {summary["indeterminate"]}',
         "Implemented checks: " + ", ".join(summary["implemented_rules"]),
+        "Note: INDETERMINATE is not PASS; check missing manifests and source/target inputs.",
     ]
     for cohort in report["cohorts"]:
         lines.extend([
@@ -139,7 +169,8 @@ def format_text(report: dict[str, Any]) -> str:
             f'  as_of={cohort["as_of"]} expected_events={cohort["expected_events"]} '
             f'physical_records={cohort["physical_records"]} '
             f'observed_distinct_event_ids={cohort["observed_distinct_event_ids"]}',
-            f'  Input gate: {cohort["input_gate"]["status"]}',
+            f'  Input gate: {cohort["input_gate"]["status"]} '
+            f'coverage={cohort["coverage_status"]} eligible_count={cohort["eligible_count"]}',
         ])
         for issue in cohort["input_gate"]["issues"]:
             lines.append(f'    - {issue["reason"]}: {issue["message"]}')
@@ -148,6 +179,8 @@ def format_text(report: dict[str, Any]) -> str:
                 f'  {rule["rule_id"]}: {rule["status"]} '
                 f'(severity={rule["severity"]}, issues={len(rule["issues"])})'
             )
+            if rule["metrics"]:
+                lines.append(f'    metrics={json.dumps(rule["metrics"], sort_keys=True)}')
             for issue in rule["issues"]:
                 detail = ", ".join(f"{key}={value}" for key, value in issue.items())
                 lines.append(f"    - {detail}")

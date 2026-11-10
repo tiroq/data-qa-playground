@@ -1,13 +1,13 @@
 # Session 06 — Data Quality — Contracts, Gates & Metrics
 
-**Date (Asia/Bangkok):** 2026-11-09 · **Duration:** 60 minutes · **Status:** IN PROGRESS  
+**Date (Asia/Bangkok):** 2026-11-09 · **Duration:** 60 minutes · **Status:** IN PROGRESS (20 rule implementations under review)  
 **Track:** Exness QA Engineer (Data Stack) interview preparation
 
 > **Language contract:** The actual technical interview is in **Russian**. All live tasks, discussion, follow-up questions, code review, mock interviews, and feedback in ChatGPT must be **in Russian**. SQL, Python, identifiers, and technical terms may remain in English. This repository's written exercise specifications are in English.
 
 ## Ready-to-run laboratory (prebuilt)
 
-Start with [START_HERE.md](START_HERE.md): it now documents the runnable DQ-01 CLI, machine-readable reporting and targeted unit tests. Discuss all code and answers in Russian. **DQ-01 and DQ-02 are implemented; the full rule catalog, DQ-03, and SLA remain pending.**
+Start with [START_HERE.md](START_HERE.md): it now documents the runnable DQ-01 CLI, machine-readable reporting and targeted unit tests. Discuss all code and answers in Russian. **DQ-01 through DQ-20 now have independent checkers**. See [the rule catalog](docs/data-quality-rules.md) for datasets, contracts, severity, SLA eligibility, source/target prerequisites and alerting.
 
 ## Goal
 
@@ -50,4 +50,4 @@ Do not add a reference solution before the learner has attempted the assignment.
 - **What worked:** DQ-01 emits one explicit PASS/FAIL per nonempty cohort with per-record issues. CLI returns text/JSON, includes an input gate for empty cohorts, and does not mark unimplemented DQ rules as passing.
 - **Bugs / edge cases:** Unexpectedly empty cohort now FAILs the input gate while DQ-01 remains INDETERMINATE. DQ-01 does not yet check empty string values, invalid versions, status domain, duplicates, or SLA; those are distinct future rules.
 - **Verification:** GitHub Actions unit-test job succeeded on `8168b89` ([run](https://github.com/tiroq/data-qa-playground/actions/runs/42633248278)); lab readiness also succeeded ([run](https://github.com/tiroq/data-qa-playground/actions/runs/42633248275)).
-- **Next-session adjustments:** DQ-02 is now integrated (commit `ca58cd3`; unit CI passed). Next: DQ-03, thresholds/denominators and late-event SLA; session is not complete.
+- **Next-session adjustments:** DQ-03..DQ-20 and a full-evidence green fixture have been implemented in PR #2, with separate PostgreSQL baseline SQL checks. Verify CI and review the rule thresholds before marking session complete.

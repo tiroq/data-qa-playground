@@ -32,7 +32,7 @@ def test_all_cohorts_have_an_explicit_report() -> None:
         "pass": 1,
         "fail": 2,
         "indeterminate": 0,
-        "implemented_rules": ["DQ-01"],
+        "implemented_rules": ["DQ-01", "DQ-02"],
     }
     by_name = {row["cohort"]: row for row in report["cohorts"]}
     assert by_name["mostly_healthy"]["results"][0]["status"] == "PASS"
@@ -40,9 +40,15 @@ def test_all_cohorts_have_an_explicit_report() -> None:
     assert mixed_rule["status"] == "FAIL"
     assert mixed_rule["issues"][0]["event_id"] == "E-104"
     assert mixed_rule["issues"][0]["field"] == "trade_id"
+    replay = by_name["mixed_anomalies"]["results"][1]
+    assert replay["status"] == "FAIL"
+    assert replay["severity"] == "warning"
+    assert replay["issues"][0]["event_id"] == "E-102"
+    assert replay["issues"][0]["duplicate_count"] == 1
     empty = by_name["empty_input"]
     assert empty["input_gate"]["status"] == "FAIL"
     assert empty["results"][0]["status"] == "INDETERMINATE"
+    assert empty["results"][1]["status"] == "INDETERMINATE"
     assert empty["overall_status"] == "FAIL"
 
 
@@ -52,7 +58,8 @@ def test_healthy_cohort_exits_successfully() -> None:
     row = json.loads(completed.stdout)["cohorts"][0]
     assert row["overall_status"] == "PASS"
     assert row["results"] == [
-        {"rule_id": "DQ-01", "status": "PASS", "severity": "critical", "issues": []}
+        {"rule_id": "DQ-01", "status": "PASS", "severity": "critical", "issues": []},
+        {"rule_id": "DQ-02", "status": "PASS", "severity": "warning", "issues": []},
     ]
 
 

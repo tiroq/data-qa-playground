@@ -201,3 +201,24 @@ def test_source_target_version_lag_is_not_status_or_pnl_conflict(tmp_path: Path)
     assert rule(outcome, 17)["status"] == "FAIL"
     assert rule(outcome, 10)["status"] == "INDETERMINATE"
     assert rule(outcome, 20)["status"] == "INDETERMINATE"
+
+
+def test_additional_business_payload_field_conflict_is_not_hidden(tmp_path: Path) -> None:
+    event = make_event("E1")
+    event["instrument_id"] = "FX-1"
+    changed = {**event, "instrument_id": "FX-2"}
+    outcome = report_for(tmp_path, [event, changed], expected_events=1)
+    assert rule(outcome, 2)["status"] == "INDETERMINATE"
+    assert rule(outcome, 3)["status"] == "FAIL"
+
+
+def test_cross_side_latest_decimal_equivalence_is_not_ambiguity(tmp_path: Path) -> None:
+    source = [make_event("S1", trade_id="T1", pnl="7.00"),
+              make_event("S2", trade_id="T1", pnl="7.0")]
+    target = [make_event("R1", trade_id="T1", pnl="7.00")]
+    outcome = report_for(tmp_path, [make_event("E0")],
+                         source_records=source, target_records=target,
+                         reconciliation_finalized=True)
+    assert rule(outcome, 10)["status"] == "PASS"
+    assert rule(outcome, 17)["status"] == "PASS"
+    assert rule(outcome, 20)["status"] == "PASS"

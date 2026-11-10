@@ -6,6 +6,7 @@ on:
     paths:
       - "tests/session07/**"
       - "src/data_qa/delivery_manifest.py"
+      - "src/data_qa/delivery_quality.py"
       - "exercises/07-pytest-architecture/**"
       - "pyproject.toml"
       - "uv.lock"

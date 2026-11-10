@@ -1,10 +1,12 @@
-name: Session 07 PostgreSQL Testcontainers integration
+name: Session 07 PostgreSQL and ClickHouse Testcontainers integration
 
 on:
   push:
     branches: [main]
     paths:
       - "tests/integration/**"
+      - "src/data_qa/delivery_manifest.py"
+      - "src/data_qa/delivery_quality.py"
       - "exercises/07-pytest-architecture/notes/**"
       - ".github/workflows/session07-postgres-integration.yml"
   pull_request:
@@ -16,14 +18,15 @@ on:
 jobs:
   postgres-isolation:
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Run PostgreSQL integration tests in a disposable container
+      - name: Run PostgreSQL and ClickHouse tests in disposable containers
         run: |
-          uv run --with 'testcontainers[postgres]>=4.10,<5' --with 'psycopg[binary]>=3.2,<4' \
+          uv run --with 'testcontainers[postgres,clickhouse]>=4.10,<5' \
+            --with 'psycopg[binary]>=3.2,<4' --with 'clickhouse-driver>=0.2.9,<1' \
             pytest -v tests/integration/

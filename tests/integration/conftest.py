@@ -107,10 +107,17 @@ def ch_trade_tables(ch_client, ch_case_db: str) -> str:
         SELECT
             trade_id,
             account_id,
-            max(version) AS version,
-            tupleElement(argMax(tuple(pnl, status), version), 1) AS pnl,
-            tupleElement(argMax(tuple(pnl, status), version), 2) AS status
-        FROM {db}.trade_events_raw
-        GROUP BY trade_id, account_id
+            latest_version AS version,
+            tupleElement(latest_payload, 1) AS pnl,
+            tupleElement(latest_payload, 2) AS status
+        FROM (
+            SELECT
+                trade_id,
+                account_id,
+                max(version) AS latest_version,
+                argMax(tuple(pnl, status), version) AS latest_payload
+            FROM {db}.trade_events_raw
+            GROUP BY trade_id, account_id
+        )
     """)
     return db

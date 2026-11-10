@@ -1,10 +1,13 @@
 # Testing layout — introduced as functionality is implemented
 
-Currently the executable baseline check is `postgres/checks/smoke.sql` via Docker Compose. Additional `tests/unit/`, `tests/integration/` and `tests/e2e/` test code must be added with the exercises that make it meaningful.
+The executable PostgreSQL baseline check is `postgres/checks/smoke.sql` via Docker Compose. Tests are added as their contracts become meaningful.
 
-- Unit tests: Python comparators, DQ classification, polling clock behavior.
-- Integration tests: PostgreSQL/ClickHouse adapters with isolated fixtures and explicit setup/cleanup.
-- End-to-end tests: delayed/replayed delivery and source-to-aggregate reconciliation only when an actual path exists.
-- Required guard: no unexpected empty dataset may be counted as a PASS.
+- `tests/unit/`: Python comparators and Data Quality rule logic.
+- `tests/labs/`: lab readiness checks; these do **not** prove exercise completion.
+- `tests/session07/`: runnable **in-memory fake** contract examples for Session 07, including parametrization and a no-empty-PASS negative control. Run with `uv run pytest -q tests/session07`.
+- `tests/integration/`: future real PostgreSQL/ClickHouse adapter tests, requiring isolated lifecycle and cleanup; not implemented for Session 07.
+- `tests/e2e/`: future full-path checks; not implemented.
 
-Don't claim these suites exist yet or create placeholder tests that always pass.
+Required guard: no unexpectedly empty dataset can be counted as PASS. A deliberately empty input may be valid only under an explicit contract.
+
+Do not present fake tests as full database integration, and do not add placeholder tests that always pass.

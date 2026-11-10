@@ -1,0 +1,34 @@
+name: Session 07 fake pipeline tests (not database integration)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "tests/session07/**"
+      - "exercises/07-pytest-architecture/**"
+      - "pyproject.toml"
+      - "uv.lock"
+      - ".github/workflows/session07-fake-tests.yml"
+  pull_request:
+    paths:
+      - "tests/session07/**"
+      - "exercises/07-pytest-architecture/**"
+      - "pyproject.toml"
+      - "uv.lock"
+      - ".github/workflows/session07-fake-tests.yml"
+  workflow_dispatch:
+
+jobs:
+  fake-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install test dependencies
+        run: uv sync --group dev
+      - name: Run fake pipeline contract tests only
+        run: uv run pytest -q tests/session07

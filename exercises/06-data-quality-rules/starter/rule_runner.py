@@ -16,7 +16,7 @@ from dataclasses import asdict
 from pathlib import Path
 from typing import Any
 
-from checkers import FieldsChecker
+from checkers import DuplicateChecker, FieldsChecker
 from rule_result import RuleOutcome, Status
 
 DEFAULT_FIXTURE = Path(__file__).resolve().parents[1] / "fixtures" / "dq_batches.json"
@@ -36,10 +36,12 @@ def evaluate_rules(cohort: dict[str, Any]) -> list[RuleOutcome]:
     """Execute only rules which have an actual implementation.
 
     Add subsequent checkers to this chain as they are implemented.
-    Do not invent PASS results for DQ-02 or other future rules.
+    Do not invent PASS results for DQ-03 or other future rules.
     """
     outcomes: list[RuleOutcome] = []
-    FieldsChecker().handle(cohort, outcomes)
+    root = FieldsChecker()
+    root.set_next(DuplicateChecker())
+    root.handle(cohort, outcomes)
     if not outcomes:
         raise RuntimeError("No DQ rules executed; refusing a vacuous PASS")
     rule_ids = [outcome.rule_id for outcome in outcomes]

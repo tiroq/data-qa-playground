@@ -5,7 +5,7 @@ on:
     branches: [main]
     paths:
       - "tests/integration/**"
-      - "exercises/07-pytest-architecture/notes/transaction-isolation-review.md"
+      - "exercises/07-pytest-architecture/notes/**"
       - ".github/workflows/session07-postgres-integration.yml"
   pull_request:
     paths:
@@ -23,7 +23,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Run PostgreSQL transaction isolation test in a disposable container
+      - name: Run PostgreSQL integration tests in a disposable container
         run: |
           uv run --with 'testcontainers[postgres]>=4.10,<5' --with 'psycopg[binary]>=3.2,<4' \
-            pytest -v tests/integration/test_transaction_isolation.py
+            pytest -v tests/integration/

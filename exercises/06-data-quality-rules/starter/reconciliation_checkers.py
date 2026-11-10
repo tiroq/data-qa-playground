@@ -206,7 +206,7 @@ class UnknownProcessingStatusChecker(AbstractChecker):
             {"trade_id": row.get("trade_id"), "account_id": row.get("account_id"),
              "status": row.get("status"), "reason": "unknown_processing_status"}
             for row in target if row.get("status") is None or
-            row.get("status") not in ALLOWED_STATUSES
+            row.get("status") not in (ALLOWED_STATUSES | {"SUCCESS"})
         ]
         emit(result, "DQ-19", "critical", failures,
              [{"reason": "empty_target_input"}] if not target else [])

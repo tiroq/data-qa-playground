@@ -28,3 +28,18 @@ Given PostgreSQL with versions 1 and 2 for a trade, and ClickHouse raw data with
 
 - https://clickhouse.com/blog/change-data-capture-solution-clickhouse-streamkap-cdc
 - https://clickhouse.com/blog/using-materialized-views-in-clickhouse
+
+## Follow-up — Processing completion barrier (learner, 2026-11-10)
+
+**Learner's position:** Run full history/reconciliation checks only after there is a reliable indication that every expected trade update has finished processing. If an additional permitted delay expires with missing data, the test fails.
+
+**Review / key distinction:**
+- Define **processing completion** independently from **data correctness**. Otherwise waiting until every target row exists masks lost events by waiting forever or by reporting only a generic timeout.
+- Record an immutable input manifest (expected event IDs, business keys, versions) before submission. A bounded processing barrier may be derived from correlated processing acknowledgments, a completed batch/checkpoint, or a trustworthy sink-side progress marker. None should be inferred solely from `COUNT(target) == COUNT(expected)`.
+- A barrier must cover all relevant workers/partitions and be located *after* durable sink writes if treated as proof of ClickHouse visibility. An upstream offset or consumer lag reaching zero alone is insufficient.
+- After completion, run independent latest-state and raw-history reconciliation: a batch with 100 expected events and 99 actual events must FAIL missing event(s), not hang.
+- If no completion signal arrives by deadline, report TIMEOUT/INDETERMINATE and preserve diagnostics; don't report PASS. Separate freshness/SLA tests must still detect late/stuck processing even when full completion is unavailable.
+
+**Next interview prompt:** What concrete, independently trustworthy barrier would be available in the actual API → PostgreSQL → Kafka/worker → ClickHouse system? How would it account for multiple partitions and late writes?
+
+**Status:** Design discussion only; completion barrier and ClickHouse checks remain unimplemented.

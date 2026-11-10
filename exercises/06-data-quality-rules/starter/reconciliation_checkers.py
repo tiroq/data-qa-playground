@@ -27,7 +27,10 @@ def current_state(rows: list[dict]) -> tuple[dict | None, str | None]:
     if latest is None:
         return None, "invalid_or_missing_version"
     # Two distinct payloads in same version are not deterministically orderable.
-    if len({(str(row.get("status")), str(decimal_value(row.get("pnl")))
+    if any(row.get("pnl") is not None and decimal_value(row["pnl"]) is None
+           for row in latest):
+        return None, "invalid_latest_decimal"
+    if len({(row.get("status"), decimal_value(row["pnl"])
              if row.get("pnl") is not None else None)
             for row in latest}) > 1:
         return None, "ambiguous_latest_version"

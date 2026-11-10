@@ -1,6 +1,6 @@
 # Session 07 — PostgreSQL Transaction Isolation Exercise
 
-**Status:** Learner approach reviewed; an executable integration test was authored from that approach. Docker/Testcontainers runtime confirmation must be recorded separately.
+**Status:** Learner approach reviewed; executable integration test verified in GitHub Actions (2026-11-10). The broader Session 07 exercise remains in progress.
 
 ## Learner approach
 
@@ -31,6 +31,12 @@ uv run --with 'testcontainers[postgres]>=4.10,<5' --with 'psycopg[binary]>=3.2,<
 ```
 
 Run against a **disposable PostgreSQL container**; it does not use the repository's docker-compose PostgreSQL seed. The `--with` dependencies keep this teaching-only integration exercise separate from the default locked unit-test environment.
+
+## Runtime verification
+
+- GitHub Actions: [Session 07 PostgreSQL Testcontainers integration](https://github.com/tiroq/data-qa-playground/actions/runs/42799506346) — **SUCCESS**, actual disposable PostgreSQL container on CI runner.
+- Verified commit: `5fb98bb46b5944d1ef7b6ef9f6f38aef5fba75a3`.
+- Local Docker execution was not performed in this ChatGPT session.
 
 ## Follow-up task
 

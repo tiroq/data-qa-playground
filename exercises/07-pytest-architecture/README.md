@@ -1,6 +1,6 @@
 # Session 07 — Pytest Architecture — Fixtures & Isolation
 
-**Date (Asia/Bangkok):** 2026-11-10 · **Duration:** 90 minutes · **Status:** PLANNED  
+**Date (Asia/Bangkok):** 2026-11-10 · **Duration:** 90 minutes · **Status:** IN PROGRESS  
 **Track:** Exness QA Engineer (Data Stack) interview preparation
 
 > **Language contract:** The actual technical interview is in **Russian**. All live tasks, discussion, follow-up questions, code review, mock interviews, and feedback in ChatGPT must be **in Russian**. SQL, Python, identifiers, and technical terms may remain in English. This repository's written exercise specifications are in English.
@@ -8,6 +8,14 @@
 ## Ready-to-run laboratory (prebuilt)
 
 Start with [START_HERE.md](START_HERE.md): it links to verified input materials, setup commands, and deliberately incomplete learner implementation. Discuss all code and answers in Russian. **Fixture readiness is not interview-task completion.**
+
+## Verified progress (2026-11-10)
+
+- [Fake pipeline pytest starter](../../tests/session07/test_pipeline.py) and corresponding fixture setup are available; fake-only CI has passed.
+- [PostgreSQL Testcontainers fixture](../../tests/integration/conftest.py) and [transaction isolation test](../../tests/integration/test_transaction_isolation.py) are implemented from the learner's five-step design.
+- [Real PostgreSQL CI run](https://github.com/tiroq/data-qa-playground/actions/runs/42799506346): **SUCCESS** on commit `5fb98bb`.
+- [Learner reasoning and remaining caveats](notes/transaction-isolation-review.md) preserve the review separately from implementation.
+- API, ClickHouse, failed-assertion fixture teardown, xdist resource isolation and complete acceptance remain unverified.
 
 ## Goal
 

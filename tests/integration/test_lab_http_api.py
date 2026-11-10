@@ -184,3 +184,28 @@ def test_invalid_api_request_is_rejected_without_records(
     assert error.value.code == 400
     assert _read_pg(postgres_dsn, trade_case_id) == []
     assert _read_ch(ch_client, ch_trade_tables, trade_case_id) == []
+
+
+def test_processing_barrier_times_out_when_worker_is_paused(
+    lab_api, postgres_dsn, trade_case_id, ch_client, ch_trade_tables
+):
+    """No false PASS when HTTP accepts a trade but processing is still in-flight."""
+    lab_api.pause_worker()
+    try:
+        status, response = lab_api.post(payload(trade_case_id))
+        assert status == 202
+        with pytest.raises(TimeoutError, match="pending"):
+            lab_api.wait_completed([response["event_id"]], timeout=0.05)
+        assert _read_pg(postgres_dsn, trade_case_id) == []
+        assert _read_ch(ch_client, ch_trade_tables, trade_case_id) == []
+    finally:
+        lab_api.resume_worker()
+    assert lab_api.wait_completed([response["event_id"]]) == {
+        response["event_id"]: "stored"
+    }
+
+
+def test_bounded_source_poll_timeout_has_diagnostics(postgres_dsn, trade_case_id):
+    """A missing source event must not yield a vacuous success or loop forever."""
+    with pytest.raises(TimeoutError, match=trade_case_id):
+        _poll_pg(postgres_dsn, trade_case_id, timeout=0.03, interval=0.01)

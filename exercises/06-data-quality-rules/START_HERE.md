@@ -32,7 +32,7 @@ Exit codes: `0` means all selected cohorts passed; `1` means at least one cohort
 - Each **implemented** rule returns one explicit outcome (PASS, FAIL or INDETERMINATE), its severity, and individual issues. Rules without implementations are **not reported as PASS**.
 - The independent input gate fails for an unexpectedly empty cohort (`expected_events > 0`). When no records exist, DQ-01 is INDETERMINATE: no fields were actually examined. An empty cohort with zero expected events is still INDETERMINATE until an explicit empty-cohort policy is implemented.
 - The overall gate fails for an input failure or a `critical` rule failure; any remaining indeterminate evaluation prevents PASS. A `warning` rule failure stays visible without automatically blocking a cohort.
-- Current learner-implemented rule: **DQ-01 required-field presence / nullability**. It does not yet validate blank strings, version domain, valid statuses, completeness, duplicate event IDs, freshness, or SLA. These remain future exercises.
+- Current implemented rules: **DQ-01 required-field presence/nullability** and **DQ-02 identical event-ID re-delivery**. The rules do not yet validate blank strings, version domain, valid statuses, completeness, conflicting event payloads (DQ-03), freshness, or SLA. These remain future exercises.
 
 ## Files
 
@@ -46,7 +46,7 @@ Exit codes: `0` means all selected cohorts passed; `1` means at least one cohort
 ## Next live exercise
 
 1. Define at least 10 independently measurable DQ checks. For each name the grain, denominator, severity, time cutoff and evidence.
-2. Implement **DQ-02** duplicate event ID; distinguish redelivery of the same event from legitimate new trade versions. Register the handler in `evaluate_rules`.
+2. **DQ-02** now detects identical replay and is registered in `evaluate_rules`. Next design **DQ-03** for conflicting payloads sharing an `event_id`.
 3. Discuss per-record defects vs aggregate SLO/SLA, thresholds, late events and safe alerting.
 
 Do not claim unimplemented rules have passed.

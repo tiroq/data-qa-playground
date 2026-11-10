@@ -1,6 +1,6 @@
 # Session 07 — Pytest Architecture — Fixtures & Isolation
 
-**Date (Asia/Bangkok):** 2026-11-10 · **Duration:** 90 minutes · **Status:** IN PROGRESS  
+**Date (Asia/Bangkok):** 2026-11-10 · **Duration:** 90 minutes · **Status:** COMPLETE (Session 07 lab implemented and container CI verified)  
 **Track:** Exness QA Engineer (Data Stack) interview preparation
 
 > **Language contract:** The actual technical interview is in **Russian**. All live tasks, discussion, follow-up questions, code review, mock interviews, and feedback in ChatGPT must be **in Russian**. SQL, Python, identifiers, and technical terms may remain in English. This repository's written exercise specifications are in English.
@@ -9,13 +9,48 @@
 
 Start with [START_HERE.md](START_HERE.md): it links to verified input materials, setup commands, and deliberately incomplete learner implementation. Discuss all code and answers in Russian. **Fixture readiness is not interview-task completion.**
 
-## Verified progress (2026-11-10)
+## Verified implementation (2026-11-10)
 
-- [Fake pipeline pytest starter](../../tests/session07/test_pipeline.py) and corresponding fixture setup are available; fake-only CI has passed.
-- [PostgreSQL Testcontainers fixture](../../tests/integration/conftest.py) and [transaction isolation test](../../tests/integration/test_transaction_isolation.py) are implemented from the learner's five-step design.
-- [Real PostgreSQL CI run](https://github.com/tiroq/data-qa-playground/actions/runs/42799506346): **SUCCESS** on commit `5fb98bb`.
-- [Learner reasoning and remaining caveats](notes/transaction-isolation-review.md) preserve the review separately from implementation.
-- API, ClickHouse, failed-assertion fixture teardown, xdist resource isolation and complete acceptance remain unverified.
+This lab is complete at the **synthetic test-system** boundary; it does not
+claim access to a real Exness environment.
+
+- **Pure Python tests:** in-memory API fake, independent event-ID delivery
+  reconciliation (set + Counter), payload/version conflict checkers, expected
+  empty datasets and false-green negative controls.
+- **Real PostgreSQL:** session-scoped Testcontainer, function-scoped cleanup,
+  READ COMMITTED two-connection isolation, explicit rollback, committed writer,
+  and a nested pytest subprocess showing that a failed assertion still runs
+  teardown. The test also demonstrates why using only Psycopg's connection
+  context can accidentally COMMIT after a failed pytest test.
+- **Real ClickHouse:** a separate Testcontainer, function-scoped database
+  lifecycle, physical event history in MergeTree, a query-time latest-state
+  VIEW, raw history-vs-source reconciliation, latest-but-missing-history,
+  identical duplicates masking losses, mismatched PnL and same-version conflict.
+- **Real HTTP:** a controlled localhost 202 Accepted service with a background
+  worker, writes committed to actual PostgreSQL and ClickHouse, plus
+  deterministic pause/resume, bounded source polling, processing barrier,
+  timeout, corruption, dropped events and duplicate delivery.
+- **Real Kafka:** Testcontainer with two partitions and real consumer commits;
+  shows that `lag=0` and observing the last event are **not** sufficient
+  evidence of sink durability, then compares the actual ClickHouse rows.
+- **Isolation:** PostgreSQL and ClickHouse containers are per pytest worker
+  session; each test gets independent IDs / ClickHouse database; worker services
+  are terminated before their state is cleaned up.
+
+**CI confirmation:**
+[GitHub Actions: PostgreSQL + ClickHouse + HTTP + Kafka](https://github.com/tiroq/data-qa-playground/actions/runs/42826563119)
+— both integration jobs **SUCCESS**.
+[Unit/fake suite](https://github.com/tiroq/data-qa-playground/actions/runs/42826267851)
+— **SUCCESS**.
+
+[Implementation and run instructions](TEST_COVERAGE.md) lists all files,
+commands, limitations and negative controls.
+
+**Scope boundary:** the Kafka exercise uses a real broker but deliberately
+manual consumer-to-sink writes; the HTTP service uses its own queue, not Kafka.
+Neither is a production consumer or an externally hosted service. These are
+different controlled integration boundaries, not a claim of one fully deployed
+production stack.
 
 ## Goal
 
@@ -37,16 +72,16 @@ Design maintainable automated tests across an API, PostgreSQL and ClickHouse.
 
 ## Acceptance criteria
 
-- [ ] A reviewer can run the selected tests repeatably.
-- [ ] Cleanup occurs even on failed assertions.
-- [ ] No-empty-PASS guard and failure diagnostics are demonstrated.
+- [x] A reviewer can run the selected tests repeatably (verified by two real-container CI jobs).
+- [x] Cleanup occurs even on failed assertions (PostgreSQL subprocess teardown proof).
+- [x] No-empty-PASS guard and failure diagnostics are demonstrated.
 
 ## Artifacts to add **during** this session
 
 - `pyproject.toml` test configuration when introduced
 - `tests/` fixtures and documented run commands
 
-Do not add a reference solution before the learner has attempted the assignment. Preserve original attempts and explain fixes in separate files or commits.
+Learner approaches were reviewed first and preserved in [notes/](notes/). The subsequent full lab is now implemented and verified separately.
 
 ## Standalone ChatGPT kickoff prompt (Russian)
 
@@ -54,8 +89,8 @@ Do not add a reference solution before the learner has attempted the assignment.
 
 ## Session result (fill **after** completing)
 
-- **Attempt / PR:** _not yet completed_
-- **Score / 10:** _not assessed_
-- **What worked:** _not assessed_
-- **Bugs / edge cases:** _not assessed_
-- **Next-session adjustments:** _not assessed_
+- **Attempt / PR:** Learner's architecture reviewed in chat; the verified reference suite is committed to `main`. See `TEST_COVERAGE.md`.
+- **Score / 10:** No formal timed mock interview score; architecture and code outcomes verified.
+- **What worked:** transaction boundaries, SQL polling, source-of-truth assumptions, raw MergeTree + latest VIEW, set/Counter reconciliation and the Kafka lag limitation.
+- **Bugs / edge cases:** ClickHouse SELECT alias collision corrected after real CI failure; Kafka Python TopicPartition property corrected; zero-row false PASS and duplicate-mask-missing covered.
+- **Next-session adjustments:** Session 08 remains **PLANNED for 2026-11-11**. Its bounded-wait exercise is intentionally not solved here; the Session 07 suite uses a local illustrative polling helper.

@@ -1,13 +1,22 @@
-# Testing layout — introduced as functionality is implemented
+# Testing layout
 
-The executable PostgreSQL baseline check is `postgres/checks/smoke.sql` via Docker Compose. Tests are added as their contracts become meaningful.
+The repository uses independent test layers. A green CI run verifies only the
+boundary exercised by that test, not the full production trading pipeline.
 
-- `tests/unit/`: Python comparators and Data Quality rule logic.
-- `tests/labs/`: lab readiness checks; these do **not** prove exercise completion.
-- `tests/session07/`: runnable **in-memory fake** contract examples and independent pure-Python event-ID manifest checks for Session 07, including parametrization, duplicate-masks-missing negative control and a no-empty-PASS guard. Run with `uv run pytest -q tests/session07`.
-- `tests/integration/`: **real PostgreSQL Testcontainers** transaction-isolation and committed-writer checks for Session 07. They do **not** exercise HTTP API, Kafka, or ClickHouse. Run with Docker, `uv run --with 'testcontainers[postgres]>=4.10,<5' --with 'psycopg[binary]>=3.2,<4' pytest -q tests/integration`. ClickHouse integration is still pending.
-- `tests/e2e/`: future full-path checks; not implemented.
+- `tests/unit/`: Session 05 comparator and Data Quality rules.
+- `tests/labs/`: lab readiness checks only.
+- `tests/session07/`: deterministic in-memory fake, event manifest set/Counter
+  reconciliation, payload and version conflict checks, deliberate-empty and
+  unexpected-empty scenarios. No Docker required.
+- `tests/integration/`: PostgreSQL and ClickHouse Testcontainers, a real
+  localhost HTTP 202 service with a controlled worker, and a Kafka broker
+  boundary test. All require Docker. The Kafka test has a dedicated marker
+  and a separate workflow job.
+- `tests/e2e/`: external production-equivalent deployment tests are NOT
+  implemented. The localhost teaching HTTP service is intentionally synthetic.
 
-Required guard: no unexpectedly empty dataset can be counted as PASS. A deliberately empty input may be valid only under an explicit contract.
+Full lab commands, run scopes, cleanup strategies and limitations:
+[Session 07 test coverage](../exercises/07-pytest-architecture/TEST_COVERAGE.md).
 
-Do not present fake tests as full database integration, and do not add placeholder tests that always pass.
+No unexpectedly empty data may count as PASS. Deliberately empty input
+requires an explicit scenario contract.

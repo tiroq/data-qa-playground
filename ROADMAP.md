@@ -20,8 +20,8 @@
 | 04 | 11 07 | [Source-to-Target Reconciliation & SLA](exercises/04-reconciliation/README.md) | IN PROGRESS (guided PostgreSQL fixture, reconciliation and SLA SQL, assertions authored; runtime checks pending) | Cardinality-safe reconciliation and timing SLA |
 | 05 | 11 08 | [Python Live Coding — Streaming Comparison](exercises/05-python-live-coding/README.md) | PLANNED | Python comparison core |
 | 06 | 11 09 | [Data Quality — Contracts, Gates & Metrics](exercises/06-data-quality-rules/README.md) | IN PROGRESS (DQ-01..DQ-20 implemented in PR #2, full-evidence sample and CI checks; policy review pending) | DQ rules and severity |
-| 07 | 11 10 | [Pytest Architecture — Fixtures & Isolation](exercises/07-pytest-architecture/README.md) | IN PROGRESS (fake suite + real PostgreSQL READ COMMITTED/rollback test verified in CI; cleanup and API/ClickHouse integration pending) | Pytest and containerized isolation |
-| 08 | 11 10 | [Async Testing — Eventual Consistency](exercises/08-async-testing/README.md) | PLANNED | Eventual-consistency testing |
+| 07 | 11 10 | [Pytest Architecture — Fixtures & Isolation](exercises/07-pytest-architecture/README.md) | COMPLETE (synthetic lab: unit + real PostgreSQL, ClickHouse, localhost HTTP and Kafka suites verified in CI; not production E2E) | Pytest and containerized isolation |
+| 08 | 11 11 | [Async Testing — Eventual Consistency](exercises/08-async-testing/README.md) | PLANNED | Eventual-consistency testing |
 | 09 | 11 11 | [ClickHouse Advanced — MV, TTL & Backfill](exercises/09-clickhouse-advanced/README.md) | PLANNED | ClickHouse MV/migrations/backfill |
 | 10 | 11 11 | [SQL Mock Interview — Correctness Under Time Pressure](exercises/10-sql-mock/README.md) | PLANNED | Timed SQL assessment |
 | 11 | 11 12 | [Kafka / Flink — Streaming Failure Modes](exercises/11-kafka-flink/README.md) | PLANNED | Streaming delivery/replay invariants |

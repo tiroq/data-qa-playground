@@ -25,7 +25,11 @@ The first test command checks lab preparation only. The second exercises the in-
 
 The baseline is starter material, not a learner interview attempt or a completed exercise. The dedicated CI workflow `.github/workflows/session07-fake-tests.yml` runs only the fake contract tests.
 
-## Live assignment
+## Session 07 completed lab
+
+See [TEST_COVERAGE.md](TEST_COVERAGE.md) and [README.md](README.md). The initial starter below remains for historical context; the reference suite is now implemented in `tests/session07/` and `tests/integration/` and verified in GitHub Actions. Session 08 is still PLANNED.
+
+## Live assignment (original exercise)
 
 1. Review the starter fixture architecture and defend `function` vs `session` scope. Explain teardown on setup failures, assertion failures and parallel workers.
 2. Extend the parametrized tests with independently meaningful failure diagnostics and no-empty-PASS assertions. Distinguish the intentionally empty case from accidentally missing processing.

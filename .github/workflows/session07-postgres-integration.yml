@@ -29,4 +29,21 @@ jobs:
         run: |
           uv run --with 'testcontainers[postgres,clickhouse]>=4.10,<5' \
             --with 'psycopg[binary]>=3.2,<4' --with 'clickhouse-driver>=0.2.9,<1' \
-            pytest -v tests/integration/
+            pytest -v tests/integration/ -m 'not kafka'
+
+  kafka-clickhouse:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run actual Kafka and ClickHouse sink-boundary test
+        run: |
+          uv run --with 'testcontainers[postgres,clickhouse,kafka]>=4.10,<5' \
+            --with 'psycopg[binary]>=3.2,<4' \
+            --with 'clickhouse-driver>=0.2.9,<1' \
+            --with 'confluent-kafka>=2.7,<3' \
+            pytest -v tests/integration/test_kafka_sink_checkpoint.py -m kafka

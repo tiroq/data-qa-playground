@@ -18,3 +18,4 @@ packages = ["src/data_qa"]
 [tool.pytest.ini_options]
 testpaths = ["tests/unit"]
 addopts = "-ra"
+markers = ["kafka: requires real Kafka and ClickHouse containers"]

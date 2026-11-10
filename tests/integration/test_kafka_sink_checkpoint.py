@@ -80,7 +80,7 @@ def test_zero_lag_before_sink_write_does_not_prove_delivery(
         ]
         result = consumer.commit(offsets=offsets, asynchronous=False)
         assert len(result) == 2
-        assert all(entry.err is None for entry in result)
+        assert all(entry.error is None for entry in result)
         acknowledged = consumer.committed(
             [TopicPartition(topic, 0), TopicPartition(topic, 1)], timeout=10,
         )

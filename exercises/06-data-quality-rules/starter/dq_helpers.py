@@ -12,9 +12,12 @@ from rule_result import RuleOutcome
 
 Row = dict[str, Any]
 BusinessKey = tuple[str, str]
-IMMUTABLE_EVENT_FIELDS = (
-    "trade_id", "account_id", "version", "status", "pnl", "event_time",
-)
+# Only observation/transport metadata is excluded from immutable payload.
+# Unknown business attributes remain covered to avoid false-negative conflicts.
+DELIVERY_METADATA_FIELDS = frozenset({
+    "event_id", "available_at", "received_at", "ingested_at",
+    "delivery_attempt", "transport_offset",
+})
 ALLOWED_STATUSES = frozenset({"NEW", "FILLED", "CANCELLED", "FAILED"})
 
 
@@ -61,7 +64,8 @@ def parse_ts(value: Any) -> datetime | None:
 def fingerprint(record: Row) -> str:
     """Immutable business event, excluding delivery metadata and event ID."""
     return json.dumps(
-        {field: record.get(field) for field in IMMUTABLE_EVENT_FIELDS},
+        {key: value for key, value in record.items()
+         if key not in DELIVERY_METADATA_FIELDS},
         ensure_ascii=False, sort_keys=True, default=str,
     )
 

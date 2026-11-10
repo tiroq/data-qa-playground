@@ -43,3 +43,16 @@ Given PostgreSQL with versions 1 and 2 for a trade, and ClickHouse raw data with
 **Next interview prompt:** What concrete, independently trustworthy barrier would be available in the actual API → PostgreSQL → Kafka/worker → ClickHouse system? How would it account for multiple partitions and late writes?
 
 **Status:** Design discussion only; completion barrier and ClickHouse checks remain unimplemented.
+
+
+## Follow-up — Kafka lag and last-trade marker (learner, 2026-11-10)
+
+**Learner's reasoning:** `consumer lag = 0` is insufficient because some records may still be in-flight. Check the last delivered trade ID / possible end-to-end sequence as an additional completion indicator.
+
+**Review:** Correct instinct on in-flight processing. Kafka offsets are **per partition**, not global; there may be no monotonic cross-system trade sequence. Even observing the final trade does not prove no earlier records were lost, skipped or miswritten. A consumer group's committed offset reaching the log end indicates committed-position progress, not necessarily durable ClickHouse persistence. The semantics depend on when the application commits offsets.
+
+**Proposed stronger barrier:** Capture expected `event_id` manifest at source; track an acknowledged sink-write checkpoint for each relevant Kafka topic partition or a correlated batch-completion acknowledgment that is emitted only after durable ClickHouse writes. After the barrier, compare actual physical IDs and payloads with the manifest; report missing, duplicate, conflicted, or extra events separately. If the barrier times out, report completion timeout and preserve diagnostics; do not infer success from a last trade ID.
+
+**Follow-up exercise:** Implement an independent set-based reconciliation that fails if 100 expected event IDs produce only 99 physical target events, even if latest-state reconciliation and Kafka lag appear healthy. No claim of implementing a real barrier yet.
+
+Source for offset semantics: https://docs.confluent.io/cloud/current/client-apps/consumer.html

@@ -60,7 +60,7 @@ class StatusDomainChecker(AbstractChecker):
             {"event_id": row.get("event_id"), "status": row["status"],
              "reason": "unsupported_status"}
             for row in cohort["records"]
-            if row.get("status") is not None and row["status"] not in ALLOWED_STATUSES
+            if row.get("status") is not None and (not isinstance(row["status"], str) or row["status"] not in ALLOWED_STATUSES)
         ]
         emit(result, "DQ-05", "critical", violations, no_records(cohort["records"]))
         return super().handle(cohort, result)
@@ -121,7 +121,13 @@ class VersionConsistencyChecker(AbstractChecker):
                         })
                         states.clear()
                         break
-                    states.add((representative.get("status"), parsed_pnl))
+                    status = representative.get("status")
+                    if not isinstance(status, str):
+                        unknown.append({"trade_id": key[0], "account_id": key[1],
+                                        "version": version, "reason": "invalid_status_blocks_version"})
+                        states.clear()
+                        break
+                    states.add((status, parsed_pnl))
                 if len(states) > 1:
                     violations.append({
                         "trade_id": key[0], "account_id": key[1], "version": version,

@@ -162,3 +162,12 @@
 - **Interviewer qualification (not candidate assertion):** PostgreSQL is sufficient only if full event history is retained; object archive similarly needs coverage, schema/version lineage, tested restore and reconciliation. No archive's actual existence was verified.
 - **Next (accelerated) question:** Migration cutover where trade counts match but new aggregate PnL differs by 0.3%; decide release/rollback and checks.
 - **Status:** Oral interview only, no testing or SQL implementation.
+
+## Card G — cutover with 0.3% PnL difference (actual answer)
+
+- **Question:** Unique trade counts match but the new aggregate PnL differs by 0.3% while live ingestion continues; cut over?
+- **Candidate actual answer:** "Ну, перед переключением надо понять, из-за чего происходит расхождение. То есть ошибка в старой системе, в новой, или это алгоритмы какие-то по-другому нам показали значение. Ну, ничего страшного, пусть получает эвенты. Когда выровняется логика, то можно будет свободно переходить."
+- **Candidate decision:** Do not cut over without explaining the discrepancy; investigate whether either system is wrong or semantics differ; continue new-system live event ingestion and switch only after logic is aligned.
+- **Interviewer review (not candidate claim):** Correct distinction between ingestion and reader cutover. Before switching, reconcile affected trades/accounts/windows against independent authoritative data, document algorithm differences, verify agreed invariants at current watermark, and preserve rollback target. Matching counts alone is insufficient.
+- **Final question posed:** Two hours after cutover, late higher versions are missing from new aggregate PnL. Choose immediate reader rollback, stopping ingestion, or on-the-fly fix and justify.
+- **Status:** Oral reasoning only, no code/SQL/test execution.

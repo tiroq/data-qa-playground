@@ -136,3 +136,10 @@
 - **Interviewer clarification (not candidate claim):** A replay of an *unchanged* event is not itself a forbidden business update and remains possible with at-least-once delivery. Distinguish duplicate replay from late mutation; security is a hypothesis requiring evidence, not an automatic classification. Need idempotency even for immutable finalized trades.
 - **Open follow-up:** Choose primary idempotency enforcement at Kafka consumer, ClickHouse storage, and/or analytical read model for identical replayed event_id after backfill.
 - **Status:** Discussion only, no implementation or execution.
+
+## Card E — request for idempotency alternatives and interviewer explanation
+
+- **Candidate actual request:** "Ну, как минимум у Kafka Consumer наверняка есть параметр, насколько старые обрабатывать или нет. Ещё-то я даже не знаю про ClickHouse финальный. накидай мне вариантов, какие есть."
+- **Candidate hypothesis:** Kafka Consumer may have configuration to limit the age of messages processed; explicitly requests alternative approaches instead of selecting one.
+- **Interviewer explanation (not candidate choice):** Kafka auto.offset.reset controls where consumers start without valid committed offsets (earliest/latest/by_duration), not whether a business event is too old and not end-to-end deduplication. Compared consumer event_id dedup, offset management, ClickHouse block INSERT dedup, ReplacingMergeTree with FINAL, aggregation-state uniqueness, and dedup-before-sum logical read model. Proposed a layered architecture (Kafka → immutable raw → logical current state + conflict checks → account PnL) as **interviewer recommendation**, not candidate decision.
+- **Open:** Candidate has not selected a primary idempotency boundary or designed an executable backfill/cutover strategy; no SQL/DDL/verification executed.

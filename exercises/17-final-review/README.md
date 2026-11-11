@@ -5,6 +5,10 @@
 
 > **Language contract:** The actual technical interview is in **Russian**. All live tasks, discussion, follow-up questions, code review, mock interviews, and feedback in ChatGPT must be **in Russian**. SQL, Python, identifiers, and technical terms may remain in English. This repository's written exercise specifications are in English.
 
+## Targeted final drill
+
+Use [GAP_REHEARSAL.md](GAP_REHEARSAL.md), based on the [Sessions 01–08 audit](../../docs/INTERVIEW_READINESS_AUDIT_2026-11-11.md) and later mock scorecards. This is a one-hour question-only refresher, not a new coding/infrastructure assignment.
+
 ## Goal
 
 Consolidate evidence and avoid opening major new areas the day before interview.

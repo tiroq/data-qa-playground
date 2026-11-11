@@ -2,6 +2,10 @@
 
 **Focused practice:** 30–45 minutes. All discussion, review and interview feedback **in Russian**.
 
+## Highest-risk negative controls
+
+Before building a gate, read [NEGATIVE_CONTROLS.md](NEGATIVE_CONTROLS.md). This exercises missing manifests, duplicate-masks-missing, `INDETERMINATE`, skipped suites and false completion from lag=0. **Do not implement the answers automatically.**
+
 ## Prepared assets
 
 - [GitHub Actions lab-readiness workflow](../../.github/workflows/lab-readiness.yml): fixture and environment smoke, **not a complete business quality gate**.

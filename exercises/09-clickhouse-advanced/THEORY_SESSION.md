@@ -4,6 +4,10 @@
 **Speaking language:** Russian only (SQL keywords and technology names may be English).  
 **Rule:** Ask one question at a time. Let the learner reason before offering hints or explanations.
 
+## Carry-forward focus
+
+Use [GAP_PROBES.md](GAP_PROBES.md) to select targeted follow-ups from previous sessions, but maintain one-question-at-a-time interviewing and do not reveal any proposed answer in advance.
+
 ## Preparation: zero hands-on setup
 
 Read [SCENARIO_CARDS.md](SCENARIO_CARDS.md), the source fixture `clickhouse/init/02-seed.sql`, and [DECISION_MATRIX.md](DECISION_MATRIX.md). You do **not** need Docker, pytest, or live ClickHouse to begin.

@@ -18,7 +18,7 @@
 | 02 | 11 06 | [SQL Live Coding — Versions, Windows & Deduplication](exercises/02-sql-live-coding/README.md) | IN PROGRESS (Tasks 1–3 discussed and reviewed; runtime verification pending) | Latest-version selection and account PnL |
 | 03 | 11 06 | [ClickHouse Fundamentals — MergeTree & Row Semantics](exercises/03-clickhouse-fundamentals/README.md) | IN PROGRESS (guided review 7.5/10 recorded; local ClickHouse / pytest verification pending) | ClickHouse storage semantics |
 | 04 | 11 07 | [Source-to-Target Reconciliation & SLA](exercises/04-reconciliation/README.md) | IN PROGRESS (guided PostgreSQL fixture, reconciliation and SLA SQL, assertions authored; runtime checks pending) | Cardinality-safe reconciliation and timing SLA |
-| 05 | 11 08 | [Python Live Coding — Streaming Comparison](exercises/05-python-live-coding/README.md) | PLANNED | Python comparison core |
+| 05 | 11 08 | [Python Live Coding — Streaming Comparison](exercises/05-python-live-coding/README.md) | IN PROGRESS (batch implementation + historical unit CI, independent timed review pending) | Python comparison core |
 | 06 | 11 09 | [Data Quality — Contracts, Gates & Metrics](exercises/06-data-quality-rules/README.md) | IN PROGRESS (DQ-01..DQ-20 implemented in PR #2, full-evidence sample and CI checks; policy review pending) | DQ rules and severity |
 | 07 | 11 10 | [Pytest Architecture — Fixtures & Isolation](exercises/07-pytest-architecture/README.md) | COMPLETE (synthetic lab: unit + real PostgreSQL, ClickHouse, localhost HTTP and Kafka suites verified in CI; not production E2E) | Pytest and containerized isolation |
 | 08 | 11 11 | [Async Testing — Eventual Consistency](exercises/08-async-testing/README.md) | IN PROGRESS (oral review 8/10; reference sync/async code and tests authored; runtime verification pending) | Eventual-consistency testing |
@@ -33,6 +33,10 @@
 | 17 | 11 15 | [Final Review — Confidence & Gaps](exercises/17-final-review/README.md) | PLANNED | Final revision sheet |
 
 Session 01's existing solutions and explanations are preserved as historical learning artifacts; the new session READMEs intentionally contain no reference solutions.
+
+## Audit-derived interview focus (2026-11-11)
+
+Read [Sessions 01–08 readiness audit](docs/INTERVIEW_READINESS_AUDIT_2026-11-11.md) before running Sessions 09–17. Each remaining session now has focused probes or an assessment worksheet for observed gaps: SQL output grain, same-version conflict, ClickHouse replacement semantics, Kafka sink proof, independent timed coding, non-vacuous quality gates and async deadline policy. The audit is evidence-based and **does not claim mastery** from mentor-authored solutions. Session 09 is still not attempted here; open it separately for an oral-first interview.
 
 ## Prepared laboratory materials for Sessions 06–13
 

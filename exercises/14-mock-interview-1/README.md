@@ -5,6 +5,10 @@
 
 > **Language contract:** The actual technical interview is in **Russian**. All live tasks, discussion, follow-up questions, code review, mock interviews, and feedback in ChatGPT must be **in Russian**. SQL, Python, identifiers, and technical terms may remain in English. This repository's written exercise specifications are in English.
 
+## Gap-adapted timed interview material
+
+Read [MOCK_PACKET.md](MOCK_PACKET.md) only at the start of the timed mock and use [SCORECARD_TEMPLATE.md](SCORECARD_TEMPLATE.md) after submission. These cases target SQL output completeness, latest-version ambiguity and independent Python implementation from the [Sessions 01–08 audit](../../docs/INTERVIEW_READINESS_AUDIT_2026-11-11.md); no answers or solutions are prefilled.
+
 ## Goal
 
 Run a strict Russian-language technical mock emphasizing coding and reasoning.

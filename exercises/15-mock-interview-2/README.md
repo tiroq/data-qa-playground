@@ -5,6 +5,10 @@
 
 > **Language contract:** The actual technical interview is in **Russian**. All live tasks, discussion, follow-up questions, code review, mock interviews, and feedback in ChatGPT must be **in Russian**. SQL, Python, identifiers, and technical terms may remain in English. This repository's written exercise specifications are in English.
 
+## Gap-adapted incident material
+
+Use [INCIDENT_PACKET.md](INCIDENT_PACKET.md) in successive reveal phases and [SCORECARD_TEMPLATE.md](SCORECARD_TEMPLATE.md) only after the answer. This targets Kafka sink durability, lost events hidden by replays, ClickHouse latest-state conflicts, MV backfill and rollback. Do not expose the full packet during the first question.
+
 ## Goal
 
 Run a scenario-driven Russian mock about production data correctness.

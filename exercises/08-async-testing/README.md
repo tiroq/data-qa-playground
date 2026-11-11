@@ -1,6 +1,6 @@
 # Session 08 — Async Testing — Eventual Consistency
 
-**Date (Asia/Bangkok):** 2026-11-11 · **Duration:** 60 minutes · **Status:** IN PROGRESS (oral review completed; reference code committed; CI verification pending)  
+**Date (Asia/Bangkok):** 2026-11-11 · **Duration:** 60 minutes · **Status:** IN PROGRESS (oral review completed; assistant-authored reference code committed; Session 08-specific CI verification pending)  
 **Track:** Exness QA Engineer (Data Stack) interview preparation
 
 > **Language contract:** The actual technical interview is in **Russian**. All live tasks, discussion, follow-up questions, code review, mock interviews, and feedback in ChatGPT must be **in Russian**. SQL, Python, identifiers, and technical terms may remain in English. This repository's written exercise specifications are in English.
@@ -50,6 +50,10 @@ Do not add a reference solution before the learner has attempted the assignment.
 - **What worked:** monotonic deadlines, bounded sleeps, retry diagnostics, predicate separation of concerns.
 - **Bugs / edge cases:** async cancellation unfamiliar; snapshot/delta initially confused; deadline boundary clarified.
 - **Next-session adjustments:** practice asyncio, idempotent effects, deterministic fake-clock testing.
+
+## Deadline-boundary contract still requires reconciliation
+
+The learner discussed a possible fourth predicate call at exactly t=1.0 for timeout=1.0 and interval=0.4. The currently documented reference contract and deterministic test instead allow starts at t=0, 0.4 and 0.8, with no new attempt at or after t=1.0. **Neither should be called the uniquely correct policy without an explicitly chosen boundary contract.** This has been added to the [final rehearsal](../17-final-review/GAP_REHEARSAL.md). No test or algorithm was changed by the audit.
 
 ## Reference implementations and tests (added after oral attempt)
 

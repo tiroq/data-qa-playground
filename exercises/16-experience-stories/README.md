@@ -5,6 +5,10 @@
 
 > **Language contract:** The actual technical interview is in **Russian**. All live tasks, discussion, follow-up questions, code review, mock interviews, and feedback in ChatGPT must be **in Russian**. SQL, Python, identifiers, and technical terms may remain in English. This repository's written exercise specifications are in English.
 
+## Grounded story preparation
+
+Use [STORY_EVIDENCE_WORKSHEET.md](STORY_EVIDENCE_WORKSHEET.md) to verify personal contributions, evidence and limits before drafting STAR answers. It contains **candidate prompts**, not prepared claims or invented outcomes. Do not attribute training reference code to production experience.
+
 ## Goal
 
 Present authentic, concise Russian-language stories tied to Data Stack QA.

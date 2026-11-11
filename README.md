@@ -130,3 +130,7 @@ Inside the client, run `SELECT * FROM lab03.trading_events ORDER BY ingest_id;`.
 ## Ready-to-run Exness labs (Sessions 06–13)
 
 Use [labs/README.md](labs/README.md) and the session-specific `START_HERE.md` files. Preparatory validation: `uv sync --group dev && uv run pytest -q tests/labs`. The GitHub Actions `lab-readiness` workflow checks only fixture structure and disposable PostgreSQL data. It **does not** claim that learner solutions, full DQ gates or live Kafka/Flink and ClickHouse advanced exercises have been completed. All interactive interview practice is in Russian.
+
+## Gap-based interview readiness review (11 November 2026)
+
+See [the evidence-based audit of Sessions 01–08](docs/INTERVIEW_READINESS_AUDIT_2026-11-11.md). Sessions 09–17 include additional targeted scenarios, scorecard templates and follow-up questions, without reference answers ahead of a candidate attempt. Session 09 remains oral-first and is deliberately not pre-solved. Documentation updates are not a substitute for test execution or independently demonstrated interview performance.

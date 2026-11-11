@@ -143,3 +143,12 @@
 - **Candidate hypothesis:** Kafka Consumer may have configuration to limit the age of messages processed; explicitly requests alternative approaches instead of selecting one.
 - **Interviewer explanation (not candidate choice):** Kafka auto.offset.reset controls where consumers start without valid committed offsets (earliest/latest/by_duration), not whether a business event is too old and not end-to-end deduplication. Compared consumer event_id dedup, offset management, ClickHouse block INSERT dedup, ReplacingMergeTree with FINAL, aggregation-state uniqueness, and dedup-before-sum logical read model. Proposed a layered architecture (Kafka → immutable raw → logical current state + conflict checks → account PnL) as **interviewer recommendation**, not candidate decision.
 - **Open:** Candidate has not selected a primary idempotency boundary or designed an executable backfill/cutover strategy; no SQL/DDL/verification executed.
+
+## Card E — replay reconciliation metrics (actual answer)
+
+- **Question:** Given 1,000 unique trades, 1,100 physical rows after replay without business-state change, which two checks prove financial PnL is unchanged?
+- **Candidate actual answer:** "Ну, можно, в принципе, event ID уникальный и PNL по каждой сделке идентифицировать, правильные ли они или нет. Если там расхождение в минимум-максимум значениях."
+- **Candidate proposal:** Compare unique event identities and PnL per trade, detecting min/max discrepancies.
+- **Interviewer review (not candidate assertion):** Useful for event coverage and same-version payload conflict, but min/max alone cannot demonstrate that duplicate delivery was not double-counted in sum. Independent invariants proposed: logical latest-state identity and PnL per trade, plus account/reporting-period aggregate PnL reconciliation before/after replay. Illustrative 1,000 unique events requires an explicitly assumed one-event-per-trade contract.
+- **Next topic:** Raw TTL 30 days; financial discrepancy for a trade older than 45 days, with aggregates but no raw data in ClickHouse. How investigate and recover?
+- **Status:** Oral only; no SQL or validation run.

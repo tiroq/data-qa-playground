@@ -62,3 +62,10 @@
 - **Interviewer caveat (not attributed to candidate):** Insert-triggered ClickHouse materialized views process the incoming inserted block, so straightforward grouped calculations do not automatically compare events arriving in separate insert blocks. Stateful aggregation or a separate stateful processor/check is needed for cross-insert conflict detection.
 - **Open follow-up:** How to detect conflict across separate INSERTs efficiently without rescanning the complete table for each event.
 - **Status:** Design discussion only; no implementation or executed checks.
+
+## Card D — Materialized View learning clarification
+
+- **Candidate actual request:** "Ну здесь Materialized View я не знаком, поэтому разбери мне этот очень коротко кейс."
+- **Candidate familiarity:** Explicitly stated unfamiliarity with Materialized View; no candidate implementation proposal was provided for cross-INSERT checking.
+- **Interviewer explanation:** Insert-triggered MV processes incoming blocks; use raw MergeTree deliveries, MV aggregate states by trade/version into AggregatingMergeTree (e.g. min/max PnL states), query merged states to detect discrepancy; alerting needs separate polling/check and the MV alone does not guarantee immediate notification.
+- **Status:** Theory explained, not experimentally verified. No SQL/DDL requested or implemented.

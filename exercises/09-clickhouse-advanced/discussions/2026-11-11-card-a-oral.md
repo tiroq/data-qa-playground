@@ -171,3 +171,21 @@
 - **Interviewer review (not candidate claim):** Correct distinction between ingestion and reader cutover. Before switching, reconcile affected trades/accounts/windows against independent authoritative data, document algorithm differences, verify agreed invariants at current watermark, and preserve rollback target. Matching counts alone is insufficient.
 - **Final question posed:** Two hours after cutover, late higher versions are missing from new aggregate PnL. Choose immediate reader rollback, stopping ingestion, or on-the-fly fix and justify.
 - **Status:** Oral reasoning only, no code/SQL/test execution.
+
+## Card G — incident after cutover (final actual answer)
+
+- **Question:** Two hours after cutover, late higher versions are not reflected in account PnL. Roll back readers, stop ingestion, or hot-fix?
+- **Candidate actual answer:** "Ну то есть получается, по сути сломалась аналитика, и здесь, я надеюсь, было что-то вроде канари перехода, то только для определенных пользователей, на них проверили, а не у всех сразу. И можно также... я бы начал откатывать на предыдущую и разбирать данный кейс, почему это произошло. С учетом, что прошлый механизм так и работал, просто у пользователей поменяется циферка на корректную обратно."
+- **Candidate decision:** Favor limited canary exposure, roll back read path to previously working analytics, then diagnose why late versions were missed.
+- **Interviewer qualification:** Verify old path stayed current and correct; switching readers alone does not remediate already published financial reports and downstream consequences. Avoid stopping ingestion absent evidence that ingestion itself is corrupt.
+- **Status:** Session concluded; discussion only, no SQL/DDL or ClickHouse execution.
+
+## Final session review (interviewer assessment)
+
+- **Semantic correctness /10:** 7.5 (weakness: ReplacingMergeTree sort-key replacement nuances; new learning: MV/AggregatingMergeTree)
+- **QA strategy /10:** 8.5 (strong conflict separation, consumer-dependent quality gates and reconciliation instincts; improve replay proof)
+- **Architecture and operations /10:** 7.0 (good backfill-finality and rollback ideas; cutover watermark and event-overlap proofs missing)
+- **Reasoning and communication /10:** 8.5 (explicitly acknowledges unknowns, identifies business-contract assumptions)
+- **Weighted overall /10:** 7.8 (35/25/25/15 weights; qualitative oral assessment)
+- **Three priorities:** (1) MV/AggregatingMergeTree State/Merge and incremental semantics; (2) end-to-end replay idempotency, count/sum vs logical state; (3) watermark-safe backfill, dual-run reconciliation, cutover and rollback.
+- **Unresolved:** precise event identity and finality contracts; replay-safe boundary; exact financial correction procedure. No testing claims or accepted implementation.

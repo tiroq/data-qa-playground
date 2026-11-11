@@ -119,3 +119,11 @@
 - **Interviewer review (not candidate claim):** Good scoped rollout, but "new trades" must be distinguished from new deliveries/versions on old trades. Asynchronous backfill overlapping with live insert-triggered MV can double-process deliveries; backfill boundaries must be explicit and validated.
 - **Open follow-up:** Choose safe boundary between historical and live deliveries, accounting for late versions of previously existing trades.
 - **Status:** Oral only; no migrations, code, or validation executed.
+
+## Card E — clarified finality-based backfill eligibility (actual answer)
+
+- **Candidate clarification (verbatim):** "Ну, я изначально подразумевал, что исторический бэкфилл делать для сделок, которые пришли к какому-то конечному состоянию. Например, они filled, и это уже закреплено по каким-то критериям, что её нельзя поменять, эту сделку. То есть filled, и, допустим, с точки зрения бизнеса есть дополнительное требование трёх суток для изменения данных, и только в этом случае эту сделку можно бэкфилить полностью, потому что она не изменится."
+- **Candidate proposal clarified:** Restrict historical backfill to trades considered immutable under the hypothetical business contract: FILLED plus a three-day correction window elapsed. Not merely an arbitrary reporting-period cutoff.
+- **Interviewer review (not candidate assertion):** Business finality and delivery completeness are separate guarantees. A trade may be unchangeable yet have delayed or replayed deliveries. Finality-based selection alone does not prevent overlap between backfill and incremental MV writes. Also ensure the 72-hour starting point and proof of immutability are explicitly contracted.
+- **Open follow-up:** A FILLED trade final on Nov 8 and backfilled receives a replayed Kafka event on Nov 11. How prevent duplicated accounting in MV target?
+- **Status:** Theory interview only; no SQL or migration run.

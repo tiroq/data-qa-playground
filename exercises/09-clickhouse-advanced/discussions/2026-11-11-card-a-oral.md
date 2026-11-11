@@ -127,3 +127,12 @@
 - **Interviewer review (not candidate assertion):** Business finality and delivery completeness are separate guarantees. A trade may be unchangeable yet have delayed or replayed deliveries. Finality-based selection alone does not prevent overlap between backfill and incremental MV writes. Also ensure the 72-hour starting point and proof of immutability are explicitly contracted.
 - **Open follow-up:** A FILLED trade final on Nov 8 and backfilled receives a replayed Kafka event on Nov 11. How prevent duplicated accounting in MV target?
 - **Status:** Theory interview only; no SQL or migration run.
+
+## Card E — finality violation versus replay (actual answer)
+
+- **Question context:** A final/backfilled trade receives an event on Nov 11; how avoid double accounting?
+- **Candidate actual answer:** "Но это будет уже прям какой-то экстраординарный случай, если пришел апдейт. Первая же. Это явно будет какой-то... Надо, в общем, в любом случае это будет проработать. То есть если закрытую сделку как-то умудрились провернуть на изменение, тут надо уже смотреть, почему какой-то из вышестоящих сервисов, которые нам продюсят это данные, разрешили такое. Вообще тут может быть уже какой-то секьюрити там."
+- **Candidate proposal:** A genuine business update after finality is exceptional; investigate upstream validation and consider possible security implications.
+- **Interviewer clarification (not candidate claim):** A replay of an *unchanged* event is not itself a forbidden business update and remains possible with at-least-once delivery. Distinguish duplicate replay from late mutation; security is a hypothesis requiring evidence, not an automatic classification. Need idempotency even for immutable finalized trades.
+- **Open follow-up:** Choose primary idempotency enforcement at Kafka consumer, ClickHouse storage, and/or analytical read model for identical replayed event_id after backfill.
+- **Status:** Discussion only, no implementation or execution.

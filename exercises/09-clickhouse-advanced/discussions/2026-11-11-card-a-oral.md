@@ -53,3 +53,12 @@
 - **Interviewer review (not candidate claim):** Reasonable risk-based quality-gate separation. Pending contract detail: whether the blocking scope is trade, account, period or whole report; a FAIL need not halt the entire pipeline.
 - **Next follow-up:** If ReplacingMergeTree has merged away the conflicting raw version, how can a DQ check still detect historical conflict?
 - **Execution evidence:** None.
+
+## Card C/D — preserving evidence before ReplacingMergeTree replacement (actual answer)
+
+- **Question:** How can DQ detect same-version conflicting PnL once ReplacingMergeTree merges have removed one competing row?
+- **Candidate actual answer:** "На входе в ClickHouse как минимум на лету можно смотреть, и если есть конкретный конфликт при записи, можно об этом сразу же сигнализировать уже при записи второй агрегации. Либо, если у нас нету какого-то промежуточного мониторингового звена, то надо отдельно как минимум хранить все значения для того, чтобы производить data quality. А для аналитики и бизнеса уже, допустим, пусть replace merge3 работает, или же поверх merge3 view, которая будет делать все эти агрегации."
+- **Candidate proposals:** Entry-time conflict detection and signaling; otherwise immutable/raw historical values retained separately for DQ; analytical read model may use ReplacingMergeTree or a view.
+- **Interviewer caveat (not attributed to candidate):** Insert-triggered ClickHouse materialized views process the incoming inserted block, so straightforward grouped calculations do not automatically compare events arriving in separate insert blocks. Stateful aggregation or a separate stateful processor/check is needed for cross-insert conflict detection.
+- **Open follow-up:** How to detect conflict across separate INSERTs efficiently without rescanning the complete table for each event.
+- **Status:** Design discussion only; no implementation or executed checks.

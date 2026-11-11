@@ -21,9 +21,17 @@
    - **Review:** One row is right. Docs describe last-inserted winner on equal highest version; insertion order is not a business event-time or ingested_at ordering guarantee.
 
 ## Open follow-up
-- Trade 205 has two max-version (2) payloads with PnL 8.0 and 8.5. Candidate has **not yet answered** whether last-insert-wins is business-correct or how QA should classify it.
+- Trade 205 has two max-version (2) payloads with PnL 8.0 and 8.5. Candidate answered the classification question; handling of account aggregate remains open.
 
 ## Agreed conclusions versus open questions
 - **Observed candidate understanding:** background deduplication is asynchronous, sorting key affects replacement identity, and `FINAL` returns a single survivor for the hypothetical stable business sorting key.
 - **Interviewer correction (not attributed to candidate):** version in ORDER BY prevents replacement of different versions.
 - **Still open:** business rule for conflicting max-version PnL, severity, independent reconciliation, and test design.
+
+## Card C — same-version conflict (first actual answer)
+
+- **Question posed:** Can `FINAL` selecting PnL 8.5 be considered DQ-correct; how should QA classify trade 205?
+- **Candidate actual answer:** "С точки зрения data quality по второй версии очень неоднозначный вопрос, потому что здесь конфликт P&L и для этого должна быть отдельная data quality проверка."
+- **Interviewer assessment:** Correctly separates same-version conflicting PnL from simple duplicate detection. This does **not** yet establish a business conflict resolution policy, severity, or account-aggregate treatment.
+- **Next follow-up:** Whether/how trade 205 should contribute to account A3's `SUM(PnL)` until conflict is resolved.
+- **Status:** open; no SQL executed or implementation authorized.

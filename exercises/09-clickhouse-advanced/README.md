@@ -1,52 +1,68 @@
-# Session 09 — ClickHouse Advanced — MV, TTL & Backfill
+# Session 09 — ClickHouse Advanced: Conversational Architecture Review
 
-**Date (Asia/Bangkok):** 2026-11-11 · **Duration:** 90 minutes · **Status:** PLANNED  
+**Date (Asia/Bangkok):** 2026-11-11 · **Default duration:** 60 minutes · **Status:** PLANNED / oral-first  
 **Track:** Exness QA Engineer (Data Stack) interview preparation
 
-> **Language contract:** The actual technical interview is in **Russian**. All live tasks, discussion, follow-up questions, code review, mock interviews, and feedback in ChatGPT must be **in Russian**. SQL, Python, identifiers, and technical terms may remain in English. This repository's written exercise specifications are in English.
+> **Language:** All discussion, interview questions, reasoning, code review and feedback take place **in Russian**. Technology names and SQL syntax may remain in English. GitHub materials are written in English.
 
-## Ready-to-run laboratory (prebuilt)
+## Format — theory first, implementation only from discussion
 
-Start with [START_HERE.md](START_HERE.md): it links to verified input materials, setup commands, and deliberately incomplete learner implementation. Discuss all code and answers in Russian. **Fixture readiness is not interview-task completion.**
+This session is now an **interactive technical interview**, not a mandatory SQL live-coding lab. We use the prebuilt synthetic ClickHouse case, discuss assumptions and compare architectures, then record the conclusions. Only SQL/DDL examples that are **actually discussed and approved** are added afterward as separate artifacts. Do not fill in alternative answers or mark the session complete in advance.
 
-## Goal
+**Start here:** [THEORY_SESSION.md](THEORY_SESSION.md) (interview flow), [SCENARIO_CARDS.md](SCENARIO_CARDS.md) (progressive cases), [DECISION_MATRIX.md](DECISION_MATRIX.md) (comparison template), [discussions/README.md](discussions/README.md) (capturing evidence), [START_HERE.md](START_HERE.md) (optional runnable fixture).
 
-Validate schema evolution, aggregates and recovery in an analytical pipeline.
+## Learning objective
 
-## Practical assignment
+Defend a trading-data quality design in ClickHouse under duplicate delivery, version updates, asynchronous merges, conflicts, backfill, materialized views, TTL and rollback. Explain **what is guaranteed**, what is merely a design assumption, and which test would falsify a claim.
 
-1. Design a raw-event table and a derived materialized view with explicit state and version semantics.
-2. Propose validation for aggregations, TTL retention, distributed queries and delayed merges.
-3. Plan a schema migration with backfill/replay, dual-write or shadow comparison and rollback.
-4. Explain why changing a materialized view does not automatically reprocess historical data.
+## Conversation agenda (60 minutes)
 
-## Contracts and constraints
+| Time | Topic | Interview challenge |
+|---|---|---|
+| 0–10 min | Storage semantics | MergeTree, ReplacingMergeTree, physical vs logical records, FINAL |
+| 10–25 min | Latest state and aggregates | argMax, same-version ties, PnL correctness and raw-vs-view reconciliation |
+| 25–40 min | Materialized views and replay | Insert-time behavior, MV target choice, idempotency and historical backfill |
+| 40–50 min | Migration, TTL and rollback | Shadow validation, cutover, retention and recoverability |
+| 50–60 min | Interview follow-ups | Distributed limitations, failure diagnosis, score and three learning gaps |
 
-- Business correctness is independent of physical merge timing.
-- Retention must not erase the only source needed to reconstruct derived tables.
-- Backfill should be idempotent and reconciliation must compare compatible windows.
+The interviewer may spend extra time on one difficult case and skip lower-priority topics; record what was actually covered.
 
-## Acceptance criteria
+## Grounded synthetic case
 
-- [ ] Migration plan includes before/after invariants and a rollback decision.
-- [ ] Explains count vs distinct trade count vs latest-state count.
-- [ ] Includes a query-level consistency check under duplicate delivery.
+- Existing `lab03.trade_versions`: **12 physical deliveries** for **6 logical business keys**.
+- Repeated version-2 payload: trade **201**.
+- Older version arrives later than newer: trade **203**.
+- Two conflicting maximum-version PnL values: trade **205**.
+- Nullable PnL/status: trade **204**.
+- Optional `lab09.raw_events` fixture is an isolated copy of this history. It is **not required** to start oral discussion.
 
-## Artifacts to add **during** this session
+Use source data and schema as evidence, not invented production behavior. [BACKFILL_BRIEF.md](BACKFILL_BRIEF.md) remains the optional hands-on extension.
 
-- Incremental ClickHouse DDL and verification queries
-- Migration/backfill runbook and review notes
+## Conversational success criteria
 
-Do not add a reference solution before the learner has attempted the assignment. Preserve original attempts and explain fixes in separate files or commits.
+- [ ] Candidate distinguishes physical rows, logical trades, immutable events, versions and time windows.
+- [ ] Candidate compares at least two viable storage/view strategies, with operational risks and QA checks.
+- [ ] A same-version conflict is not resolved by accidental row ordering.
+- [ ] Candidate specifies how to detect false aggregate correctness after duplicate/replayed deliveries.
+- [ ] Candidate explains a feasible backfill, cutover and rollback plan and its limits.
+- [ ] Notes clearly separate **candidate answer**, **reviewer's challenge**, **agreed conclusion** and **unverified claim**.
+- [ ] Three targeted follow-ups are recorded. No claims of PASS or executed SQL unless actually verified.
+
+## Optional implementation backlog — NOT required today
+
+Only after discussion, implement selected design choices from the original brief:
+
+1. Target table, possible materialized view and explicit version-conflict policy.
+2. Query-level comparison for raw history vs latest state / account-level PnL.
+3. Safe backfill or shadow migration with before/after assertions and replay scenario.
+4. Retention, schema evolution and rollback checks.
+
+Save reviewed examples under `discussions/` as Markdown first, and only create SQL files under `solutions/` after their logic is decided. Keep source `clickhouse/init/` and original `lab03` unchanged.
 
 ## Standalone ChatGPT kickoff prompt (Russian)
 
-> Ты — технический интервьюер Exness QA Engineer (Data Stack). Реальное интервью 16 ноября 2026 года проходит **на русском языке**. Проводим сессию 09: «ClickHouse Advanced — MV, TTL & Backfill» (90 минут), и **всё общение — на русском**, включая задачу, вопросы, оценку, обсуждение SQL/Python-кода и разбор ошибок. Код и общепринятые технические названия могут быть на английском. Мой контекст: Python/Go SDET, FIX и post-trade, reconciliation, нагрузочное тестирование, CI, NATS JetStream; слабее практический ClickHouse и Kafka/Flink. Первая SQL-диагностика пройдена успешно, но нужно особенно проверять JOIN cardinality, полноту output columns, группировку на бизнес-ключ, версии и крайние случаи. Открой в GitHub репозитории `tiroq/data-qa-playground` файл `exercises/09-clickhouse-advanced/README.md`; используй задание и acceptance criteria как основной контракт. Начни с одной практической задачи, дождись моего решения, не показывай эталон заранее. Далее проведи code review и follow-up, оцени от 0 до 10 и назови три точечных пробела. Сохраняй в репозитории только действительно выполненные решения и подтверждённые результаты.
+> Проводи **Session 09 — ClickHouse Advanced** как устное техническое интервью по Data Stack QA на русском языке, продолжительностью до 60 минут. Прочитай `exercises/09-clickhouse-advanced/THEORY_SESSION.md`, `SCENARIO_CARDS.md`, `DECISION_MATRIX.md` и исходные данные из `clickhouse/init/02-seed.sql` в `tiroq/data-qa-playground`. Давай **один кейс или вопрос за раз**, жди моего ответа, затем выявляй слабые допущения, предлагай контрпример и задавай follow-up. Не требуй написания SQL/DDL в ходе разговора и не показывай эталон заранее. После обсуждения записывай в репозиторий только рассмотренные кейсы, мои реальные аргументы, подтверждённые выводы и открытые вопросы. Реализацию добавляй лишь когда мы отдельно решим её делать. В конце оценка /10 и три приоритета для повторения.
 
-## Session result (fill **after** completing)
+## Session result (fill only after discussion)
 
-- **Attempt / PR:** _not yet completed_
-- **Score / 10:** _not assessed_
-- **What worked:** _not assessed_
-- **Bugs / edge cases:** _not assessed_
-- **Next-session adjustments:** _not assessed_
+**Status:** not yet assessed. See [discussion record template](DISCUSSION_RECORD_TEMPLATE.md); score and verification evidence remain unset until actual conversation.

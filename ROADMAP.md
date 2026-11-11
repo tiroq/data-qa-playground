@@ -22,7 +22,7 @@
 | 06 | 11 09 | [Data Quality — Contracts, Gates & Metrics](exercises/06-data-quality-rules/README.md) | IN PROGRESS (DQ-01..DQ-20 implemented in PR #2, full-evidence sample and CI checks; policy review pending) | DQ rules and severity |
 | 07 | 11 10 | [Pytest Architecture — Fixtures & Isolation](exercises/07-pytest-architecture/README.md) | COMPLETE (synthetic lab: unit + real PostgreSQL, ClickHouse, localhost HTTP and Kafka suites verified in CI; not production E2E) | Pytest and containerized isolation |
 | 08 | 11 11 | [Async Testing — Eventual Consistency](exercises/08-async-testing/README.md) | IN PROGRESS (oral review 8/10; reference sync/async code and tests authored; runtime verification pending) | Eventual-consistency testing |
-| 09 | 11 11 | [ClickHouse Advanced — MV, TTL & Backfill](exercises/09-clickhouse-advanced/README.md) | PLANNED | ClickHouse MV/migrations/backfill |
+| 09 | 11 11 | [ClickHouse Advanced — MV, TTL & Backfill](exercises/09-clickhouse-advanced/README.md) | PLANNED (oral-first, 60 min) | ClickHouse MV/migrations/backfill |
 | 10 | 11 11 | [SQL Mock Interview — Correctness Under Time Pressure](exercises/10-sql-mock/README.md) | PLANNED | Timed SQL assessment |
 | 11 | 11 12 | [Kafka / Flink — Streaming Failure Modes](exercises/11-kafka-flink/README.md) | PLANNED | Streaming delivery/replay invariants |
 | 12 | 11 12 | [Trading Data Pipeline Design — End-to-End QA](exercises/12-pipeline-design/README.md) | PLANNED | End-to-end design and test matrix |

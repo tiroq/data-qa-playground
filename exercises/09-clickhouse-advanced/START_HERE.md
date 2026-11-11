@@ -1,12 +1,20 @@
-# Session 09 — ClickHouse Advanced Prebuilt Lab
+# Session 09 — Start Here: Oral ClickHouse Interview
 
-**Focused practice:** 60 minutes. Russian discussion and feedback; SQL and docs in English.
+**Default mode:** theoretical **conversation in Russian** (up to 60 minutes). There is **no Docker setup, SQL coding or code generation required** to begin.
 
-## Existing service
+## Start in three steps
 
-ClickHouse is already present in `compose.yaml` under the `clickhouse` profile, with `lab03.trade_versions` containing 12 physical rows and 6 logical trade keys. Do not reset or modify `lab03`.
+1. Open [THEORY_SESSION.md](THEORY_SESSION.md) for the moderator's 60-minute flow.
+2. Use [SCENARIO_CARDS.md](SCENARIO_CARDS.md) one card at a time. They are grounded in the existing 12-row synthetic fixture; **do not expose answers in advance**.
+3. After each actually discussed case, record reasoning in [discussions/](discussions/) using [DISCUSSION_RECORD_TEMPLATE.md](DISCUSSION_RECORD_TEMPLATE.md). Fill [DECISION_MATRIX.md](DECISION_MATRIX.md) only when alternatives were genuinely compared.
 
-## Prepare an isolated advanced exercise
+**Interview prompt (copy into a new ChatGPT conversation):**
+
+> Проводи Session 09 как устное техническое интервью по ClickHouse Advanced на русском, максимум 60 минут. Открой в `tiroq/data-qa-playground` файлы `exercises/09-clickhouse-advanced/THEORY_SESSION.md`, `SCENARIO_CARDS.md` и `DECISION_MATRIX.md`; проверь факты фикстуры `clickhouse/init/02-seed.sql`. Давай по одному вопросу или кейсу и жди моего ответа, затем проверяй допущения, задавай follow-up и контрпример. Не заставляй писать SQL и не раскрывай эталон заранее. По результатам каждого кейса сохраняй в GitHub только мои реальные ответы, рассмотренные альтернативы, выводы и открытые вопросы. Код/SQL создавать лишь по отдельному решению после обсуждения. В конце дай оценку /10 и три приоритета.
+
+## Optional runnable lab — only if we decide to validate something
+
+The existing synthetic `lab03.trade_versions` contains 12 physical records and 6 logical business keys. `lab09.raw_events` can be recreated as an isolated copy for verifying an agreed hypothesis.
 
 ```bash
 docker compose --profile clickhouse up -d --wait clickhouse
@@ -16,18 +24,6 @@ docker compose --profile clickhouse exec -T clickhouse \
   clickhouse-client --user qa --password qa --multiquery < clickhouse/checks/09-advanced-smoke.sql
 ```
 
-**Destructive scope:** `09-advanced.sql` intentionally drops and recreates **only `lab09`** each time. Any work you stored in `lab09` is lost; save solutions in SQL files first.
+**Warning:** `09-advanced.sql` destroys and recreates **only `lab09`** on every invocation. It does not modify `lab03`, but it will erase any unsaved work stored in `lab09`. The smoke checks are fixture readiness only, not acceptance of any learner SQL.
 
-## Provided vs learner-owned
-
-- Provided: `lab09.raw_events`, an isolated physical event copy of `lab03.trade_versions`, with initial count smoke assertions.
-- Learner-owned: choose a new MV/aggregate table, define latest-version logic and conflict policy, plan backfill/migration, write quality checks and rollback.
-- Do not treat `argMax`, `FINAL` or asynchronous merges as magical conflict-resolution policies.
-
-## Design brief
-
-Follow [BACKFILL_BRIEF.md](BACKFILL_BRIEF.md). Show a migration's checks **before** and **after**, including an intentionally replayed delivery. Explain what a ClickHouse materialized view processes at insertion time and what requires explicit backfill.
-
-## Interview kickoff prompt
-
-> Проведи ClickHouse Advanced как интервью на русском. Прочитай START_HERE.md, BACKFILL_BRIEF.md, схему и исходные данные. Давай одну задачу за раз, дождись моего DDL/SQL. Обязательно проверь версии, ties, backfill, TTL, replay, стоимость FINAL, правильность агрегатов и rollback. Не создавай за меня финальную MV.
+Optional implementation ideas remain in [BACKFILL_BRIEF.md](BACKFILL_BRIEF.md). No claims of execution are made by this documentation.

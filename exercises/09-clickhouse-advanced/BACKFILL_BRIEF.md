@@ -1,5 +1,7 @@
 # Advanced ClickHouse migration / materialized view challenge
 
+> **Optional implementation extension:** Session 09 is now **oral-first**. Read [THEORY_SESSION.md](THEORY_SESSION.md) and discuss relevant cards before using this as a SQL/DDL assignment. Do **not** implement these tasks automatically or present untested SQL as a verified result.
+
 ## Context
 
 Raw stored deliveries are preserved in `lab09.raw_events` with the same 12 physical rows as `lab03.trade_versions`, including duplicate representation of version 2 for trade 201 and contradictory version-2 PnL for trade 205.

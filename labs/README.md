@@ -7,7 +7,7 @@ These laboratories turn interview time into **implementation, reasoning and code
 | [06](../exercises/06-data-quality-rules/START_HERE.md) | JSON batches with controlled DQ violations; typed runner API | Rule definitions, thresholds, report and severity |
 | [07](../exercises/07-pytest-architecture/START_HERE.md) | In-memory processing fake and case matrix | pytest fixture scopes, isolation, integration strategy |
 | [08](../exercises/08-async-testing/START_HERE.md) | Deterministic manual clock and delayed-read fake | bounded async polling, retries, diagnostic errors |
-| [09](../exercises/09-clickhouse-advanced/START_HERE.md) | Dedicated ClickHouse raw table and backfill brief | MV/aggregate design, migration validation, rollback |
+| [09](../exercises/09-clickhouse-advanced/START_HERE.md) | Oral-first ClickHouse scenario cards and optional isolated lab09 fixture | Discuss MV/aggregate design, migration validation and rollback; implement only agreed cases |
 | [10](../exercises/10-sql-mock/START_HERE.md) | Isolated PostgreSQL tables, timed task brief | SQL solutions under time pressure |
 | [11](../exercises/11-kafka-flink/START_HERE.md) | Reproducible transport delivery traces | offset/checkpoint reasoning, idempotency and recovery |
 | [12](../exercises/12-pipeline-design/START_HERE.md) | Architecture requirements, event schema and failure cards | end-to-end test strategy and design decisions |

@@ -1,5 +1,8 @@
 # Session 13 — Quality Gates & CI — Reproducible Data Testing
 
+**Chat title (copy to rename the conversation):** `🎯 Exness | Session 13 — Quality Gates / CI`  
+**Session short name:** `Quality Gates / CI`  
+
 **Date (Asia/Bangkok):** 2026-11-13 · **Duration:** 60 minutes · **Status:** PLANNED  
 **Track:** Exness QA Engineer (Data Stack) interview preparation
 

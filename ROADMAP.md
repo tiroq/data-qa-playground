@@ -3,6 +3,22 @@
 **Target interview:** 2026-11-16, Russian-language technical interview for QA Engineer (Data Stack).  
 **Approach:** One continuously evolving **synthetic trading-data QA case**, not 17 isolated solutions. Repository specifications and code are in English; interactive discussion and assessment are in Russian.
 
+## Standard ChatGPT conversation titles
+
+Copy the title exactly when starting or renaming a chat. These match the shortened calendar event names; dates, schedule and session completion status are independent.
+
+| Session | Chat title |
+|---|---|
+| 09 | `🎯 Exness \| Session 09 — ClickHouse Advanced` |
+| 10 | `🎯 Exness \| Session 10 — SQL Mock` |
+| 11 | `🎯 Exness \| Session 11 — Kafka / Flink` |
+| 12 | `🎯 Exness \| Session 12 — Data Pipeline Design` |
+| 13 | `🎯 Exness \| Session 13 — Quality Gates / CI` |
+| 14 | `🎯 Exness \| Session 14 — Mock Interview №1` |
+| 15 | `🎯 Exness \| Session 15 — Mock Interview №2` |
+| 16 | `🎯 Exness \| Session 16 — Experience Stories` |
+| 17 | `🎯 Exness \| Session 17 — Final Review` |
+
 ## Status semantics
 
 - **COMPLETE:** a real attempt and review exist in the repository.

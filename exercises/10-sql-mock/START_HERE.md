@@ -1,5 +1,8 @@
 # Session 10 — Timed SQL Mock
 
+**Chat title (copy to rename the conversation):** `🎯 Exness | Session 10 — SQL Mock`  
+**Session short name:** `SQL Mock`  
+
 **Format:** 45 minutes coding without hints + 15 minutes review. All discussion and evaluation in Russian; SQL and repository code in English.
 
 ## Targeted regression after the timed phase

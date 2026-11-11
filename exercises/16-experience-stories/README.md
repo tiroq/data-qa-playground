@@ -1,5 +1,8 @@
 # Session 16 — Experience Stories — Evidence-Based Interview Answers
 
+**Chat title (copy to rename the conversation):** `🎯 Exness | Session 16 — Experience Stories`  
+**Session short name:** `Experience Stories`  
+
 **Date (Asia/Bangkok):** 2026-11-14 · **Duration:** 60 minutes · **Status:** PLANNED  
 **Track:** Exness QA Engineer (Data Stack) interview preparation
 

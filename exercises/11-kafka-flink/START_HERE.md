@@ -1,5 +1,8 @@
 # Session 11 — Streaming Failure Scenarios
 
+**Chat title (copy to rename the conversation):** `🎯 Exness | Session 11 — Kafka / Flink`  
+**Session short name:** `Kafka / Flink`  
+
 **Practice:** 60 minutes; discuss and review in Russian.
 
 After the standard trace exercise, use [BARRIER_AND_CHECKPOINT_DRILLS.md](BARRIER_AND_CHECKPOINT_DRILLS.md) to probe the observed per-partition completion and Flink knowledge gaps. Do not present answers before the candidate's proposal.

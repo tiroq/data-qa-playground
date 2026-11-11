@@ -1,5 +1,8 @@
 # Session 11 — Kafka / Flink — Streaming Failure Modes
 
+**Chat title (copy to rename the conversation):** `🎯 Exness | Session 11 — Kafka / Flink`  
+**Session short name:** `Kafka / Flink`  
+
 **Date (Asia/Bangkok):** 2026-11-12 · **Duration:** 90 minutes · **Status:** PLANNED  
 **Track:** Exness QA Engineer (Data Stack) interview preparation
 

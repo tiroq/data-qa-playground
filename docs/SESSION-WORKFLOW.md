@@ -1,5 +1,13 @@
 # Session Workflow and Language Agreement
 
+## Chat naming convention (Sessions 09–17)
+
+Use the same short title in the calendar and when renaming a ChatGPT conversation:
+
+`🎯 Exness | Session NN — Short Title`
+
+The full canonical **Chat title** is provided at the top of each session's `README.md` (and `START_HERE.md` where present). The chat name is metadata for navigation, not proof of session completion. Never rename existing chats automatically.
+
 ## Language and format
 
 The Exness technical interview on **2026-11-16** is conducted **in Russian**. Each ChatGPT learning session therefore uses Russian for all task explanation, spoken/written discussion, assessment and follow-up. SQL/Python and ordinary technology terms may remain in English. Exercise specifications and code committed to this GitHub repository remain in English.

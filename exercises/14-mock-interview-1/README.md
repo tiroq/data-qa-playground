@@ -1,5 +1,8 @@
 # Session 14 — Mock Interview 1 — SQL, Python & Testing
 
+**Chat title (copy to rename the conversation):** `🎯 Exness | Session 14 — Mock Interview №1`  
+**Session short name:** `Mock Interview №1`  
+
 **Date (Asia/Bangkok):** 2026-11-13 · **Duration:** 90 minutes · **Status:** PLANNED  
 **Track:** Exness QA Engineer (Data Stack) interview preparation
 

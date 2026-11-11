@@ -1,5 +1,8 @@
 # Session 10 — SQL Mock Interview — Correctness Under Time Pressure
 
+**Chat title (copy to rename the conversation):** `🎯 Exness | Session 10 — SQL Mock`  
+**Session short name:** `SQL Mock`  
+
 **Date (Asia/Bangkok):** 2026-11-11 · **Duration:** 60 minutes · **Status:** PLANNED  
 **Track:** Exness QA Engineer (Data Stack) interview preparation
 

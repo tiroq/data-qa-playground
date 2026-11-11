@@ -1,5 +1,8 @@
 # Session 12 — Trading Data Pipeline Design — End-to-End QA
 
+**Chat title (copy to rename the conversation):** `🎯 Exness | Session 12 — Data Pipeline Design`  
+**Session short name:** `Data Pipeline Design`  
+
 **Date (Asia/Bangkok):** 2026-11-12 · **Duration:** 90 minutes · **Status:** PLANNED  
 **Track:** Exness QA Engineer (Data Stack) interview preparation
 

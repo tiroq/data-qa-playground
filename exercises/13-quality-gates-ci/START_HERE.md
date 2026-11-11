@@ -1,5 +1,8 @@
 # Session 13 — CI / Data Quality Gate Lab
 
+**Chat title (copy to rename the conversation):** `🎯 Exness | Session 13 — Quality Gates / CI`  
+**Session short name:** `Quality Gates / CI`  
+
 **Focused practice:** 30–45 minutes. All discussion, review and interview feedback **in Russian**.
 
 ## Highest-risk negative controls

@@ -1,5 +1,8 @@
 # Session 17 — Final Review — Confidence & Gaps
 
+**Chat title (copy to rename the conversation):** `🎯 Exness | Session 17 — Final Review`  
+**Session short name:** `Final Review`  
+
 **Date (Asia/Bangkok):** 2026-11-15 · **Duration:** 60 minutes · **Status:** PLANNED  
 **Track:** Exness QA Engineer (Data Stack) interview preparation
 

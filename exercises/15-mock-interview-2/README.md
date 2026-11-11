@@ -1,5 +1,8 @@
 # Session 15 — Mock Interview 2 — ClickHouse, Streaming & Incident QA
 
+**Chat title (copy to rename the conversation):** `🎯 Exness | Session 15 — Mock Interview №2`  
+**Session short name:** `Mock Interview №2`  
+
 **Date (Asia/Bangkok):** 2026-11-14 · **Duration:** 90 minutes · **Status:** PLANNED  
 **Track:** Exness QA Engineer (Data Stack) interview preparation
 

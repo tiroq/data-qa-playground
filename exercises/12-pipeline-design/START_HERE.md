@@ -1,5 +1,8 @@
 # Session 12 — Trading Data Pipeline Design
 
+**Chat title (copy to rename the conversation):** `🎯 Exness | Session 12 — Data Pipeline Design`  
+**Session short name:** `Data Pipeline Design`  
+
 **Focused practice:** 60 minutes. Interview conversation and review strictly in **Russian**; schemas and written artifacts in English.
 
 ## Targeted evidence exercise

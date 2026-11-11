@@ -93,3 +93,12 @@
 - **Interviewer correction, not attributed to candidate:** A count increase and unchanged min/max do not alone *prove* duplicate delivery; independent legitimate events can share the same PnL. Need stable event identity and contract. Ingestion-generated ID may not persist across replay.
 - **Open follow-up:** Extend aggregation to distinguish 100 replayed deliveries from 100 genuinely new events using stable event_id.
 - **Status:** Oral reasoning only; no SQL, tests, or implementation.
+
+## Card E — event identity versus version/status (actual answer)
+
+- **Question:** How to distinguish 100 replay deliveries from 100 legitimate new events, assuming stable event_id?
+- **Candidate actual answer:** "Ну, с event ID также можно поступать, потому что event ID, скорее всего, циферное обозначение статуса будет, и у нас будет min и max разные, при том, что count также будет изменён. И мы сможем для одной версии определить, было ли изменение event ID за счёт обновления. Ну, то, что пришла сначала с одним event ID у нас запись, потом той же версии с другим event ID. Так мы сможем отследить."
+- **Candidate hypothesis:** Treat min/max event IDs as detecting a change of event identity within one trade/version.
+- **Interviewer correction (not attributed to candidate):** event_id should be defined by an explicit immutable event identity contract, not assumed numeric/status or ordered; min/max IDs do not reveal how many distinct events/deliveries exist. With stable event_id, compare delivery count to uniqExact(event_id) to identify repeat deliveries, and separately detect same-event_id conflicting payload. Different event_id at same trade/version can be legitimate separate events or conflict depending on business contract.
+- **Open follow-up:** Same event_id but changed PnL on replay — how should DQ classify and alert independently of duplicate count?
+- **Status:** Oral-only; no SQL/test execution.

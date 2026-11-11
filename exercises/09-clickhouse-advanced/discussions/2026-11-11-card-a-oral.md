@@ -76,3 +76,11 @@
 - **Candidate inference:** If aggregated min/max PnL for the same trade/version differ, a same-version conflict can be detected without rescanning all raw rows.
 - **Interviewer explanation (not candidate-authored implementation):** AggregatingMergeTree stores intermediate aggregate-function states by sorting key; insert-triggered MV can write minState/maxState for separate blocks; minMerge/maxMerge with GROUP BY consolidates across parts even before background merges. No automatic alert is emitted by the engine; an explicit check is required. Duplicate delivery and NULL semantics need separate handling.
 - **Status:** Theoretical only, no DDL, SQL validation, or tests executed.
+
+## Card D — aggregation-state persistence after repeated value
+
+- **Question:** For same trade/version PnL sequence 8.0 → 8.5 → 8.0, do min/max conflict signals disappear after third event?
+- **Candidate actual answer:** "Не должен исчезнуть, потому что максимум должен остаться восемь с половиной, а минимум как был, так и будет восьмёркой."
+- **Interviewer review:** Correct for min/max aggregate states: minimum remains 8.0, maximum 8.5; incoming duplicate does not erase existing conflict. This does not itself identify authoritative value or correction status.
+- **Next question:** Kafka replay of previously processed events and which of min/max/count remain invariant under replay.
+- **Status:** Discussion only; no SQL or executions.

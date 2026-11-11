@@ -69,3 +69,10 @@
 - **Candidate familiarity:** Explicitly stated unfamiliarity with Materialized View; no candidate implementation proposal was provided for cross-INSERT checking.
 - **Interviewer explanation:** Insert-triggered MV processes incoming blocks; use raw MergeTree deliveries, MV aggregate states by trade/version into AggregatingMergeTree (e.g. min/max PnL states), query merged states to detect discrepancy; alerting needs separate polling/check and the MV alone does not guarantee immediate notification.
 - **Status:** Theory explained, not experimentally verified. No SQL/DDL requested or implemented.
+
+## Card D — AggregatingMergeTree explanation and actual candidate inference
+
+- **Candidate actual answer/request:** "Давай разберем агрегейтинг merge, как работает, потому что я тоже про него не в курсе. Хотя, ну подожди, агрегейтинг merge 3, скорее всего, покажет, что min и max разные, то, по идее, без дополнительного чтения всей таблицы мы как раз-таки поймем, что они разные, значит у нас на одну и ту же версию какая-то ерунда получилась."
+- **Candidate inference:** If aggregated min/max PnL for the same trade/version differ, a same-version conflict can be detected without rescanning all raw rows.
+- **Interviewer explanation (not candidate-authored implementation):** AggregatingMergeTree stores intermediate aggregate-function states by sorting key; insert-triggered MV can write minState/maxState for separate blocks; minMerge/maxMerge with GROUP BY consolidates across parts even before background merges. No automatic alert is emitted by the engine; an explicit check is required. Duplicate delivery and NULL semantics need separate handling.
+- **Status:** Theoretical only, no DDL, SQL validation, or tests executed.

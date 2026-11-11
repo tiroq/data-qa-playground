@@ -2,6 +2,10 @@
 
 **Format:** 45 minutes coding without hints + 15 minutes review. All discussion and evaluation in Russian; SQL and repository code in English.
 
+## Targeted regression after the timed phase
+
+Use [GAP_REVIEW_CHECKLIST.md](GAP_REVIEW_CHECKLIST.md) **only after submitting the original timed answers**. Optional perturbation SQL is separate and must not change the baseline mock beforehand.
+
 ## Setup before starting the timer
 
 ```bash

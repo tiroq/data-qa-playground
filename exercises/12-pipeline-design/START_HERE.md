@@ -2,6 +2,10 @@
 
 **Focused practice:** 60 minutes. Interview conversation and review strictly in **Russian**; schemas and written artifacts in English.
 
+## Targeted evidence exercise
+
+Use [QA_EVIDENCE_CHAIN.md](QA_EVIDENCE_CHAIN.md) after the candidate's initial architecture proposal to test as-of snapshots, manifest integrity, sink barriers and snapshot-vs-delta PnL.
+
 ## Preparation pack
 
 - [Synthetic case study](CASE_STUDY.md): non-production load, freshness, correctness and recovery requirements.

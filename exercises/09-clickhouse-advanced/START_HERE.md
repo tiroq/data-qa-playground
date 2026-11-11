@@ -2,6 +2,10 @@
 
 **Default mode:** theoretical **conversation in Russian** (up to 60 minutes). There is **no Docker setup, SQL coding or code generation required** to begin.
 
+## Carry-forward weakness probes
+
+Read [GAP_PROBES.md](GAP_PROBES.md) to target the observed Sessions 01–08 gaps. **Keep the prompts oral; do not read or write answers ahead of the candidate.**
+
 ## Start in three steps
 
 1. Open [THEORY_SESSION.md](THEORY_SESSION.md) for the moderator's 60-minute flow.

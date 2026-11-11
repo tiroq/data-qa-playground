@@ -2,6 +2,8 @@
 
 **Practice:** 60 minutes; discuss and review in Russian.
 
+After the standard trace exercise, use [BARRIER_AND_CHECKPOINT_DRILLS.md](BARRIER_AND_CHECKPOINT_DRILLS.md) to probe the observed per-partition completion and Flink knowledge gaps. Do not present answers before the candidate's proposal.
+
 The [trace contract](TRACE_CONTRACT.md) defines physical deliveries, immutable event IDs, version ordering and simulated replay. The [failure matrix](FAILURE_MATRIX.md) is an unfinished learner deliverable.
 
 ```bash

@@ -152,3 +152,13 @@
 - **Interviewer review (not candidate assertion):** Useful for event coverage and same-version payload conflict, but min/max alone cannot demonstrate that duplicate delivery was not double-counted in sum. Independent invariants proposed: logical latest-state identity and PnL per trade, plus account/reporting-period aggregate PnL reconciliation before/after replay. Illustrative 1,000 unique events requires an explicitly assumed one-event-per-trade contract.
 - **Next topic:** Raw TTL 30 days; financial discrepancy for a trade older than 45 days, with aggregates but no raw data in ClickHouse. How investigate and recover?
 - **Status:** Oral only; no SQL or validation run.
+
+## Card F — TTL and archival recovery (actual answer; accelerated interview)
+
+- **Candidate request:** "Давай ускорим сессию, пройдемся по основным кейсам только."
+- **Question:** Raw ClickHouse retention 30 days; PnL discrepancy 45 days ago; where recover original events?
+- **Candidate actual answer:** "Ну, я ожидаю, что либо в подрез будет, либо где-то отдельное будет историческое, по-любому архивное хранилище под это, условно более дешёвое."
+- **Candidate proposal:** PostgreSQL or separate cheaper archive/historical storage as independent recovery source.
+- **Interviewer qualification (not candidate assertion):** PostgreSQL is sufficient only if full event history is retained; object archive similarly needs coverage, schema/version lineage, tested restore and reconciliation. No archive's actual existence was verified.
+- **Next (accelerated) question:** Migration cutover where trade counts match but new aggregate PnL differs by 0.3%; decide release/rollback and checks.
+- **Status:** Oral interview only, no testing or SQL implementation.

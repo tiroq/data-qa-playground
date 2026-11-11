@@ -102,3 +102,11 @@
 - **Interviewer correction (not attributed to candidate):** event_id should be defined by an explicit immutable event identity contract, not assumed numeric/status or ordered; min/max IDs do not reveal how many distinct events/deliveries exist. With stable event_id, compare delivery count to uniqExact(event_id) to identify repeat deliveries, and separately detect same-event_id conflicting payload. Different event_id at same trade/version can be legitimate separate events or conflict depending on business contract.
 - **Open follow-up:** Same event_id but changed PnL on replay — how should DQ classify and alert independently of duplicate count?
 - **Status:** Oral-only; no SQL/test execution.
+
+## Card E — same event_id with changed payload (actual answer)
+
+- **Question:** Two records with event_id E100 and version 2 but PnL 8.0 vs 8.5: duplicate, new event, or consistency breach?
+- **Candidate actual answer:** "Слушай, но здесь у нас в моем понимании бизнес-конфликт получается, потому что у тебя EID и PNL изменились с одной и той же версии."
+- **Interviewer review:** Correctly recognizes a business/payload conflict, not simple duplicate delivery. Correction: EID itself was unchanged (E100 in both records); only PnL changed, with constant version. Under immutable event identity contract this is an event-payload consistency breach. Separate duplicate delivery checks from conflicting payload checks.
+- **Next case posed:** MV backfill over 10 million existing events while Kafka continues delivering; prevent misses/double counting and validate cutover.
+- **Status:** Oral only; no SQL/DDL/test run.

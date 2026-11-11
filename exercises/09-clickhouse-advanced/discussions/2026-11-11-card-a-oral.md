@@ -110,3 +110,12 @@
 - **Interviewer review:** Correctly recognizes a business/payload conflict, not simple duplicate delivery. Correction: EID itself was unchanged (E100 in both records); only PnL changed, with constant version. Under immutable event identity contract this is an event-payload consistency breach. Separate duplicate delivery checks from conflicting payload checks.
 - **Next case posed:** MV backfill over 10 million existing events while Kafka continues delivering; prevent misses/double counting and validate cutover.
 - **Status:** Oral only; no SQL/DDL/test run.
+
+## Card E — live MV and bounded historical backfill (actual answer)
+
+- **Question:** How to populate new aggregate target from 10 million existing raw events while Kafka continues to deliver events, without misses/double counts?
+- **Candidate actual answer:** "Тут сначала пусть считает только для новых сделок и можно взять backfill, к примеру, для какого-то последнего финансового отчетного периода."
+- **Candidate proposal:** Start processing fresh data first and backfill a bounded relevant financial-reporting period rather than entire history.
+- **Interviewer review (not candidate claim):** Good scoped rollout, but "new trades" must be distinguished from new deliveries/versions on old trades. Asynchronous backfill overlapping with live insert-triggered MV can double-process deliveries; backfill boundaries must be explicit and validated.
+- **Open follow-up:** Choose safe boundary between historical and live deliveries, accounting for late versions of previously existing trades.
+- **Status:** Oral only; no migrations, code, or validation executed.

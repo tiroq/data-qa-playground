@@ -1,6 +1,6 @@
 # Session 08 — Async Testing — Eventual Consistency
 
-**Date (Asia/Bangkok):** 2026-11-11 · **Duration:** 60 minutes · **Status:** PLANNED  
+**Date (Asia/Bangkok):** 2026-11-11 · **Duration:** 60 minutes · **Status:** IN PROGRESS (oral review completed; reference code committed; CI verification pending)  
 **Track:** Exness QA Engineer (Data Stack) interview preparation
 
 > **Language contract:** The actual technical interview is in **Russian**. All live tasks, discussion, follow-up questions, code review, mock interviews, and feedback in ChatGPT must be **in Russian**. SQL, Python, identifiers, and technical terms may remain in English. This repository's written exercise specifications are in English.
@@ -28,9 +28,9 @@ Test asynchronous processing without brittle sleeps or unbounded waits.
 
 ## Acceptance criteria
 
-- [ ] Unit tests cover both successful and unsuccessful waiting.
-- [ ] No infinite loop; monotonic time is used.
-- [ ] Distinguishes eventual consistency from guaranteed exactly-once processing.
+- [x] Unit tests authored for success and failure (execution not yet verified).
+- [x] Bounded monotonic polling implemented.
+- [x] Documented distinction between eventual consistency and exactly-once business effects.
 
 ## Artifacts to add **during** this session
 
@@ -45,8 +45,51 @@ Do not add a reference solution before the learner has attempted the assignment.
 
 ## Session result (fill **after** completing)
 
-- **Attempt / PR:** _not yet completed_
-- **Score / 10:** _not assessed_
-- **What worked:** _not assessed_
-- **Bugs / edge cases:** _not assessed_
-- **Next-session adjustments:** _not assessed_
+- **Attempt:** oral design discussion, no learner-authored code; reference implementations added on branch.
+- **Score / 10:** 8/10 (oral reasoning only; code not graded).
+- **What worked:** monotonic deadlines, bounded sleeps, retry diagnostics, predicate separation of concerns.
+- **Bugs / edge cases:** async cancellation unfamiliar; snapshot/delta initially confused; deadline boundary clarified.
+- **Next-session adjustments:** practice asyncio, idempotent effects, deterministic fake-clock testing.
+
+## Reference implementations and tests (added after oral attempt)
+
+- [wait_until.py](wait_until.py): synchronous basic and diagnostic helpers.
+- [wait_until_async.py](wait_until_async.py): asyncio equivalents.
+- [test_wait_until.py](test_wait_until.py): deterministic pytest tests.
+
+Run with `python -m pytest -q exercises/08-async-testing/test_wait_until.py` (requires pytest and pytest-asyncio). Test execution/CI result has **not** been verified here.
+
+### Explicit helper contract
+
+- Deadline uses monotonic time. The initial observation is allowed even when timeout=0.
+- Once an attempt has occurred, a new predicate call is not started at or after deadline. A call started before deadline can complete after it and still succeed (soft timeout); use driver-level request timeouts for blocking calls.
+- Sleep duration is `min(interval, remaining)`; no busy wait.
+- Only exceptions listed in `retry_exceptions=(ConnectionError, ...)` are retried; default is empty. Fatal errors propagate. Do not catch cancellation.
+- No successful reads + only transient exceptions raises `ObservationUnavailable`; otherwise `WaitTimeout` includes counts, last value, bounded recent history and chained last error.
+- `wait_until` checks a generic truthy predicate; business assertions, replica convergence, DQ uniqueness and SLA measurement remain separate.
+
+### Discussed scenarios and expected behavior
+
+| Scenario | Expected |
+| --- | --- |
+| 1.0s timeout, 0.4s interval | Calls at 0, 0.4, 0.8; deadline at 1.0; 3 calls |
+| Late success: call starts 9.99s, finishes 10.14s | Accepted under soft deadline; not proof of SLA |
+| None then two ConnectionError then PROCESSED | Success; retry diagnostics retained during polling |
+| All ConnectionError | ObservationUnavailable with error counts and last cause |
+| Some None and some ConnectionError | WaitTimeout with mixed history |
+| Non-allowlisted exception | Immediate propagation |
+| Ctrl+C / Task.cancel() | KeyboardInterrupt / CancelledError propagated |
+| Async poll with time.sleep | Blocks event loop; use await asyncio.sleep |
+| Replica A v2 and B v1 | One read success proves observation only, not convergence |
+| ReplacingMergeTree with v1 and v2 | FINAL or deterministic latest-version selection; FINAL cannot replicate absent rows |
+| Duplicate Kafka delivery after offset commit failure | Physical duplicates may be allowed; logical effect must be idempotent |
+| Snapshot PnL v1=100, v2=150, replay v1 | Current PnL 150 |
+| Delta PnL v1=+100, v2=+50, replay v1 | Aggregate 150 after dedup by contractual operation identity |
+| SLA from cross-host timestamps | Account for timestamp semantics and clock synchronization uncertainty |
+| Repeated writes during polling | Avoid non-idempotent writes; polling should normally repeat reads |
+
+### Interview design notes
+
+The learner verbally chose a generic predicate-based helper rather than embedding replica-specific stability checks. DQ uniqueness should be a separate suite across controlled test records, including explicit idempotency assertions for intentionally duplicated inputs. The learner suggested capturing observation history and distinguishing infrastructure unavailability from an unmet predicate. The reference code is assistant-authored and is **not evidence of learner coding proficiency**.
+
+**Weakest link:** no runtime proof or integration with live ClickHouse/Kafka; fake tests demonstrate helper behavior and illustrate data contracts, not distributed-system guarantees.

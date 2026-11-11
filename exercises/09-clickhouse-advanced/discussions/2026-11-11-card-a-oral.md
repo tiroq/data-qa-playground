@@ -84,3 +84,12 @@
 - **Interviewer review:** Correct for min/max aggregate states: minimum remains 8.0, maximum 8.5; incoming duplicate does not erase existing conflict. This does not itself identify authoritative value or correction status.
 - **Next question:** Kafka replay of previously processed events and which of min/max/count remain invariant under replay.
 - **Status:** Discussion only; no SQL or executions.
+
+## Card E — replay idempotency of aggregate states (actual answer)
+
+- **Question:** After Kafka replay of 100 previously processed events, which of min(PnL), max(PnL), count() remain correct?
+- **Candidate actual answer:** "Ну если это те же самые события и там нет каких-то конфликтов, то у нас увеличится только count. Amin и Max будут соответствовать одинаковым значениям, и это будет идентифицировать нам как минимум точно, что дубликаты получились. Ну если другие поля не поменялись, конечно. Это мы не учитываем сейчас."
+- **Correct observation:** For identical replayed values, min/max are invariant under duplicate delivery, while raw-delivery count grows.
+- **Interviewer correction, not attributed to candidate:** A count increase and unchanged min/max do not alone *prove* duplicate delivery; independent legitimate events can share the same PnL. Need stable event identity and contract. Ingestion-generated ID may not persist across replay.
+- **Open follow-up:** Extend aggregation to distinguish 100 replayed deliveries from 100 genuinely new events using stable event_id.
+- **Status:** Oral reasoning only; no SQL, tests, or implementation.

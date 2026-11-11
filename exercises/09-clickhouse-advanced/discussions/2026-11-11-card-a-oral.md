@@ -44,3 +44,12 @@
 - **Interviewer qualification (not attributed to candidate):** For the fixture, account A3 PnL could be 8.0–8.5 assuming the only valid alternatives for trade 205 are those two rows and trade 206 contributes 0.0. This is not an approved financial settlement value. A range may be acceptable for provisional analytics but insufficient for financial reporting.
 - **Open follow-up:** Define different quality gates, if any, for monitoring dashboard versus final financial reporting.
 - **Status:** Interview discussion only; no SQL or test execution.
+
+## Card C — consumer-specific quality gates (actual answer)
+
+- **Question:** Should a monitoring dashboard and financial report both use an unresolved PnL range?
+- **Candidate actual answer:** "Я бы, наверное, допустил в мониторинге, а вот в финансовом репорте я бы уже не допустил это значение, пока конфликт не разрешен."
+- **Candidate conclusion:** Permit explicitly flagged uncertainty in monitoring, but block the affected financial result until conflict resolution.
+- **Interviewer review (not candidate claim):** Reasonable risk-based quality-gate separation. Pending contract detail: whether the blocking scope is trade, account, period or whole report; a FAIL need not halt the entire pipeline.
+- **Next follow-up:** If ReplacingMergeTree has merged away the conflicting raw version, how can a DQ check still detect historical conflict?
+- **Execution evidence:** None.

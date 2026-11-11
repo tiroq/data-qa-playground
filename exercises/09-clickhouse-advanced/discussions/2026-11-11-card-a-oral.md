@@ -35,3 +35,12 @@
 - **Interviewer assessment:** Correctly separates same-version conflicting PnL from simple duplicate detection. This does **not** yet establish a business conflict resolution policy, severity, or account-aggregate treatment.
 - **Next follow-up:** Whether/how trade 205 should contribute to account A3's `SUM(PnL)` until conflict is resolved.
 - **Status:** open; no SQL executed or implementation authorized.
+
+## Card C — account aggregate under unresolved conflict (actual answer)
+
+- **Question:** How should trade 205 affect account A3 aggregate while max-version PnL values 8.0 and 8.5 conflict?
+- **Candidate actual answer:** "Смотри, если мы из агрегата выкинем её, то это будет уже некорректная аналитика. С другой стороны мы можем в аналитике указать, что, например, диапазон у нас и недетерминировано пока значение, и вот в таких-то диапазонах."
+- **Candidate proposal:** Do not silently exclude the trade; explicitly represent uncertain aggregate as a range instead of falsely precise value.
+- **Interviewer qualification (not attributed to candidate):** For the fixture, account A3 PnL could be 8.0–8.5 assuming the only valid alternatives for trade 205 are those two rows and trade 206 contributes 0.0. This is not an approved financial settlement value. A range may be acceptable for provisional analytics but insufficient for financial reporting.
+- **Open follow-up:** Define different quality gates, if any, for monitoring dashboard versus final financial reporting.
+- **Status:** Interview discussion only; no SQL or test execution.

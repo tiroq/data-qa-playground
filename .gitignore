@@ -9,6 +9,3 @@ __pycache__/
 
 # Generated unified-streaming lab reports (synthetic CI artifacts)
 labs/unified/artifacts/*.json
-
-# Generated local synthetic streaming fixtures and machine-readable DQ reports
-.streaming-runs/

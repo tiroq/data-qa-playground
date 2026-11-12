@@ -1,9 +1,5 @@
 # Session 11 — Streaming Failure Scenarios
 
-## Consolidated learning route (2026-11-12)
-
-**Combined meeting B: Streaming & System Design.** This module is studied together with **Session 12**, while retaining both original sets of exercises and chat names. Read [the five-meeting plan](../../docs/UNIFIED_FIVE_SESSION_PLAN.md) and the [unified streaming environment](../../streaming/README.md). The original session is **not marked complete**; any scored evaluation requires an actual independent answer. The shared environment can be booted using `bash scripts/streaming_lab.sh up`, but SQL-only or offline exercises do not require the heavy Flink stack.
-
 
 ## Unified five-block route
 

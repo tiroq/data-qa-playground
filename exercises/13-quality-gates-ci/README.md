@@ -20,6 +20,10 @@ Start with [START_HERE.md](START_HERE.md): it links to verified input materials,
 - Do not silently replace a candidate interview answer with prewritten code, or interpret a successful readiness smoke test as a full quality gate.
 - The pre-existing exercise contracts and mock packets below remain available; no historic solutions are deleted. Calendar dates and times are **unchanged**.
 
+## Unified independent SQL tasks
+
+See [SQL_TASKS.md](../../labs/unified/SQL_TASKS.md) for runnable PostgreSQL and ClickHouse prompts grounded in the real streaming manifest and sink. Keep the answers blank until the live session.
+
 ## Goal
 
 Make data tests actionable in CI without flaky or misleading green builds.

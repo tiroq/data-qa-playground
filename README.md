@@ -139,3 +139,5 @@ See [the evidence-based audit of Sessions 01–08](docs/INTERVIEW_READINESS_AUDI
 
 The [Unified Data Stack Training Lab](labs/unified/README.md) provides an optional real Kafka → Flink SQL → Kafka → ClickHouse path with a PostgreSQL manifest and standalone DQ checker. The [five-block curriculum](labs/unified/CURRICULUM.md) groups original Sessions **10+13**, **11+12**, **14**, **15**, and **16+17** into ~7 hours **excluding environment setup**, without deleting existing exercises, independent mock material or calendar entries. See the separate integration CI for validated claims; a runnable profile alone does not prove end-to-end exactly-once. Session titles retain the canonical `🎯 Exness | Session NN — ...` format.
 
+
+Verified integration evidence: [Unified Streaming Lab, 12 November 2026](docs/UNIFIED_LAB_VERIFICATION_2026-11-12.md) (all six synthetic scenarios validated in CI; production exactly-once not claimed).

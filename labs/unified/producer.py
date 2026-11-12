@@ -72,6 +72,16 @@ def register_source(run_id: str, scenario: str, events: list[dict]) -> None:
             )
 
 
+def seal_source(run_id: str) -> None:
+    with psycopg.connect(PG_DSN) as conn:
+        result = conn.execute(
+            "UPDATE streaming_lab.batches SET sealed=TRUE WHERE run_id=%s AND NOT sealed",
+            (run_id,),
+        )
+        if result.rowcount != 1:
+            raise RuntimeError(f"Could not seal source batch: {run_id}")
+
+
 def publish(deliveries: list[dict]) -> None:
     producer = Producer({"bootstrap.servers": KAFKA_BOOTSTRAP,
                          "enable.idempotence": True, "acks": "all"})
@@ -96,16 +106,22 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--scenario", choices=SCENARIOS, default="clean")
     parser.add_argument("--run-id", type=str, default=None)
+    parser.add_argument("--manifest-only", action="store_true",
+                        help="Simulate interrupted producer: register source without Kafka publish")
     args = parser.parse_args()
     run_id = args.run_id or uuid.uuid4().hex
     if len(run_id) > 80 or not all(c.isalnum() or c in "-_" for c in run_id):
         parser.error("--run-id must be <=80 alphanumeric, dash or underscore characters")
     events, deliveries = build_events(run_id, args.scenario)
     register_source(run_id, args.scenario, events)
-    publish(deliveries)
+    if not args.manifest_only:
+        publish(deliveries)
+        seal_source(run_id)  # Publishing failed? Keep batch unsealed for diagnosis.
     print(f"RUN_ID={run_id}", flush=True)
     print(json.dumps({"run_id":run_id,"scenario":args.scenario,
-                      "source_manifest_events":len(events),"kafka_deliveries":len(deliveries)}))
+                      "source_manifest_events":len(events),
+                      "kafka_deliveries":0 if args.manifest_only else len(deliveries),
+                      "sealed":not args.manifest_only}))
 
 
 if __name__ == "__main__":

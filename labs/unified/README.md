@@ -4,7 +4,7 @@
 
 ## Purpose
 
-An optional, isolated but **real** Kafka → Flink SQL → Kafka → Python ClickHouse sink path, anchored by an independent PostgreSQL expected-event manifest. Source manifests are committed before Kafka publish; this is deliberately NOT an atomic cross-system write. The sink commits Kafka offsets only after ClickHouse acknowledges the insert, but these two actions are NOT atomic: replay may duplicate physical deliveries. Business correctness is assessed separately.
+An optional, isolated but **real** Kafka → Flink SQL → Kafka → Python ClickHouse sink path, anchored by an independent PostgreSQL expected-event manifest. Source manifests are committed before Kafka publish and marked `sealed` only after Kafka delivery callbacks succeed; this is deliberately NOT an atomic cross-system write. The sink commits Kafka offsets only after ClickHouse acknowledges the insert, but these two actions are NOT atomic: replay may duplicate physical deliveries. Business correctness is assessed separately.
 
 ```text
 source-event fixture -> PostgreSQL streaming_lab.source_events (manifest)
@@ -13,7 +13,7 @@ source-event fixture -> PostgreSQL streaming_lab.source_events (manifest)
                        -> Kafka processed-trades (at-least-once)
                        -> Python sink (manual offset commit)
                        -> ClickHouse streaming_lab.raw_events (append-only)
-PostgreSQL manifest + ClickHouse raw -> check.py (PASS / FAIL / ERROR + JSON report)
+PostgreSQL manifest + ClickHouse raw -> check.py (PASS / FAIL / INDETERMINATE / ERROR + JSON report)
 ```
 
 ### Source manifest contract
@@ -67,6 +67,7 @@ bash labs/unified/scripts/smoke.sh
 | missing | Event E03 in source manifest not published | FAIL: `missing_event` |
 | conflict | Distinct event E07 contradicts trade T100/version 2 | FAIL: `conflict_same_version` |
 | corrupt | Kafka contains changed PnL versus PostgreSQL | FAIL: `payload_mismatch` |
+| unsealed_source | Manifest exists but producer is stopped before Kafka publish | INDETERMINATE: `source_batch_unsealed` |
 
 Run-specific JSON reports include expected/observed unique IDs, physical delivery count, duplicate count and independent DQ issues. `--expect FAIL --require-rule <code>` prevents an infrastructure error from looking like a passing negative control.
 
@@ -90,6 +91,8 @@ To reset only Kafka/streaming-specific persisted state, use a separate Compose p
 - `python3 -m unittest discover -s labs/unified/tests` verifies pure DQ logic **without Docker**.
 - GitHub Actions [unified-streaming-lab.yml](../../.github/workflows/unified-streaming-lab.yml) is the integration gate, using disposable CI volumes.
 - `check.py` compares currently persisted ClickHouse rows against the independent PostgreSQL source manifest. It waits a bounded time for eligible IDs and checks a short stability window. **A green snapshot is not a formal sink-side completion barrier**: late conflicting events could still appear. Producer flush only acknowledges Kafka publish, not ClickHouse durability.
+- Flink SQL writes a JSON Kafka key for `(run_id,account_id,trade_id)`. The DQ gate detects cross-partition versions of one trade; incoming and outgoing partition numbers need not match.
+- Kafka producer completion (`sealed`) is not a sink completion barrier; an unsealed source batch is `INDETERMINATE`, not downstream data loss.
 - Flink SQL runs with at-least-once Kafka output. The Python sink has no Kafka/ClickHouse cross-system transaction; replay duplicates can occur.
 - No transactional CDC from PostgreSQL, no production-grade schema registry, Flink HA, DLQ, TLS, multi-node recovery or true exactly-once effect is implemented.
 - Current SQL processing projects raw fields; account aggregates, time windows, Flink watermarks and MV/backfill policies are **learner exercises**, not completed by this setup.

@@ -21,10 +21,10 @@ from common import PG_DSN, clickhouse_query, parse_json_rows
 from dq import evaluate
 
 
-def source_manifest(run_id: str) -> tuple[int,list[dict],str]:
+def source_manifest(run_id: str) -> tuple[int,list[dict],str,bool]:
     with psycopg.connect(PG_DSN) as conn:
         batch = conn.execute(
-            "SELECT planned_count,scenario FROM streaming_lab.batches WHERE run_id=%s",
+            "SELECT planned_count,scenario,sealed FROM streaming_lab.batches WHERE run_id=%s",
             (run_id,),
         ).fetchone()
         if batch is None:
@@ -37,7 +37,7 @@ def source_manifest(run_id: str) -> tuple[int,list[dict],str]:
         dict(event_id=r[0],trade_id=r[1],account_id=r[2],
              version=r[3],status=r[4],pnl=str(r[5]),event_time=r[6])
         for r in rows
-    ], batch[1]
+    ], batch[1], batch[2]
 
 
 def clickhouse_observations(run_id: str) -> list[dict]:
@@ -55,7 +55,7 @@ def main() -> int:
     parser.add_argument("--run-id", required=True)
     parser.add_argument("--wait-seconds", type=float, default=90)
     parser.add_argument("--settle-seconds", type=float, default=2)
-    parser.add_argument("--expect", choices=["PASS","FAIL"], default="PASS")
+    parser.add_argument("--expect", choices=["PASS","FAIL","INDETERMINATE"], default="PASS")
     parser.add_argument("--require-rule", default=None,
                         help="Required rule code when expecting a known negative scenario")
     parser.add_argument("--output", default=None)
@@ -63,17 +63,17 @@ def main() -> int:
     if args.wait_seconds < 0 or args.settle_seconds < 0:
         parser.error("Wait and settle durations must be nonnegative")
     try:
-        planned, source, scenario = source_manifest(args.run_id)
+        planned, source, scenario, sealed = source_manifest(args.run_id)
         deadline = time.monotonic() + args.wait_seconds
         fully_visible_since = None
         while True:
             actual = clickhouse_observations(args.run_id)
-            report = evaluate(args.run_id, planned, source, actual)
+            report = evaluate(args.run_id, planned, source, actual, sealed=sealed)
             seen_all = report["observed_distinct"] >= report["expected_distinct"] and not any(
                 issue["rule"] == "missing_event" for issue in report["issues"]
             )
             now = time.monotonic()
-            if report["status"] == "ERROR":
+            if report["status"] in ("ERROR", "INDETERMINATE"):
                 break
             if seen_all:
                 if fully_visible_since is None:

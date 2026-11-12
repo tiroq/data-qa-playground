@@ -36,7 +36,7 @@ def field_equal(field: str, first: Any, second: Any) -> bool:
 
 
 def evaluate(run_id: str, planned_count: int,
-             expected: list[dict], actual: list[dict]) -> dict:
+             expected: list[dict], actual: list[dict], *, sealed: bool = True) -> dict:
     issues: list[dict] = []
     source_ids = [e.get("event_id") for e in expected]
     if planned_count <= 0 or not expected or len(expected) != planned_count:
@@ -49,6 +49,13 @@ def evaluate(run_id: str, planned_count: int,
             {"rule":"invalid_manifest","detail":"Duplicate or null expected event IDs"}],
             "planned_count":planned_count,"expected_distinct":len(set(source_ids)),
             "observed_distinct":0,"observed_physical":len(actual),"duplicate_deliveries":{}}
+    if not sealed:
+        return {"run_id":run_id,"status":"INDETERMINATE",
+                "issues":[{"rule":"source_batch_unsealed",
+                           "detail":"Kafka producer did not finish the declared source batch"}],
+                "planned_count":planned_count,"expected_distinct":len(set(source_ids)),
+                "observed_distinct":len({r.get("event_id") for r in actual}),
+                "observed_physical":len(actual),"duplicate_deliveries":{}}
     expected_by_id = {e["event_id"]:e for e in expected}
     actual_by_id: dict[str,list[dict]] = defaultdict(list)
     for row in actual:
@@ -73,6 +80,19 @@ def evaluate(run_id: str, planned_count: int,
                           if not field_equal(name, source[name], row.get(name))]
             if mismatches:
                 issues.append({"rule":"payload_mismatch","event_id":eid,"fields":mismatches})
+    # A keyed Kafka sink must keep all versions of a business trade in one
+    # output partition (the input partition number need not match).
+    by_partition: dict[tuple[str,str,str],set[int]] = defaultdict(set)
+    for row in actual:
+        if "kafka_partition" in row:
+            key = (str(row.get("run_id")), str(row.get("account_id")),
+                   str(row.get("trade_id")))
+            by_partition[key].add(int(row["kafka_partition"]))
+    for (run, account, trade), partitions in by_partition.items():
+        if len(partitions) > 1:
+            issues.append({"rule":"cross_partition_trade",
+                           "business_key":[run,account,trade],
+                           "partitions":sorted(partitions)})
     # Check all maximum-version rows before any representative selection.
     # Also flag non-max-version conflicts at the same version: raw history is auditable.
     groups: dict[tuple[str,str,int],set[tuple[str,str]]] = defaultdict(set)

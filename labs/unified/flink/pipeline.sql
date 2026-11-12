@@ -40,7 +40,10 @@ CREATE TABLE processed_trades (
   'connector' = 'kafka',
   'topic' = 'processed-trades',
   'properties.bootstrap.servers' = 'kafka:9092',
-  'format' = 'json',
+  'key.format' = 'json',
+  'key.fields' = 'run_id;account_id;trade_id',
+  'value.format' = 'json',
+  'value.fields-include' = 'ALL',
   'sink.delivery-guarantee' = 'at-least-once'
 );
 

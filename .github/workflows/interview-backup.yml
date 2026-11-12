@@ -1,0 +1,59 @@
+name: Interview Backup Data Stack (isolated)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "labs/interview-backup/**"
+      - ".github/workflows/interview-backup.yml"
+  pull_request:
+    paths:
+      - "labs/interview-backup/**"
+      - ".github/workflows/interview-backup.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify Python source compilation
+        run: python3 -m compileall -q labs/interview-backup
+      - name: Validate offline scenarios and architecture contracts
+        run: python3 -m unittest discover -s labs/interview-backup/tests -p "test_*.py" -v
+      - name: Produce standalone report without Docker
+        run: python3 labs/interview-backup/offline_demo.py --output "${RUNNER_TEMP}/interview-backup-offline.html"
+      - name: Validate isolated Compose configuration
+        run: docker compose -f labs/interview-backup/compose.yaml config --quiet
+      - name: Check shell entrypoints
+        run: |
+          bash -n labs/interview-backup/scripts/run.sh
+          bash -n labs/interview-backup/scripts/smoke.sh
+
+  e2e:
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run isolated backup and seven failure/quality scenarios
+        run: bash labs/interview-backup/scripts/smoke.sh
+      - name: Upload synthetic evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: interview-backup-dq-evidence
+          path: labs/interview-backup/artifacts/*.json
+          if-no-files-found: warn
+      - name: Diagnose any failed services
+        if: failure()
+        run: |
+          docker compose -f labs/interview-backup/compose.yaml ps -a
+          docker compose -f labs/interview-backup/compose.yaml logs --no-color --tail=200
+      - name: Remove only disposable backup CI volumes
+        if: always()
+        run: docker compose -f labs/interview-backup/compose.yaml down -v --remove-orphans

@@ -81,6 +81,7 @@ jobs:
           name: streaming-dq-evidence
           path: .streaming-runs/
           if-no-files-found: ignore
+          include-hidden-files: true
       - name: Stop test environment
         if: always()
         run: bash scripts/streaming_lab.sh down

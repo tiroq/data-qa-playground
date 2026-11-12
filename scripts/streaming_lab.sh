@@ -51,6 +51,12 @@ running_flink_jobs() {
 up() {
   "${DC[@]}" up -d --build --wait postgres clickhouse kafka flink-jobmanager flink-taskmanager
 
+  # Docker-managed empty checkpoint volumes may be root-owned. Flink runs as
+  # an unprivileged user. Repair volume ownership before SQL job submission;
+  # this is a disposable training environment, not a production setup.
+  "${DC[@]}" exec -T -u root flink-jobmanager \
+    chown -R flink:flink /opt/flink/checkpoints
+
   # Explicitly create both topics: no auto-create and no implicit partition count.
   "${DC[@]}" exec -T kafka /opt/kafka/bin/kafka-topics.sh \
     --bootstrap-server kafka:9092 --create --if-not-exists \
@@ -70,7 +76,20 @@ up() {
   else
     echo "Existing trading-versioned-events-lab Flink job is already RUNNING."
   fi
-  echo "Streaming lab started. Flink UI: http://127.0.0.1:18081"
+  # Flink sql-client.sh may print [ERROR] yet exit with zero. The REST state
+  # is mandatory evidence that our long-running job actually exists.
+  local attempt active=0
+  for ((attempt=1; attempt<=30; attempt++)); do
+    active="$(running_flink_jobs)"
+    if (( active >= 1 )); then break; fi
+    sleep 2
+  done
+  if (( active != 1 )); then
+    echo "Expected exactly one RUNNING trading Flink job, got $active" >&2
+    "${DC[@]}" logs --no-color --tail=100 flink-jobmanager flink-taskmanager >&2
+    return 1
+  fi
+  echo "Streaming lab RUNNING with one Flink job. UI: http://127.0.0.1:18081"
 }
 
 seed() {

@@ -1,4 +1,3 @@
-
 name: dataqa-interview-backup
 services:
   postgres:
@@ -42,7 +41,7 @@ services:
 
   kafka:
     image: confluentinc/cp-kafka:7.9.11
-        environment:
+    environment:
       CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
       KAFKA_NODE_ID: "1"
       KAFKA_PROCESS_ROLES: broker,controller
@@ -69,7 +68,7 @@ services:
 
   streaming-topics:
     image: confluentinc/cp-kafka:7.9.11
-        depends_on:
+    depends_on:
       kafka:
         condition: service_healthy
     entrypoint: ["/bin/bash", "-euc"]
@@ -81,7 +80,7 @@ services:
   # Local-only permission initializer for the shared checkpoint volume.
   flink-checkpoints-init:
     image: busybox:1.36
-        user: "0:0"
+    user: "0:0"
     command: ["sh", "-ec", "mkdir -p /checkpoints && chmod 0777 /checkpoints"]
     volumes:
       - flink_lab_checkpoints:/checkpoints
@@ -90,7 +89,7 @@ services:
   flink-jobmanager:
     build:
       context: ./flink
-        command: jobmanager
+    command: jobmanager
     depends_on:
       flink-checkpoints-init:
         condition: service_completed_successfully
@@ -114,7 +113,7 @@ services:
   flink-taskmanager:
     build:
       context: ./flink
-        command: taskmanager
+    command: taskmanager
     environment:
       FLINK_PROPERTIES: |
         jobmanager.rpc.address: flink-jobmanager
@@ -130,7 +129,7 @@ services:
   flink-sql-submit:
     build:
       context: ./flink
-        # Preserve the official Flink entrypoint so FLINK_PROPERTIES config is applied.
+    # Preserve the official Flink entrypoint so FLINK_PROPERTIES config is applied.
     command: ["bin/sql-client.sh", "-f", "/opt/flink/usrlib/pipeline.sql"]
     environment:
       FLINK_PROPERTIES: |
@@ -150,7 +149,7 @@ services:
   streaming-bootstrap:
     build:
       context: ./python
-        working_dir: /app
+    working_dir: /app
     command: ["python", "/app/bootstrap.py"]
     environment: &lab_env
       PG_DSN: postgresql://qa:qa@postgres:5432/trading
@@ -159,7 +158,7 @@ services:
       CLICKHOUSE_USER: qa
       CLICKHOUSE_PASSWORD: qa
     volumes:
-      - ./labs/unified:/app:ro
+      - ./:/app:ro
     depends_on:
       postgres:
         condition: service_healthy
@@ -170,13 +169,13 @@ services:
   streaming-sink:
     build:
       context: ./python
-        working_dir: /app
+    working_dir: /app
     command: ["python", "-u", "/app/sink.py"]
     environment:
       <<: *lab_env
       SINK_GROUP: trading-lab-clickhouse-sink-v1
     volumes:
-      - ./labs/unified:/app:ro
+      - ./:/app:ro
     depends_on:
       streaming-topics:
         condition: service_completed_successfully
@@ -192,7 +191,7 @@ services:
     environment:
       <<: *lab_env
     volumes:
-      - ./labs/unified:/app:ro
+      - ./:/app:ro
       - ./artifacts:/artifacts
     depends_on:
       streaming-topics:
@@ -220,11 +219,10 @@ services:
         condition: service_completed_successfully
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "python -c 'import urllib.request; urllib.request.urlopen("http://localhost:8765/api/health", timeout=3)'"]
+      test: ["CMD", "python", "-c", "from urllib.request import urlopen; urlopen('http://localhost:8765/api/health', timeout=3)"]
       interval: 5s
       timeout: 5s
       retries: 15
-
 
 volumes:
   postgres_data:

@@ -103,6 +103,15 @@ def main() -> None:
     events, deliveries = build_events(run_id, args.scenario)
     register_source(run_id, args.scenario, events)
     publish(deliveries)
+    # Manifest publication is a two-system boundary, not an atomic
+    # transaction. A PENDING run must never be treated as a DQ PASS/FAIL.
+    with psycopg.connect(PG_DSN) as conn:
+        conn.execute(
+            "UPDATE streaming_lab.batches "
+            "SET publication_status='PUBLISHED', published_at=now() "
+            "WHERE run_id=%s AND publication_status='PENDING'",
+            (run_id,),
+        )
     print(f"RUN_ID={run_id}", flush=True)
     print(json.dumps({"run_id":run_id,"scenario":args.scenario,
                       "source_manifest_events":len(events),"kafka_deliveries":len(deliveries)}))

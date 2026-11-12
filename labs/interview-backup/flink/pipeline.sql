@@ -27,6 +27,7 @@ CREATE TABLE trade_events (
 );
 
 CREATE TABLE processed_trades (
+  business_key STRING,
   run_id STRING,
   event_id STRING,
   trade_id STRING,
@@ -40,11 +41,15 @@ CREATE TABLE processed_trades (
   'connector' = 'kafka',
   'topic' = 'processed-trades',
   'properties.bootstrap.servers' = 'kafka:9092',
-  'format' = 'json',
+  'key.format' = 'json',
+  'key.fields' = 'business_key',
+  'value.format' = 'json',
+  'value.fields-include' = 'EXCEPT_KEY',
   'sink.delivery-guarantee' = 'at-least-once'
 );
 
 INSERT INTO processed_trades
-SELECT run_id, event_id, trade_id, account_id, version, status, pnl,
+SELECT CONCAT(run_id, ':', account_id, ':', trade_id) AS business_key,
+       run_id, event_id, trade_id, account_id, version, status, pnl,
        event_time, 'flink_sql' AS source_tag
 FROM trade_events;

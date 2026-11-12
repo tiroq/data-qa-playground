@@ -4,6 +4,9 @@ CREATE TABLE IF NOT EXISTS streaming_lab.batches (
   run_id TEXT PRIMARY KEY,
   scenario TEXT NOT NULL,
   planned_count INTEGER NOT NULL CHECK (planned_count > 0),
+  publication_status TEXT NOT NULL DEFAULT 'PENDING'
+    CHECK (publication_status IN ('PENDING', 'PUBLISHED')),
+  published_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE TABLE IF NOT EXISTS streaming_lab.source_events (

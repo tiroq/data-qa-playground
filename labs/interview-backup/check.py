@@ -21,10 +21,10 @@ from common import PG_DSN, clickhouse_query, parse_json_rows
 from dq import evaluate
 
 
-def source_manifest(run_id: str) -> tuple[int,list[dict],str]:
+def source_manifest(run_id: str) -> tuple[int,list[dict],str,str]:
     with psycopg.connect(PG_DSN) as conn:
         batch = conn.execute(
-            "SELECT planned_count,scenario FROM streaming_lab.batches WHERE run_id=%s",
+            "SELECT planned_count,scenario,publication_status FROM streaming_lab.batches WHERE run_id=%s",
             (run_id,),
         ).fetchone()
         if batch is None:
@@ -37,7 +37,7 @@ def source_manifest(run_id: str) -> tuple[int,list[dict],str]:
         dict(event_id=r[0],trade_id=r[1],account_id=r[2],
              version=r[3],status=r[4],pnl=str(r[5]),event_time=r[6])
         for r in rows
-    ], batch[1]
+    ], batch[1], batch[2]
 
 
 def clickhouse_observations(run_id: str) -> list[dict]:
@@ -50,12 +50,16 @@ def clickhouse_observations(run_id: str) -> list[dict]:
     return parse_json_rows(clickhouse_query(q, params={"param_rid":run_id}))
 
 
+class PublicationIncomplete(Exception):
+    """Source manifest exists but producer has not committed publication status."""
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--run-id", required=True)
     parser.add_argument("--wait-seconds", type=float, default=90)
     parser.add_argument("--settle-seconds", type=float, default=2)
-    parser.add_argument("--expect", choices=["PASS","FAIL"], default="PASS")
+    parser.add_argument("--expect", choices=["PASS","FAIL","INDETERMINATE"], default="PASS")
     parser.add_argument("--require-rule", default=None,
                         help="Required rule code when expecting a known negative scenario")
     parser.add_argument("--output", default=None)
@@ -63,7 +67,11 @@ def main() -> int:
     if args.wait_seconds < 0 or args.settle_seconds < 0:
         parser.error("Wait and settle durations must be nonnegative")
     try:
-        planned, source, scenario = source_manifest(args.run_id)
+        planned, source, scenario, publication_status = source_manifest(args.run_id)
+        if publication_status != "PUBLISHED":
+            raise PublicationIncomplete(
+                f"Source batch not sealed: publication_status={publication_status}"
+            )
         deadline = time.monotonic() + args.wait_seconds
         fully_visible_since = None
         while True:
@@ -90,6 +98,9 @@ def main() -> int:
             "Comparison of current persisted observations; NOT a proof of sink completion "
             "or of future absence of late conflicting events"
         )
+    except PublicationIncomplete as exc:
+        report = {"run_id":args.run_id,"status":"INDETERMINATE","issues":[
+            {"rule":"publication_incomplete","detail":str(exc)}]}
     except Exception as exc:
         report = {"run_id":args.run_id,"status":"ERROR","issues":[
             {"rule":"infrastructure_or_manifest_error","detail":f"{type(exc).__name__}: {exc}"}]}

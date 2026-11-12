@@ -9,7 +9,6 @@ from __future__ import annotations
 import json
 import logging
 import os
-import time
 
 from confluent_kafka import Consumer
 
@@ -52,11 +51,27 @@ def main() -> None:
                 continue
             try:
                 payload = json.loads(message.value())
+                expected_key = (
+                    f'{payload["run_id"]}:{payload["account_id"]}:{payload["trade_id"]}'
+                )
+                # Flink's Kafka sink explicitly serializes a JSON record key.
+                kafka_key = json.loads(message.key() or b"null")
+                if not isinstance(kafka_key, dict) or kafka_key.get("business_key") != expected_key:
+                    raise ValueError("Missing/mismatched Flink output business key")
                 row = row_for_message(payload, topic=message.topic(),
                                       partition=message.partition(), offset=message.offset())
                 clickhouse_query(INSERT, data=(json.dumps(row)+"\n").encode())
                 consumer.store_offsets(message=message)
-                consumer.commit(asynchronous=False)
+                committed = consumer.commit(asynchronous=False)
+                relevant = [p for p in committed
+                            if p.topic == message.topic() and p.partition == message.partition()]
+                if not relevant or any(
+                    getattr(p, "err", None) is not None
+                    or p.offset < message.offset() + 1 for p in relevant
+                ):
+                    raise RuntimeError(
+                        f"Kafka sink offset commit not confirmed: {committed!r}"
+                    )
             except Exception:
                 log.exception("Sink write/commit failed, stopping to force replay; physical duplicates may occur")
                 raise
@@ -65,8 +80,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    while True:
-        try:
-            main()
-        except Exception:
-            time.sleep(3)
+    # Docker Compose owns restarts. Avoid a second independent retry layer.
+    main()

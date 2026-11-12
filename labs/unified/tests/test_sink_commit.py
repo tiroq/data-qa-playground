@@ -25,7 +25,7 @@ class SinkCommitTest(unittest.TestCase):
         consumer = Mock()
         consumer.poll.return_value = message
         consumer.commit.return_value = [SimpleNamespace(
-            topic="processed-trades", partition=0, offset=13, err="not committed")]
+            topic="processed-trades", partition=0, offset=13, error="not committed")]
         fake_kafka = types.ModuleType("confluent_kafka")
         fake_kafka.Consumer = Mock(return_value=consumer)
         with patch.dict(sys.modules, {"confluent_kafka": fake_kafka}):

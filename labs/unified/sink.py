@@ -56,8 +56,8 @@ def main() -> None:
                 clickhouse_query(INSERT, data=(json.dumps(row)+"\n").encode())
                 consumer.store_offsets(message=message)
                 committed = consumer.commit(asynchronous=False)
-                errors = [f"{p.topic}:{p.partition}@{p.offset}: {p.err}"
-                          for p in committed if p.err is not None]
+                errors = [f"{p.topic}:{p.partition}@{p.offset}: {p.error}"
+                          for p in committed if p.error is not None]
                 if errors:
                     raise RuntimeError(f"Kafka offset commit failed: {', '.join(errors)}")
             except Exception:

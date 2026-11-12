@@ -1,0 +1,233 @@
+
+name: dataqa-interview-backup
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: qa
+      POSTGRES_PASSWORD: qa
+      POSTGRES_DB: trading
+    ports:
+      - "127.0.0.1:15433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U qa -d trading"]
+      interval: 5s
+      timeout: 3s
+      retries: 15
+
+  clickhouse:
+    image: clickhouse/clickhouse-server:26.8.36.3
+    environment:
+      CLICKHOUSE_DB: default
+      CLICKHOUSE_USER: qa
+      CLICKHOUSE_PASSWORD: qa
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: "1"
+    ports:
+      - "127.0.0.1:28123:8123"
+      - "127.0.0.1:29000:9000"
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    healthcheck:
+      test: ["CMD-SHELL", "clickhouse-client --user qa --password qa --query 'SELECT 1' >/dev/null"]
+      interval: 5s
+      timeout: 5s
+      retries: 25
+      start_period: 15s
+
+  kafka:
+    image: confluentinc/cp-kafka:7.9.11
+        environment:
+      CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
+      KAFKA_NODE_ID: "1"
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT,HOST:PLAINTEXT
+      KAFKA_LISTENERS: INTERNAL://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093,HOST://0.0.0.0:19092
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:9092,HOST://localhost:29092
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "1"
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: "1"
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: "1"
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: "0"
+    ports:
+      - "127.0.0.1:29092:19092"
+    volumes:
+      - kafka_lab_data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-broker-api-versions --bootstrap-server localhost:9092 >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 10s
+      retries: 18
+      start_period: 25s
+
+  streaming-topics:
+    image: confluentinc/cp-kafka:7.9.11
+        depends_on:
+      kafka:
+        condition: service_healthy
+    entrypoint: ["/bin/bash", "-euc"]
+    command:
+      - |
+        kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic trade-events --partitions 2 --replication-factor 1
+        kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic processed-trades --partitions 2 --replication-factor 1
+
+  # Local-only permission initializer for the shared checkpoint volume.
+  flink-checkpoints-init:
+    image: busybox:1.36
+        user: "0:0"
+    command: ["sh", "-ec", "mkdir -p /checkpoints && chmod 0777 /checkpoints"]
+    volumes:
+      - flink_lab_checkpoints:/checkpoints
+    restart: "no"
+
+  flink-jobmanager:
+    build:
+      context: ./flink
+        command: jobmanager
+    depends_on:
+      flink-checkpoints-init:
+        condition: service_completed_successfully
+    environment:
+      FLINK_PROPERTIES: |
+        jobmanager.rpc.address: flink-jobmanager
+        rest.address: flink-jobmanager
+        jobmanager.memory.process.size: 1024m
+        state.checkpoints.dir: file:///opt/flink/checkpoints
+    volumes:
+      - flink_lab_checkpoints:/opt/flink/checkpoints
+    ports:
+      - "127.0.0.1:28081:8081"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:8081/overview"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 10s
+
+  flink-taskmanager:
+    build:
+      context: ./flink
+        command: taskmanager
+    environment:
+      FLINK_PROPERTIES: |
+        jobmanager.rpc.address: flink-jobmanager
+        taskmanager.memory.process.size: 1536m
+        taskmanager.numberOfTaskSlots: 2
+        state.checkpoints.dir: file:///opt/flink/checkpoints
+    volumes:
+      - flink_lab_checkpoints:/opt/flink/checkpoints
+    depends_on:
+      flink-jobmanager:
+        condition: service_started
+
+  flink-sql-submit:
+    build:
+      context: ./flink
+        # Preserve the official Flink entrypoint so FLINK_PROPERTIES config is applied.
+    command: ["bin/sql-client.sh", "-f", "/opt/flink/usrlib/pipeline.sql"]
+    environment:
+      FLINK_PROPERTIES: |
+        jobmanager.rpc.address: flink-jobmanager
+        rest.address: flink-jobmanager
+    volumes:
+      - ./flink/pipeline.sql:/opt/flink/usrlib/pipeline.sql:ro
+    depends_on:
+      streaming-topics:
+        condition: service_completed_successfully
+      flink-jobmanager:
+        condition: service_healthy
+      flink-taskmanager:
+        condition: service_started
+    restart: "no"
+
+  streaming-bootstrap:
+    build:
+      context: ./python
+        working_dir: /app
+    command: ["python", "/app/bootstrap.py"]
+    environment: &lab_env
+      PG_DSN: postgresql://qa:qa@postgres:5432/trading
+      KAFKA_BOOTSTRAP: kafka:9092
+      CLICKHOUSE_URL: http://clickhouse:8123
+      CLICKHOUSE_USER: qa
+      CLICKHOUSE_PASSWORD: qa
+    volumes:
+      - ./labs/unified:/app:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      clickhouse:
+        condition: service_healthy
+    restart: "no"
+
+  streaming-sink:
+    build:
+      context: ./python
+        working_dir: /app
+    command: ["python", "-u", "/app/sink.py"]
+    environment:
+      <<: *lab_env
+      SINK_GROUP: trading-lab-clickhouse-sink-v1
+    volumes:
+      - ./labs/unified:/app:ro
+    depends_on:
+      streaming-topics:
+        condition: service_completed_successfully
+      streaming-bootstrap:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  streaming-tools:
+    build:
+      context: ./python
+    profiles: [manual]
+    working_dir: /app
+    environment:
+      <<: *lab_env
+    volumes:
+      - ./labs/unified:/app:ro
+      - ./artifacts:/artifacts
+    depends_on:
+      streaming-topics:
+        condition: service_completed_successfully
+      streaming-bootstrap:
+        condition: service_completed_successfully
+    command: ["python", "/app/producer.py", "--help"]
+
+  dashboard:
+    build:
+      context: ./python
+    working_dir: /app
+    command: ["python", "-u", "/app/dashboard.py"]
+    environment:
+      PG_DSN: postgresql://qa:qa@postgres:5432/trading
+      CLICKHOUSE_URL: http://clickhouse:8123
+      CLICKHOUSE_USER: qa
+      CLICKHOUSE_PASSWORD: qa
+    ports:
+      - "127.0.0.1:28765:8765"
+    volumes:
+      - ./:/app:ro
+    depends_on:
+      streaming-bootstrap:
+        condition: service_completed_successfully
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "python -c 'import urllib.request; urllib.request.urlopen("http://localhost:8765/api/health", timeout=3)'"]
+      interval: 5s
+      timeout: 5s
+      retries: 15
+
+
+volumes:
+  postgres_data:
+  clickhouse_data:
+  kafka_lab_data:
+  flink_lab_checkpoints:

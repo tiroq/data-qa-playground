@@ -121,6 +121,15 @@ def main() -> None:
         "".join(json.dumps(row, sort_keys=True) + "\n" for row in published),
         encoding="utf-8",
     )
+    # Composite business key ensures versions of one trade share Kafka partition.
+    (dest / "kafka-input.txt").write_text(
+        "".join(
+            f'{row["account_id"]}:{row["trade_id"]}|'
+            + json.dumps(row, sort_keys=True) + "\\n"
+            for row in published
+        ),
+        encoding="utf-8",
+    )
     print(json.dumps({"run_id": args.run_id, "scenario": args.scenario,
                       "expected_events": len(expected),
                       "published_deliveries": len(published),

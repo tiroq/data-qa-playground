@@ -1,0 +1,154 @@
+# Merge with repository root compose.yaml. All credentials are local-only demo values.
+# docker compose -f compose.yaml -f labs/unified/compose.streaming.yaml --profile clickhouse --profile streaming up -d --build
+services:
+  kafka:
+    image: confluentinc/cp-kafka:7.9.11
+    profiles: [streaming]
+    environment:
+      CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
+      KAFKA_NODE_ID: "1"
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT,HOST:PLAINTEXT
+      KAFKA_LISTENERS: INTERNAL://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093,HOST://0.0.0.0:19092
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:9092,HOST://localhost:19092
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "1"
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: "1"
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: "1"
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: "0"
+    ports:
+      - "127.0.0.1:19092:19092"
+    volumes:
+      - kafka_lab_data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-broker-api-versions --bootstrap-server localhost:9092 >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 10s
+      retries: 18
+      start_period: 25s
+
+  streaming-topics:
+    image: confluentinc/cp-kafka:7.9.11
+    profiles: [streaming]
+    depends_on:
+      kafka:
+        condition: service_healthy
+    entrypoint: ["/bin/bash", "-euc"]
+    command:
+      - |
+        kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic trade-events --partitions 2 --replication-factor 1
+        kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic processed-trades --partitions 2 --replication-factor 1
+
+  flink-jobmanager:
+    build:
+      context: ./labs/unified/flink
+    profiles: [streaming]
+    command: jobmanager
+    environment:
+      FLINK_PROPERTIES: |
+        jobmanager.rpc.address: flink-jobmanager
+        rest.address: flink-jobmanager
+        jobmanager.memory.process.size: 1024m
+        state.checkpoints.dir: file:///opt/flink/checkpoints
+    volumes:
+      - flink_lab_checkpoints:/opt/flink/checkpoints
+    ports:
+      - "127.0.0.1:18081:8081"
+
+  flink-taskmanager:
+    build:
+      context: ./labs/unified/flink
+    profiles: [streaming]
+    command: taskmanager
+    environment:
+      FLINK_PROPERTIES: |
+        jobmanager.rpc.address: flink-jobmanager
+        taskmanager.memory.process.size: 1536m
+        taskmanager.numberOfTaskSlots: 2
+        state.checkpoints.dir: file:///opt/flink/checkpoints
+    volumes:
+      - flink_lab_checkpoints:/opt/flink/checkpoints
+    depends_on:
+      flink-jobmanager:
+        condition: service_started
+
+  flink-sql-submit:
+    build:
+      context: ./labs/unified/flink
+    profiles: [streaming]
+    entrypoint: ["/bin/bash", "-euc"]
+    command: "/opt/flink/bin/sql-client.sh -f /opt/flink/usrlib/pipeline.sql"
+    environment:
+      FLINK_PROPERTIES: |
+        jobmanager.rpc.address: flink-jobmanager
+        rest.address: flink-jobmanager
+    volumes:
+      - ./labs/unified/flink/pipeline.sql:/opt/flink/usrlib/pipeline.sql:ro
+    depends_on:
+      streaming-topics:
+        condition: service_completed_successfully
+      flink-taskmanager:
+        condition: service_started
+    restart: "no"
+
+  streaming-bootstrap:
+    build:
+      context: ./labs/unified/python
+    profiles: [streaming]
+    working_dir: /app
+    command: ["python", "/app/bootstrap.py"]
+    environment: &lab_env
+      PG_DSN: postgresql://qa:qa@postgres:5432/trading
+      KAFKA_BOOTSTRAP: kafka:9092
+      CLICKHOUSE_URL: http://clickhouse:8123
+      CLICKHOUSE_USER: qa
+      CLICKHOUSE_PASSWORD: qa
+    volumes:
+      - ./labs/unified:/app:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      clickhouse:
+        condition: service_healthy
+    restart: "no"
+
+  streaming-sink:
+    build:
+      context: ./labs/unified/python
+    profiles: [streaming]
+    working_dir: /app
+    command: ["python", "-u", "/app/sink.py"]
+    environment:
+      <<: *lab_env
+      SINK_GROUP: trading-lab-clickhouse-sink-v1
+    volumes:
+      - ./labs/unified:/app:ro
+    depends_on:
+      streaming-topics:
+        condition: service_completed_successfully
+      streaming-bootstrap:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  streaming-tools:
+    build:
+      context: ./labs/unified/python
+    profiles: [manual]
+    working_dir: /app
+    environment:
+      <<: *lab_env
+    volumes:
+      - ./labs/unified:/app:ro
+      - ./labs/unified/artifacts:/artifacts
+    depends_on:
+      streaming-topics:
+        condition: service_completed_successfully
+      streaming-bootstrap:
+        condition: service_completed_successfully
+    command: ["python", "/app/producer.py", "--help"]
+
+volumes:
+  kafka_lab_data:
+  flink_lab_checkpoints:

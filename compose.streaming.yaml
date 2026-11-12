@@ -1,0 +1,81 @@
+# Additive training-only Compose overlay. Existing PostgreSQL and ClickHouse are
+# defined in compose.yaml and remain unchanged. No ZooKeeper or production auth.
+# Usage: docker compose -f compose.yaml -f compose.streaming.yaml --profile clickhouse --profile streaming ...
+services:
+  kafka:
+    image: apache/kafka:3.9.1
+    profiles: ["streaming"]
+    ports:
+      - "127.0.0.1:19092:9094"
+    environment:
+      CLUSTER_ID: "MkU3OEVBNTcwNTJENDM2Qk"
+      KAFKA_NODE_ID: "1"
+      KAFKA_PROCESS_ROLES: "broker,controller"
+      KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@kafka:9093"
+      KAFKA_LISTENERS: "INTERNAL://:9092,CONTROLLER://:9093,EXTERNAL://:9094"
+      KAFKA_ADVERTISED_LISTENERS: "INTERNAL://kafka:9092,EXTERNAL://localhost:19092"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "INTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT"
+      KAFKA_INTER_BROKER_LISTENER_NAME: "INTERNAL"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "1"
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: "1"
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: "1"
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: "0"
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+      KAFKA_LOG_DIRS: "/var/lib/kafka/data"
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list >/dev/null 2>&1"]
+      interval: 5s
+      timeout: 10s
+      retries: 30
+      start_period: 15s
+
+  flink-jobmanager:
+    build:
+      context: ./streaming/flink
+      dockerfile: Dockerfile
+    image: data-qa-flink:1.20.3-lab
+    profiles: ["streaming"]
+    command: jobmanager
+    ports:
+      - "127.0.0.1:18081:8081"
+    environment:
+      JOB_MANAGER_RPC_ADDRESS: flink-jobmanager
+      FLINK_PROPERTIES: |
+        jobmanager.rpc.address: flink-jobmanager
+        rest.address: flink-jobmanager
+        parallelism.default: 1
+        execution.checkpointing.interval: 5s
+        execution.checkpointing.mode: AT_LEAST_ONCE
+        state.checkpoints.dir: file:///opt/flink/checkpoints
+    volumes:
+      - ./streaming/flink/sql:/opt/flink/jobs:ro
+      - flink_checkpoints:/opt/flink/checkpoints
+    depends_on:
+      kafka:
+        condition: service_healthy
+
+  flink-taskmanager:
+    image: data-qa-flink:1.20.3-lab
+    build:
+      context: ./streaming/flink
+      dockerfile: Dockerfile
+    profiles: ["streaming"]
+    command: taskmanager
+    environment:
+      JOB_MANAGER_RPC_ADDRESS: flink-jobmanager
+      FLINK_PROPERTIES: |
+        jobmanager.rpc.address: flink-jobmanager
+        taskmanager.numberOfTaskSlots: 2
+        parallelism.default: 1
+        state.checkpoints.dir: file:///opt/flink/checkpoints
+    volumes:
+      - flink_checkpoints:/opt/flink/checkpoints
+    depends_on:
+      - flink-jobmanager
+
+volumes:
+  kafka_data:
+  flink_checkpoints:

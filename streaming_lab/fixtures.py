@@ -125,7 +125,7 @@ def main() -> None:
     (dest / "kafka-input.txt").write_text(
         "".join(
             f'{row["account_id"]}:{row["trade_id"]}|'
-            + json.dumps(row, sort_keys=True) + "\\n"
+            + json.dumps(row, sort_keys=True) + "\n"
             for row in published
         ),
         encoding="utf-8",

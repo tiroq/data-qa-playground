@@ -36,7 +36,7 @@ jobs:
       - name: Compile the pure-Python lab logic
         run: python -m compileall -q streaming_lab
       - name: Synthetic data quality negative controls
-        run: uv run pytest -q tests/streaming
+        run: uv run python -m pytest -q tests/streaming
       - name: Check Compose overlay syntax
         run: docker compose -f compose.yaml -f compose.streaming.yaml --profile clickhouse --profile streaming config --quiet
       - name: Check shell syntax

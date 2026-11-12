@@ -79,7 +79,7 @@ services:
       context: ./labs/unified/flink
     profiles: [streaming]
     entrypoint: ["/bin/bash", "-euc"]
-    command: "/opt/flink/bin/sql-client.sh -f /opt/flink/usrlib/pipeline.sql"
+    command: ["/opt/flink/bin/sql-client.sh -f /opt/flink/usrlib/pipeline.sql"]
     environment:
       FLINK_PROPERTIES: |
         jobmanager.rpc.address: flink-jobmanager

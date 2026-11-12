@@ -6,7 +6,12 @@ dc=(docker compose -f compose.yaml -f labs/unified/compose.streaming.yaml --prof
 mkdir -p labs/unified/artifacts
 echo "[unified] starting isolated streaming stack"
 "${dc[@]}" up -d --build
-python3 labs/unified/wait_for_flink.py --timeout 180
+if ! python3 labs/unified/wait_for_flink.py --timeout 120; then
+  echo "[unified] Flink SQL submit diagnostics" >&2
+  "${dc[@]}" ps -a
+  "${dc[@]}" logs --no-color --tail=160 flink-sql-submit flink-jobmanager
+  exit 1
+fi
 
 run_case() {
   local scenario="$1" expected="$2" rule="${3:-}"

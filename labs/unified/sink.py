@@ -9,7 +9,6 @@ from __future__ import annotations
 import json
 import logging
 import os
-import time
 
 from confluent_kafka import Consumer
 
@@ -56,7 +55,11 @@ def main() -> None:
                                       partition=message.partition(), offset=message.offset())
                 clickhouse_query(INSERT, data=(json.dumps(row)+"\n").encode())
                 consumer.store_offsets(message=message)
-                consumer.commit(asynchronous=False)
+                committed = consumer.commit(asynchronous=False)
+                errors = [f"{p.topic}:{p.partition}@{p.offset}: {p.err}"
+                          for p in committed if p.err is not None]
+                if errors:
+                    raise RuntimeError(f"Kafka offset commit failed: {', '.join(errors)}")
             except Exception:
                 log.exception("Sink write/commit failed, stopping to force replay; physical duplicates may occur")
                 raise
@@ -65,8 +68,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    while True:
-        try:
-            main()
-        except Exception:
-            time.sleep(3)
+    main()

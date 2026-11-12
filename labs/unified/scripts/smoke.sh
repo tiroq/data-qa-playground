@@ -38,4 +38,13 @@ run_case out_of_order PASS
 run_case missing FAIL missing_event
 run_case conflict FAIL conflict_same_version
 run_case corrupt FAIL payload_mismatch
-echo "[unified] all six synthetic positive/negative scenarios checked"
+
+echo "[unified] scenario=unsealed_source expected=INDETERMINATE"
+unsealed_output=$("${dc[@]}" run --rm streaming-tools python /app/producer.py --scenario clean --manifest-only)
+unsealed_run_id=$(printf '%s\n' "$unsealed_output" | sed -n 's/^RUN_ID=//p' | tail -1 | tr -d '\r')
+[[ -n "$unsealed_run_id" ]] || { echo "Missing unsealed source RUN_ID" >&2; exit 1; }
+"${dc[@]}" run --rm streaming-tools python /app/check.py --run-id "$unsealed_run_id" \
+  --expect INDETERMINATE --require-rule source_batch_unsealed \
+  --wait-seconds 1 --output /artifacts/unsealed_source.json
+
+echo "[unified] all six streaming scenarios + unsealed-source negative control checked"

@@ -61,6 +61,21 @@ class DqChecks(unittest.TestCase):
         self.assertEqual({i["rule"] for i in result["issues"]},
                          {"missing_event","unexpected_event"})
 
+    def test_unsealed_source_is_not_misclassified_as_missing(self):
+        source=[ev("E1")]
+        result=evaluate("r1",1,source,[],sealed=False)
+        self.assertEqual(result["status"],"INDETERMINATE")
+        self.assertEqual([i["rule"] for i in result["issues"]],["source_batch_unsealed"])
+        self.assertEqual(evaluate("r1",1,source,[],sealed=True)["status"],"FAIL")
+
+    def test_trade_versions_must_remain_on_one_output_partition(self):
+        source=[ev("E1",version=1),ev("E2",version=2,pnl="2")]
+        same=[{**e,"kafka_partition":0} for e in source]
+        self.assertEqual(evaluate("r1",2,source,same)["status"],"PASS")
+        different=[{**same[0]},{**same[1],"kafka_partition":1}]
+        result=evaluate("r1",2,source,different)
+        self.assertIn("cross_partition_trade",{i["rule"] for i in result["issues"]})
+
     def test_wrong_flink_tag_fails(self):
         result=evaluate("r1",1,[ev()],[{**ev(),"source_tag":"direct_insert"}])
         self.assertIn("invalid_source_tag",{i["rule"] for i in result["issues"]})

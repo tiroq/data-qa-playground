@@ -141,3 +141,7 @@ The [Unified Data Stack Training Lab](labs/unified/README.md) provides an option
 
 
 Verified integration evidence: [Unified Streaming Lab, 12 November 2026](docs/UNIFIED_LAB_VERIFICATION_2026-11-12.md) (all six synthetic scenarios validated in CI; production exactly-once not claimed).
+
+## Independent interview reserve
+
+For a separate Docker Data Stack with a read-only live dashboard and a zero-Docker standalone HTML fallback, see [Interview Backup Lab](labs/interview-backup/README.md). All events are synthetic. The primary unified lab remains unchanged.

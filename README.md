@@ -141,3 +141,7 @@ The [Unified Data Stack Training Lab](labs/unified/README.md) provides an option
 
 
 Verified integration evidence: [Unified Streaming Lab, 12 November 2026](docs/UNIFIED_LAB_VERIFICATION_2026-11-12.md) (all six synthetic scenarios validated in CI; production exactly-once not claimed).
+
+## Unified Streaming Data QA training environment
+
+Use [streaming/README.md](streaming/README.md) for the optional real Kafka KRaft → Flink SQL → Kafka → ClickHouse stack, a separate PostgreSQL source manifest, synthetic fault injection, independent DQ gate and dedicated CI job. Use [five-session consolidated learning route](docs/UNIFIED_FIVE_SESSION_PLAN.md) to combine the original Sessions 10–17 into 5 assessed meetings without losing original exercises or chat titles. CI distinguishes fast unit/config checks from actual end-to-end runtime verification.

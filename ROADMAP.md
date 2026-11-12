@@ -19,6 +19,10 @@ Copy the title exactly when starting or renaming a chat. These match the shorten
 | 16 | `🎯 Exness \| Session 16 — Experience Stories` |
 | 17 | `🎯 Exness \| Session 17 — Final Review` |
 
+## Consolidated sessions — active interview plan (2026-11-12)
+
+The original Sessions 10–17 have **not been attempted** as of this plan. For a faster preparation track, use [five combined meetings](docs/UNIFIED_FIVE_SESSION_PLAN.md): **10+13**, **11+12**, **14**, **15**, **16+17** (7 hours total rather than 10 hours of original slots). Shared synthetic [Kafka/Flink/ClickHouse lab](streaming/README.md) provides concrete pipeline context, but the initial stack setup is separate from teaching time. Existing chat names, numbering, original tasks and calendar appointments are preserved.
+
 ## Status semantics
 
 - **COMPLETE:** a real attempt and review exist in the repository.

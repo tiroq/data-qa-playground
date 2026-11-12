@@ -1,5 +1,10 @@
 # Session 15 — Mock Interview 2 — ClickHouse, Streaming & Incident QA
 
+## Consolidated learning route (2026-11-12)
+
+**Combined meeting D: Mock Interview №2.** This remains a standalone full mock interview within the five-meeting route. Read [the five-meeting plan](../../docs/UNIFIED_FIVE_SESSION_PLAN.md) and the [unified streaming environment](../../streaming/README.md). The original session is **not marked complete**; any scored evaluation requires an actual independent answer. The shared environment can be booted using `bash scripts/streaming_lab.sh up`, but SQL-only or offline exercises do not require the heavy Flink stack.
+
+
 **Chat title (copy to rename the conversation):** `🎯 Exness | Session 15 — Mock Interview №2`  
 **Session short name:** `Mock Interview №2`  
 

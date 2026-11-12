@@ -1,0 +1,50 @@
+name: Unified Streaming Data QA Lab
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "labs/unified/**"
+      - ".github/workflows/unified-streaming-lab.yml"
+      - "compose.yaml"
+  pull_request:
+    paths:
+      - "labs/unified/**"
+      - ".github/workflows/unified-streaming-lab.yml"
+      - "compose.yaml"
+  workflow_dispatch:
+
+jobs:
+  source-and-compose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Python DQ negative-control tests
+        run: python3 -m unittest discover -s labs/unified/tests -p 'test_*.py' -v
+      - name: Validate merged Compose syntax
+        run: docker compose -f compose.yaml -f labs/unified/compose.streaming.yaml --profile clickhouse --profile streaming config --quiet
+
+  streaming-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    needs: source-and-compose
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bring up Kafka, Flink, PostgreSQL and ClickHouse; run six fault scenarios
+        run: bash labs/unified/scripts/smoke.sh
+      - name: Upload synthetic DQ evidence even on failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unified-streaming-dq-reports
+          path: labs/unified/artifacts/*.json
+          if-no-files-found: warn
+      - name: Inspect all service logs if failed
+        if: failure()
+        run: |
+          docker compose -f compose.yaml -f labs/unified/compose.streaming.yaml --profile clickhouse --profile streaming ps -a
+          docker compose -f compose.yaml -f labs/unified/compose.streaming.yaml --profile clickhouse --profile streaming logs --no-color --tail=200
+      - name: Remove disposable streaming volumes
+        if: always()
+        run: docker compose -f compose.yaml -f labs/unified/compose.streaming.yaml --profile clickhouse --profile streaming down -v --remove-orphans

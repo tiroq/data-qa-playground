@@ -6,3 +6,6 @@
 __pycache__/
 .pytest_cache/
 *.py[cod]
+
+# Generated unified-streaming lab reports (synthetic CI artifacts)
+labs/unified/artifacts/*.json

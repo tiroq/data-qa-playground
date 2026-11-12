@@ -1,5 +1,9 @@
 # Session 10 — Timed SQL Mock
 
+## Unified five-block route
+
+This session now reuses the [real optional streaming environment](../../labs/unified/README.md) and the [consolidated practice agenda](../../labs/unified/CURRICULUM.md). The older isolated exercises remain valid fallbacks if Docker/Flink is unavailable. Do not treat already supplied code as a candidate's independent answer.
+
 **Chat title (copy to rename the conversation):** `🎯 Exness | Session 10 — SQL Mock`  
 **Session short name:** `SQL Mock`  
 

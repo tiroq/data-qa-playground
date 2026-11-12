@@ -12,6 +12,14 @@
 
 Use [GAP_REHEARSAL.md](GAP_REHEARSAL.md), based on the [Sessions 01–08 audit](../../docs/INTERVIEW_READINESS_AUDIT_2026-11-11.md) and later mock scorecards. This is a one-hour question-only refresher, not a new coding/infrastructure assignment.
 
+## Unified Data Stack Lab alignment (2026-11-12)
+
+**Block E — Experience Stories + Final Review.** This session shares one consolidated practice block with **Session 16**; the original session and calendar title remain valid. See [the five-block curriculum](../../labs/unified/CURRICULUM.md) and [the runnable stack](../../labs/unified/README.md).
+
+- Use synthetic `streaming_lab` PostgreSQL source manifest, real Kafka/Flink SQL transport, ClickHouse raw sink and `check.py` with JSON failure evidence as the common technical case.
+- Do not silently replace a candidate interview answer with prewritten code, or interpret a successful readiness smoke test as a full quality gate.
+- The pre-existing exercise contracts and mock packets below remain available; no historic solutions are deleted. Calendar dates and times are **unchanged**.
+
 ## Goal
 
 Consolidate evidence and avoid opening major new areas the day before interview.

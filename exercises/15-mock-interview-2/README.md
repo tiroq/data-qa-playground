@@ -12,6 +12,14 @@
 
 Use [INCIDENT_PACKET.md](INCIDENT_PACKET.md) in successive reveal phases and [SCORECARD_TEMPLATE.md](SCORECARD_TEMPLATE.md) only after the answer. This targets Kafka sink durability, lost events hidden by replays, ClickHouse latest-state conflicts, MV backfill and rollback. Do not expose the full packet during the first question.
 
+## Unified Data Stack Lab alignment (2026-11-12)
+
+**Block D — Incident Mock Interview №2.** This session is kept as a protected independent mock; no shortening. See [the five-block curriculum](../../labs/unified/CURRICULUM.md) and [the runnable stack](../../labs/unified/README.md).
+
+- Use synthetic `streaming_lab` PostgreSQL source manifest, real Kafka/Flink SQL transport, ClickHouse raw sink and `check.py` with JSON failure evidence as the common technical case.
+- Do not silently replace a candidate interview answer with prewritten code, or interpret a successful readiness smoke test as a full quality gate.
+- The pre-existing exercise contracts and mock packets below remain available; no historic solutions are deleted. Calendar dates and times are **unchanged**.
+
 ## Goal
 
 Run a scenario-driven Russian mock about production data correctness.

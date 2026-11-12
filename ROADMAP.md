@@ -80,3 +80,8 @@ The [ready-to-run lab index](labs/README.md) covers the dedicated fixtures, supp
 ## End-state acceptance
 
 A reviewer should be able to bootstrap PostgreSQL; inspect case contracts; run independent SQL/data-quality checks; run implemented Python tests; and understand clearly which ClickHouse/Kafka/Flink capabilities are runnable, simulated or only designed. The educational objective is **defensible reasoning about trading-data correctness**, not an artificially inflated stack.
+
+## Unified five-block preparation option (2026-11-12)
+
+The [Unified Data Stack Training Lab](labs/unified/README.md) provides an optional real Kafka → Flink SQL → Kafka → ClickHouse path with a PostgreSQL manifest and standalone DQ checker. The [five-block curriculum](labs/unified/CURRICULUM.md) groups original Sessions **10+13**, **11+12**, **14**, **15**, and **16+17** into ~7 hours **excluding environment setup**, without deleting existing exercises, independent mock material or calendar entries. See the separate integration CI for validated claims; a runnable profile alone does not prove end-to-end exactly-once. Session titles retain the canonical `🎯 Exness | Session NN — ...` format.
+

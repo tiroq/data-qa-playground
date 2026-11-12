@@ -134,3 +134,8 @@ Use [labs/README.md](labs/README.md) and the session-specific `START_HERE.md` fi
 ## Gap-based interview readiness review (11 November 2026)
 
 See [the evidence-based audit of Sessions 01–08](docs/INTERVIEW_READINESS_AUDIT_2026-11-11.md). Sessions 09–17 include additional targeted scenarios, scorecard templates and follow-up questions, without reference answers ahead of a candidate attempt. Session 09 remains oral-first and is deliberately not pre-solved. Documentation updates are not a substitute for test execution or independently demonstrated interview performance.
+
+## Unified five-block preparation option (2026-11-12)
+
+The [Unified Data Stack Training Lab](labs/unified/README.md) provides an optional real Kafka → Flink SQL → Kafka → ClickHouse path with a PostgreSQL manifest and standalone DQ checker. The [five-block curriculum](labs/unified/CURRICULUM.md) groups original Sessions **10+13**, **11+12**, **14**, **15**, and **16+17** into ~7 hours **excluding environment setup**, without deleting existing exercises, independent mock material or calendar entries. See the separate integration CI for validated claims; a runnable profile alone does not prove end-to-end exactly-once. Session titles retain the canonical `🎯 Exness | Session NN — ...` format.
+

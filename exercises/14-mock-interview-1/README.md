@@ -12,6 +12,14 @@
 
 Read [MOCK_PACKET.md](MOCK_PACKET.md) only at the start of the timed mock and use [SCORECARD_TEMPLATE.md](SCORECARD_TEMPLATE.md) after submission. These cases target SQL output completeness, latest-version ambiguity and independent Python implementation from the [Sessions 01–08 audit](../../docs/INTERVIEW_READINESS_AUDIT_2026-11-11.md); no answers or solutions are prefilled.
 
+## Unified Data Stack Lab alignment (2026-11-12)
+
+**Block C — Independent Mock Interview №1.** This session is kept as a protected independent mock; no shortening. See [the five-block curriculum](../../labs/unified/CURRICULUM.md) and [the runnable stack](../../labs/unified/README.md).
+
+- Use synthetic `streaming_lab` PostgreSQL source manifest, real Kafka/Flink SQL transport, ClickHouse raw sink and `check.py` with JSON failure evidence as the common technical case.
+- Do not silently replace a candidate interview answer with prewritten code, or interpret a successful readiness smoke test as a full quality gate.
+- The pre-existing exercise contracts and mock packets below remain available; no historic solutions are deleted. Calendar dates and times are **unchanged**.
+
 ## Goal
 
 Run a strict Russian-language technical mock emphasizing coding and reasoning.

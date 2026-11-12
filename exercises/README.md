@@ -22,3 +22,8 @@
 | 17 | [Final Review — Confidence & Gaps](17-final-review/README.md) |
 
 See the [roadmap](../ROADMAP.md), [synthetic case contract](../docs/TRADING-DATA-CASE.md), [session protocol](../docs/SESSION-WORKFLOW.md) and [assessment rubric](../docs/ASSESSMENT-RUBRIC.md).
+
+## Unified five-block preparation option (2026-11-12)
+
+The [Unified Data Stack Training Lab](../labs/unified/README.md) provides an optional real Kafka → Flink SQL → Kafka → ClickHouse path with a PostgreSQL manifest and standalone DQ checker. The [five-block curriculum](../labs/unified/CURRICULUM.md) groups original Sessions **10+13**, **11+12**, **14**, **15**, and **16+17** into ~7 hours **excluding environment setup**, without deleting existing exercises, independent mock material or calendar entries. See the separate integration CI for validated claims; a runnable profile alone does not prove end-to-end exactly-once. Session titles retain the canonical `🎯 Exness | Session NN — ...` format.
+

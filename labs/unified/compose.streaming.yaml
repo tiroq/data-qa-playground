@@ -41,11 +41,24 @@ services:
         kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic trade-events --partitions 2 --replication-factor 1
         kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic processed-trades --partitions 2 --replication-factor 1
 
+  # Local-only permission initializer for the shared checkpoint volume.
+  flink-checkpoints-init:
+    image: busybox:1.36
+    profiles: [streaming]
+    user: "0:0"
+    command: ["sh", "-ec", "mkdir -p /checkpoints && chmod 0777 /checkpoints"]
+    volumes:
+      - flink_lab_checkpoints:/checkpoints
+    restart: "no"
+
   flink-jobmanager:
     build:
       context: ./labs/unified/flink
     profiles: [streaming]
     command: jobmanager
+    depends_on:
+      flink-checkpoints-init:
+        condition: service_completed_successfully
     environment:
       FLINK_PROPERTIES: |
         jobmanager.rpc.address: flink-jobmanager

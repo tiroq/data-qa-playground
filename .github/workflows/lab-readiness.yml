@@ -36,6 +36,27 @@ jobs:
         run: docker compose exec -T postgres psql -U qa -d trading -v ON_ERROR_STOP=1 < postgres/fixtures/10-sql-mock.sql
       - name: Check Session 10 mock fixture structure
         run: docker compose exec -T postgres psql -U qa -d trading -v ON_ERROR_STOP=1 < postgres/checks/lab10-smoke.sql
+      - name: Validate reviewed Session 10 SQL and adversarial NULL/version scenarios
+        run: |
+          cat exercises/10-sql-mock/REVIEWED_SQL.sql \\
+              exercises/10-sql-mock/REVIEWED_CHECKS.sql \\
+            | docker compose exec -T postgres psql -U qa -d trading -v ON_ERROR_STOP=1
+      - name: Assert Session 13 DQ negative control really blocks CI
+        run: |
+          set +e
+          docker compose exec -T postgres psql -U qa -d trading -v ON_ERROR_STOP=1 \\
+            < exercises/13-quality-gates-ci/REVIEWED_SQL.sql > /tmp/dq-negative-control.log 2>&1
+          code=$?
+          set -e
+          cat /tmp/dq-negative-control.log
+          if [ "$code" -eq 0 ]; then
+            echo "DQ negative control falsely passed" >&2
+            exit 1
+          fi
+          grep -q 'Session 13 DQ gate blocked' /tmp/dq-negative-control.log || {
+            echo "DQ failure was not the expected business-rule failure" >&2
+            exit 1
+          }
       - name: Inspect postgres on failure
         if: failure()
         run: docker compose ps && docker compose logs --no-color postgres

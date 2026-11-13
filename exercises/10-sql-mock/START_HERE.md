@@ -35,9 +35,7 @@ When the timer starts, open [INTERVIEW_TASKS.md](INTERVIEW_TASKS.md). Preserve t
 After loading the Session 10 fixture, run the reviewed SQL and regression checks **in the same connection**:
 
 ```bash
-cat exercises/10-sql-mock/REVIEWED_SQL.sql \\
-    exercises/10-sql-mock/REVIEWED_CHECKS.sql \\
-  | docker compose exec -T postgres psql -U qa -d trading -v ON_ERROR_STOP=1
+cat exercises/10-sql-mock/REVIEWED_SQL.sql exercises/10-sql-mock/REVIEWED_CHECKS.sql | docker compose exec -T postgres psql -U qa -d trading -v ON_ERROR_STOP=1
 ```
 
 Do not run these before the independent mock. The SQL is designed for PostgreSQL `lab10`, **not** the optional unified PostgreSQL/ClickHouse `streaming_lab`.

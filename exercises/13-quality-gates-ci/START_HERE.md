@@ -40,8 +40,7 @@ The SQL fixture reload is destructive **only to lab10**. The preparatory workflo
 [REVIEWED_SQL.sql](REVIEWED_SQL.sql) checks event-ID sets, immutable payload equality, duplicate physical deliveries, invalid business keys and an independent fixture row-count contract. It deliberately raises an SQL exception on the supplied broken mock fixture; use `-v ON_ERROR_STOP=1` to get a nonzero CI exit code:
 
 ```bash
-docker compose exec -T postgres psql -U qa -d trading -v ON_ERROR_STOP=1 \\
-  < exercises/13-quality-gates-ci/REVIEWED_SQL.sql
+docker compose exec -T postgres psql -U qa -d trading -v ON_ERROR_STOP=1 < exercises/13-quality-gates-ci/REVIEWED_SQL.sql
 ```
 
 This is a **negative control**, not a green release gate. Source completion, ClickHouse visibility, pytest collection and infrastructure-error classification still require independent evidence. See also [Session 10 reviewed SQL](../10-sql-mock/REVIEWED_SQL.sql).
